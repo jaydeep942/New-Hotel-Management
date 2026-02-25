@@ -24,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result->num_rows > 0) {
         // Generate 6-digit OTP
         $otp = sprintf("%06d", mt_rand(1, 999999));
-        $expiry = date("Y-m-d H:i:s", strtotime("+15 minutes"));
+        $expiry = date("Y-m-d H:i:s", strtotime("+2 minutes"));
 
         // Save OTP to database
         $update_sql = "UPDATE users SET reset_token = '$otp', token_expiry = '$expiry' WHERE email = '$email'";
@@ -43,8 +43,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $mail->isSMTP();
                 $mail->Host       = 'smtp.gmail.com';             // Gmail SMTP server
                 $mail->SMTPAuth   = true;
-                $mail->Username   = 'jaydipramoliya942@gmail.com'; // YOUR CONFIGURED EMAIL
-                $mail->Password   = 'xkax chyj ccud sskl';          // GOOGLE APP PASSWORD NEEDED HERE
+                $mail->Username   = 'grandluxe.luxury@gmail.com'; // YOUR CONFIGURED EMAIL
+                $mail->Password   = 'hzpe obze lbbi anuu';          // GOOGLE APP PASSWORD NEEDED HERE
                 $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
                 $mail->Port       = 587;
 
@@ -79,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <div style='font-size: 54px; font-weight: 700; color: #ffffff; letter-spacing: 12px; font-family: monospace;'>$otp</div>
                             </div>
                             
-                            <p style='color: #78716c; font-size: 13px;'>This key will expire in 15 minutes for your protection. If this wasn't you, our security team suggests ignoring this message.</p>
+                            <p style='color: #78716c; font-size: 13px;'>This key will expire in 2 minutes for your protection. If this wasn't you, our security team suggests ignoring this message.</p>
                         </div>
                         
                         <!-- Concierge Footer -->
