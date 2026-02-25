@@ -27,6 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['name'] = $user['name'];
             $_SESSION['email'] = $user['email'];
+            $_SESSION['phone'] = $user['phone'];
 
             // Redirect to Customer Dashboard
             header("Location: ../customer-dashboard.php");
