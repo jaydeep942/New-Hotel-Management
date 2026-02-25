@@ -70,7 +70,7 @@
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 15px;
-            padding: 15px 15px 15px 50px;
+            padding: 15px 45px 15px 50px;
             color: white;
             font-size: 16px;
             transition: 0.3s;
@@ -86,6 +86,22 @@
         .input-group input:focus {
             outline: none;
             border-color: var(--gold);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #888;
+            font-size: 14px;
+            transition: 0.3s;
+            z-index: 10;
+        }
+
+        .toggle-password:hover {
+            color: var(--gold);
         }
 
         .action-btn {
@@ -136,7 +152,8 @@
                 <label>New Password</label>
                 <div class="relative">
                     <i class="fas fa-lock"></i>
-                    <input type="password" name="password" placeholder="••••••••" required>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                    <i class="fas fa-eye toggle-password" onclick="toggleVisibility('password', this)"></i>
                 </div>
             </div>
 
@@ -144,12 +161,23 @@
                 <label>Confirm Password</label>
                 <div class="relative">
                     <i class="fas fa-check-circle"></i>
-                    <input type="password" name="confirm_password" placeholder="••••••••" required>
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="••••••••" required>
+                    <i class="fas fa-eye toggle-password" onclick="toggleVisibility('confirm_password', this)"></i>
                 </div>
             </div>
 
             <button type="submit" class="action-btn">Reset Password</button>
         </form>
     </div>
+    <script>
+        function toggleVisibility(inputId, icon) {
+            const input = document.getElementById(inputId);
+            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+            input.setAttribute('type', type);
+            
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+        }
+    </script>
 </body>
 </html>

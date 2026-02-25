@@ -79,7 +79,7 @@ if (isset($_SESSION['user_id'])) {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 15px;
-            padding: 15px 20px 15px 55px;
+            padding: 15px 50px 15px 55px;
             color: white;
             font-size: 16px;
             transition: all 0.3s ease;
@@ -91,6 +91,22 @@ if (isset($_SESSION['user_id'])) {
             bottom: 18px;
             color: var(--gold);
             font-size: 18px;
+        }
+
+        .input-group .toggle-password {
+            position: absolute;
+            right: 20px;
+            left: auto;
+            bottom: 18px;
+            cursor: pointer;
+            color: #888;
+            font-size: 16px;
+            transition: color 0.3s;
+            z-index: 10;
+        }
+
+        .input-group .toggle-password:hover {
+            color: var(--gold);
         }
 
         .input-group input:focus {
@@ -196,6 +212,7 @@ if (isset($_SESSION['user_id'])) {
                 </div>
                 <i class="fas fa-lock"></i>
                 <input type="password" id="password" name="password" placeholder="••••••••" required>
+                <i class="fas fa-eye toggle-password" id="togglePassword"></i>
             </div>
 
             <div class="flex items-center mb-8">
@@ -256,6 +273,19 @@ if (isset($_SESSION['user_id'])) {
             const email = document.getElementById('email').value;
             window.location.href = 'forgot-password.html?email=' + encodeURIComponent(email);
         }
+
+        // Toggle Password Visibility
+        const togglePassword = document.getElementById('togglePassword');
+        const password = document.getElementById('password');
+
+        togglePassword.addEventListener('click', function() {
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            
+            // Toggle the eye / eye-slash icon
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
 
         // Auto-fill email if passed from Registration
         if (urlParams.has('email')) {

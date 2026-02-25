@@ -79,7 +79,7 @@
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
-            padding: 12px 15px 12px 45px;
+            padding: 12px 45px 12px 45px;
             color: white;
             font-size: 15px;
             transition: all 0.3s ease;
@@ -91,6 +91,22 @@
             bottom: 14px;
             color: var(--gold);
             font-size: 16px;
+        }
+
+        .input-group .toggle-password {
+            position: absolute;
+            right: 15px;
+            left: auto;
+            bottom: 14px;
+            cursor: pointer;
+            color: #777;
+            font-size: 14px;
+            transition: color 0.3s;
+            z-index: 10;
+        }
+
+        .input-group .toggle-password:hover {
+            color: var(--gold);
         }
 
         .input-group input:focus {
@@ -199,12 +215,14 @@
                     <label>Password</label>
                     <i class="fas fa-lock"></i>
                     <input type="password" id="password" name="password" placeholder="••••••••" required>
+                    <i class="fas fa-eye toggle-password" onclick="toggleVisibility('password', this)"></i>
                 </div>
                 <div class="input-group">
                     <label>Confirm Password</label>
                     <i class="fas fa-redo"></i>
                     <input type="password" id="confirm_password" name="confirm_password" placeholder="••••••••"
                         required>
+                    <i class="fas fa-eye toggle-password" onclick="toggleVisibility('confirm_password', this)"></i>
                 </div>
             </div>
 
@@ -265,6 +283,15 @@
         function goToLogin() {
             const email = document.querySelector('input[name="email"]').value;
             window.location.href = 'login.php?email=' + encodeURIComponent(email);
+        }
+
+        function toggleVisibility(inputId, icon) {
+            const input = document.getElementById(inputId);
+            const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+            input.setAttribute('type', type);
+
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
         }
 
         const urlParams = new URLSearchParams(window.location.search);
