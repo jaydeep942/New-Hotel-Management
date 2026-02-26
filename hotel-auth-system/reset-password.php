@@ -142,7 +142,9 @@
             <p class="text-gray-500 uppercase tracking-[4px] text-[10px] font-bold">Secure your account with a new password</p>
         </div>
 
-        <div id="messageBox"></div>
+        <div id="messageBox" <?php echo isset($_GET['error']) ? 'style="display:block;"' : ''; ?>>
+            <?php echo htmlspecialchars($_GET['error'] ?? ''); ?>
+        </div>
 
         <form action="php/reset-password.php" method="POST" class="space-y-6">
             <input type="hidden" name="email" value="<?php echo htmlspecialchars($_GET['email'] ?? ''); ?>">
@@ -178,6 +180,22 @@
             icon.classList.toggle('fa-eye');
             icon.classList.toggle('fa-eye-slash');
         }
+
+        const resetForm = document.querySelector('form');
+        const messageBox = document.getElementById('messageBox');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+
+        resetForm.addEventListener('submit', function(e) {
+            if (passwordInput.value !== confirmPasswordInput.value) {
+                e.preventDefault();
+                messageBox.textContent = "Passwords do not match. Please ensure both fields are identical.";
+                messageBox.style.display = 'block';
+                messageBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                messageBox.style.display = 'none';
+            }
+        });
     </script>
 </body>
 </html>
