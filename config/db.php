@@ -84,6 +84,19 @@ $table_notifs = "CREATE TABLE IF NOT EXISTS notifications (
 )";
 $conn->query($table_notifs);
 
+// 8. Create service_orders table
+$table_service_orders = "CREATE TABLE IF NOT EXISTS service_orders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    room_number VARCHAR(10),
+    items TEXT NOT NULL,
+    total_price DECIMAL(10,2) NOT NULL,
+    status ENUM('Pending', 'Preparing', 'Delivered', 'Cancelled') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+)";
+$conn->query($table_service_orders);
+
 // Migration: Check for newly added registration fields
 $fields_to_check = [
     'guest_email' => "VARCHAR(100) NULL AFTER guest_name",
@@ -99,6 +112,12 @@ foreach ($fields_to_check as $col => $definition) {
     if ($check->num_rows == 0) {
         $conn->query("ALTER TABLE bookings ADD COLUMN $col $definition");
     }
+}
+
+// Fix service_orders created_at if it was named order_date previously
+$check_order_date = $conn->query("SHOW COLUMNS FROM `service_orders` LIKE 'order_date'");
+if ($check_order_date->num_rows > 0) {
+    $conn->query("ALTER TABLE service_orders CHANGE order_date created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
 }
 
 // 7. Seed Rooms if empty (for demo)

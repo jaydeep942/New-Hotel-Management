@@ -22,11 +22,22 @@ $nationality = $user_data['nationality'] ?? '';
 $dob = $user_data['dob'] ?? '';
 $created_at = $user_data['created_at'];
 
+// Pagination Logic
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$limit = 6;
+$offset = ($page - 1) * $limit;
+
+// Get total count
+$count_res = $conn->query("SELECT COUNT(*) as total FROM bookings WHERE user_id = $user_id");
+$total_bookings = $count_res->fetch_assoc()['total'];
+$total_pages = ceil($total_bookings / $limit);
+
 $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number 
                                 FROM bookings b 
                                 JOIN rooms r ON b.room_id = r.id 
                                 WHERE b.user_id = $user_id 
-                                ORDER BY b.created_at DESC");
+                                ORDER BY b.created_at DESC 
+                                LIMIT $limit OFFSET $offset");
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -37,6 +48,7 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
     <title>Booking History | Grand Luxe Hotel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
@@ -46,6 +58,10 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
                         cream: '#F8F5F0',
                         maroon: '#6A1E2D',
                         teal: '#2CA6A4',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
                     }
                 }
             }
@@ -310,21 +326,34 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
                                 <th class="pr-10 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="text-sm">
+                        <tbody id="historyTableBody" class="text-sm">
+                            <!-- Populated via JS -->
                             <?php while($row = $history_result->fetch_assoc()): ?>
-                            <tr>
+                            <tr class="animate-fade-in">
                                 <td class="pl-10 font-bold maroon-text">#LX-<?php echo str_pad($row['id'], 4, '0', STR_PAD_LEFT); ?></td>
                                 <td>
                                     <p class="font-bold"><?php echo $row['room_type']; ?> Suite</p>
                                     <p class="text-[10px] text-gray-400 font-bold uppercase">Room <?php echo $row['room_number']; ?></p>
                                 </td>
                                  <td><?php echo date('d M Y', strtotime($row['check_in'])); ?></td>
-                                <td><?php echo date('d M Y', strtotime($row['check_out'])); ?></td>
-                                <td class="font-bold maroon-text">₹<?php echo number_format($row['total_price'], 0); ?></td>
+                                 <td>
+                                    <?php if($row['status'] === 'Checked-Out' && $row['actual_checkout']): ?>
+                                        <p class="font-bold text-teal-600"><?php echo date('d M Y, h:i A', strtotime($row['actual_checkout'])); ?></p>
+                                        <p class="text-[9px] uppercase tracking-tighter opacity-50">Actual Departure</p>
+                                    <?php else: ?>
+                                        <?php echo date('d M Y', strtotime($row['check_out'])); ?>
+                                    <?php endif; ?>
+                                 </td>
+                                 <td class="font-bold maroon-text">
+                                    ₹<?php 
+                                        $display_price = ($row['status'] === 'Checked-Out' && $row['final_bill']) ? $row['final_bill'] : $row['total_price'];
+                                        echo number_format($display_price, 0); 
+                                    ?>
+                                 </td>
                                  <td><span class="status-badge <?php 
                                     $status = strtolower($row['status']);
-                                    if ($status == 'confirmed') echo 'status-confirmed';
-                                    elseif ($status == 'completed') echo 'status-completed';
+                                    if ($status == 'confirmed' || $status == 'checked-in') echo 'status-confirmed';
+                                    elseif ($status == 'checked-out' || $status == 'completed') echo 'status-completed';
                                     elseif ($status == 'cancelled') echo 'status-cancelled';
                                 ?>"><?php echo $row['status']; ?></span></td>
                                 <td class="pr-10 text-right">
@@ -334,10 +363,10 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
                                                 <i class="fas fa-times-circle"></i>
                                             </button>
                                         <?php endif; ?>
-                                         <button onclick="viewBooking(<?php echo htmlspecialchars(json_encode($row)); ?>)" class="p-2 text-gray-300 hover:text-gold transition-all duration-300 hover:scale-125" title="View Details">
+                                         <button onclick='viewBooking(<?php echo json_encode($row); ?>)' class="p-2 text-gray-300 hover:text-gold transition-all duration-300 hover:scale-125" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                         <button onclick="printBooking(<?php echo htmlspecialchars(json_encode($row)); ?>)" class="p-2 text-gray-300 hover:text-maroon transition-all duration-300 hover:scale-125" title="Print Receipt">
+                                         <button onclick='printBooking(<?php echo json_encode($row); ?>)' class="p-2 text-gray-300 hover:text-maroon transition-all duration-300 hover:scale-125" title="Print Receipt">
                                             <i class="fas fa-print"></i>
                                         </button>
                                     </div>
@@ -346,29 +375,40 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
                             <?php endwhile; ?>
                             <?php if($history_result->num_rows == 0): ?>
                             <tr>
-                                <td colspan="6" class="p-10 text-center text-gray-400 italic">No residency archives found.</td>
+                                <td colspan="7" class="p-10 text-center text-gray-400 italic">No residency archives found.</td>
                             </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Pagination UI -->
-                <div
-                    class="p-6 md:p-10 border-t border-gray-50 flex flex-col md:flex-row items-center justify-between gap-6">
-                    <p class="text-xs text-gray-400 uppercase tracking-widest font-bold text-center">Showing 1-3 of 12
-                        Archives</p>
+                <!-- Pagination UI (AJAX version) -->
+                <div id="paginationContainer" class="p-6 md:p-10 border-t border-gray-50 flex flex-col md:flex-row items-center justify-between gap-6 <?php echo $total_pages <= 1 ? 'hidden' : ''; ?>">
+                    <p id="showingStats" class="text-xs text-gray-400 uppercase tracking-widest font-bold text-center">
+                        Showing <?php echo $offset + 1; ?>-<?php echo min($offset + $limit, $total_bookings); ?> of <?php echo $total_bookings; ?> Archives
+                    </p>
                     <div class="flex items-center space-x-3">
-                        <button
-                            class="w-10 h-10 rounded-xl border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-maroon hover:text-white transition"><i
-                                class="fas fa-chevron-left text-xs"></i></button>
-                        <button
-                            class="w-10 h-10 rounded-xl bg-maroon text-white flex items-center justify-center text-xs font-bold">1</button>
-                        <button
-                            class="w-10 h-10 rounded-xl border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-50 transition text-xs font-bold">2</button>
-                        <button
-                            class="w-10 h-10 rounded-xl border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-maroon hover:text-white transition"><i
-                                class="fas fa-chevron-right text-xs"></i></button>
+                        <button onclick="changeHistoryPage(-1)" id="prevBtn" class="w-10 h-10 rounded-xl border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-maroon hover:text-white transition <?php echo $page <= 1 ? 'opacity-50 cursor-not-allowed' : ''; ?>" <?php echo $page <= 1 ? 'disabled' : ''; ?>>
+                            <i class="fas fa-chevron-left text-xs"></i>
+                        </button>
+
+                        <div id="pageNumbers" class="flex items-center space-x-3">
+                            <!-- Numbers populated via JS -->
+                            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                                <?php if ($i == 1 || $i == $total_pages || ($i >= $page - 1 && $i <= $page + 1)): ?>
+                                    <button onclick="fetchHistory(<?php echo $i; ?>)"
+                                        class="page-num-btn w-10 h-10 rounded-xl <?php echo $i == $page ? 'bg-maroon text-white active-page' : 'border border-gray-100 text-gray-400 hover:bg-gray-50'; ?> flex items-center justify-center text-xs font-bold transition-all duration-300">
+                                        <?php echo $i; ?>
+                                    </button>
+                                <?php elseif (($i == $page - 2 && $start > 1) || ($i == $page + 2 && $end < $total_pages)): ?>
+                                    <span class="text-gray-300">...</span>
+                                <?php endif; ?>
+                            <?php endfor; ?>
+                        </div>
+
+                        <button onclick="changeHistoryPage(1)" id="nextBtn" class="w-10 h-10 rounded-xl border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-maroon hover:text-white transition <?php echo $page >= $total_pages ? 'opacity-50 cursor-not-allowed' : ''; ?>" <?php echo $page >= $total_pages ? 'disabled' : ''; ?>>
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -376,48 +416,121 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
     </main>
 
     <!-- View Details Modal -->
-    <div id="viewModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-6">
-        <div class="absolute inset-0 bg-maroon/40 backdrop-blur-md" onclick="closeViewModal()"></div>
-        <div class="bg-white rounded-[40px] p-10 max-w-lg w-full relative z-[101] premium-shadow border border-white/20 animate-slide">
-            <button onclick="closeViewModal()" class="absolute top-6 right-8 text-gray-400 hover:text-maroon">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-            <div class="text-center mb-8">
-                <div class="w-20 h-20 bg-maroon/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-file-invoice maroon-text text-3xl"></i>
-                </div>
-                <h3 class="text-2xl font-bold maroon-text" style="font-family: 'Playfair Display', serif;">Residency Details</h3>
-                <p id="modalBookingID" class="text-[10px] uppercase tracking-[4px] font-bold text-gold mt-2">#LX-0000</p>
-            </div>
-            
-            <div class="space-y-6">
-                <div class="flex justify-between border-b border-gray-50 pb-4">
-                    <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Guest Name</span>
-                    <span id="modalGuestName" class="font-bold text-sm maroon-text">-</span>
-                </div>
-                <div class="flex justify-between border-b border-gray-50 pb-4">
-                    <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Room Type</span>
-                    <span id="modalRoomType" class="font-bold text-sm maroon-text">-</span>
-                </div>
-                <div class="grid grid-cols-2 gap-8 py-4 bg-gray-50 rounded-3xl px-6">
-                    <div>
-                        <span class="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Arrival</span>
-                        <p id="modalCheckIn" class="font-bold text-sm maroon-text">-</p>
+    <div id="viewModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-maroon/60 backdrop-blur-xl" onclick="closeViewModal()"></div>
+        <div class="bg-white rounded-[40px] w-full max-w-2xl relative z-[101] premium-shadow border border-white/20 animate-fade-in overflow-hidden">
+            <!-- Modal Header -->
+            <div class="gradient-maroon p-8 text-white relative">
+                <button onclick="closeViewModal()" class="absolute top-6 right-8 text-white/50 hover:text-white transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                <div class="flex items-center space-x-4">
+                    <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                        <i class="fas fa-file-invoice text-2xl"></i>
                     </div>
                     <div>
-                        <span class="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Departure</span>
-                        <p id="modalCheckOut" class="font-bold text-sm maroon-text">-</p>
+                        <h3 class="text-2xl font-bold" style="font-family: 'Playfair Display', serif;">Residency Dossier</h3>
+                        <p id="modalBookingID" class="text-[10px] uppercase tracking-[4px] font-bold text-gold/80 mt-1">#LX-0123</p>
                     </div>
                 </div>
-                <div class="flex justify-between pt-2">
-                    <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Total Amount Paid</span>
-                    <span id="modalTotalPrice" class="text-2xl font-bold maroon-text">-</span>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-8 md:p-10 space-y-10 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                
+                <!-- Section: Guest Identity -->
+                <div>
+                    <div class="flex items-center space-x-3 mb-6">
+                        <span class="w-8 h-8 rounded-lg bg-maroon/5 flex items-center justify-center text-maroon text-xs">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-maroon/60">Guest Identity</h4>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50/50 p-6 rounded-3xl border border-gray-100">
+                        <div class="space-y-4">
+                            <div>
+                                <span class="text-[9px] font-bold uppercase tracking-tighter text-gray-400 block">Full Name</span>
+                                <p id="modalGuestName" class="font-bold maroon-text">--</p>
+                            </div>
+                            <div>
+                                <span class="text-[9px] font-bold uppercase tracking-tighter text-gray-400 block">Contact</span>
+                                <p id="modalGuestEmail" class="text-xs font-medium text-gray-600">--</p>
+                                <p id="modalGuestPhone" class="text-xs font-medium text-gray-600 mt-0.5">--</p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <span class="text-[9px] font-bold uppercase tracking-tighter text-gray-400 block">Identification</span>
+                                <p id="modalGuestID" class="text-xs font-bold text-gray-700 italic">--</p>
+                            </div>
+                            <div>
+                                <span class="text-[9px] font-bold uppercase tracking-tighter text-gray-400 block">Residential Address</span>
+                                <p id="modalGuestAddress" class="text-[11px] leading-relaxed text-gray-500 mt-1">--</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Stay Chronology -->
+                <div>
+                    <div class="flex items-center space-x-3 mb-6">
+                        <span class="w-8 h-8 rounded-lg bg-teal/5 flex items-center justify-center text-teal text-xs">
+                            <i class="fas fa-calendar-alt"></i>
+                        </span>
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-teal/60">Stay Chronology</h4>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                            <span class="text-[9px] font-bold uppercase tracking-tighter text-gray-400 block mb-1">Arrival</span>
+                            <p id="modalCheckIn" class="font-bold maroon-text text-sm">--</p>
+                        </div>
+                        <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                            <span class="text-[9px] font-bold uppercase tracking-tighter text-gray-400 block mb-1">Departure</span>
+                            <p id="modalCheckOut" class="font-bold maroon-text text-sm">--</p>
+                        </div>
+                        <div class="bg-gold/5 p-5 rounded-2xl border border-gold/10">
+                            <span class="text-[9px] font-bold uppercase tracking-tighter text-gold block mb-1">Suite Assigned</span>
+                            <p id="modalRoomType" class="font-bold maroon-text text-sm">--</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Financial Audit -->
+                <div>
+                    <div class="flex items-center space-x-3 mb-6">
+                        <span class="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center text-gold text-xs">
+                            <i class="fas fa-receipt"></i>
+                        </span>
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-gold">Financial Audit</h4>
+                    </div>
+                    <div class="bg-maroon/5 p-8 rounded-[32px] border border-maroon/10 flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-maroon/40 mb-1">Final Settlement Amount</p>
+                            <h2 id="modalTotalPrice" class="text-4xl font-black maroon-text tracking-tighter">--</h2>
+                            <p class="text-[9px] text-gray-400 mt-2 uppercase font-bold tracking-widest">Inclusive of all services & taxes</p>
+                        </div>
+                        <button id="modalPrintBtn" class="flex items-center space-x-3 px-8 py-4 bg-maroon text-white text-xs font-bold uppercase tracking-widest rounded-2xl shadow-xl shadow-maroon/20 hover:scale-105 transition-transform">
+                            <i class="fas fa-print"></i>
+                            <span>Download Receipt</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Section: Provisions -->
+                <div id="modalRequestsContainer" class="hidden pt-4">
+                    <div class="bg-gold/5 border border-gold/10 p-6 rounded-2xl italic text-[11px] leading-relaxed text-maroon/70 relative">
+                        <i class="fas fa-quote-left absolute -top-3 -left-1 text-2xl text-gold/20"></i>
+                        <span id="modalSpecialRequests">--</span>
+                    </div>
                 </div>
             </div>
-            
-            <button onclick="closeViewModal()" class="w-full mt-10 py-4 bg-maroon text-white rounded-2xl font-bold shadow-xl shadow-maroon/20 hover:scale-[1.02] transition-transform">
-                Close Archive
-            </button>
+
+            <!-- Modal Footer -->
+            <div class="p-6 bg-gray-50 border-t border-gray-100 text-center">
+                <button onclick="closeViewModal()" class="text-[10px] font-bold uppercase tracking-[3px] text-gray-400 hover:text-maroon transition-colors py-2">
+                    Dismiss Archives
+                </button>
+            </div>
         </div>
     </div>
     
@@ -443,53 +556,136 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
     </div>
 
     <style>
-        #printableReceipt { display: none; }
+        /* Modern Print Architecture */
         @media print {
+            body { background: #fff !important; }
             body > *:not(#printableReceipt) { display: none !important; }
+            
             #printableReceipt { 
                 display: block !important; 
-                position: absolute; 
-                top: 0; 
-                left: 0; 
-                width: 100%; 
-                padding: 40px; 
-                color: #333;
-                background: white !important;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 40px !important;
+                border: none !important;
+                visibility: visible !important;
+                background: #fff !important;
             }
-            #printableReceipt .print-header, 
-            #printableReceipt .print-details, 
-            #printableReceipt .print-footer,
-            #printableReceipt p,
-            #printableReceipt span,
-            #printableReceipt h1 { 
-                display: block !important; 
-                visibility: visible !important; 
+            
+            #printableReceipt * {
+                visibility: visible !important;
             }
-            #printableReceipt .label { display: inline-block !important; font-weight: bold; color: #6A1E2D; margin-right: 10px; }
-            #printableReceipt p { margin-bottom: 15px; }
-            .print-header { border-bottom: 2px solid #6A1E2D; padding-bottom: 20px; margin-bottom: 30px; text-align: center; }
-            .print-details { margin-bottom: 30px; line-height: 1.6; }
-            .print-footer { border-top: 1px solid #eee; padding-top: 20px; text-align: center; font-size: 12px; color: #999; }
+
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            section { break-inside: avoid; page-break-inside: avoid; }
+        }
+        
+        /* Hidden on Screen by Default */
+        @media screen {
+            #printableReceipt { display: none !important; }
         }
     </style>
-    <!-- Hidden Printable Receipt -->
-    <div id="printableReceipt">
-        <div class="print-header">
-            <h1 style="font-family: serif; color: #6A1E2D;">GRAND LUXE HOTEL</h1>
-            <p>Official Residency Receipt</p>
-        </div>
-        <div class="print-details">
-            <p><span class="label">Residency ID:</span> <span id="printBookingID"></span></p>
-            <p><span class="label">Guest Name:</span> <span id="printGuestName"></span></p>
-            <p><span class="label">Suite:</span> <span id="printRoomType"></span> (Room <span id="printRoomNumber"></span>)</p>
-            <p><span class="label">Check In:</span> <span id="printCheckIn"></span></p>
-            <p><span class="label">Check Out:</span> <span id="printCheckOut"></span></p>
-            <p style="font-size: 20px;"><span class="label">Total Paid:</span> <span id="printTotalPrice"></span></p>
-        </div>
-        <div class="print-footer">
-            <p>Thank you for choosing Grand Luxe. We look forward to your next visit.</p>
-            <p>Mumbai • Nariman Point • Excellence Defined</p>
-        </div>
+    <div id="printableReceipt" style="font-family: 'Outfit', sans-serif; background: #fff; width: 210mm; min-height: 297mm; box-sizing: border-box;">
+        <!-- Header Section -->
+        <section style="border-bottom: 3px solid #6A1E2D; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="flex: 1;">
+                <h1 style="font-family: 'Playfair Display', serif; color: #6A1E2D; margin: 0; font-size: 30px; letter-spacing: -1px; font-weight: 900;">GRAND LUXE</h1>
+                <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 9px; font-weight: 800; color: #D4AF37; margin: 4px 0 0 0;">Excellence Defined Since 1924</p>
+            </div>
+            <div style="text-align: right; flex: 1;">
+                <div style="display: inline-block; padding: 5px 12px; border: 1px solid #D4AF37; color: #D4AF37; font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; border-radius: 4px; margin-bottom: 10px;">Official Receipt</div>
+                <p style="margin: 0; font-weight: 800; color: #6A1E2D; font-size: 14px;" id="printBookingID_H">#LX-0000</p>
+                <p style="margin: 2px 0 0 0; font-size: 10px; color: #999;" id="printDate">Generated: --</p>
+            </div>
+        </section>
+
+        <!-- Information Columnar Grid -->
+        <section style="display: flex; gap: 30px; margin-bottom: 30px;">
+            <div style="flex: 1; padding: 20px; background: #fbfbfc; border-radius: 20px; border: 1px solid #f0f0f2;">
+                <h4 style="text-transform: uppercase; font-size: 8px; letter-spacing: 2px; color: #D4AF37; margin: 0 0 12px 0; font-weight: 800;">Principal Guest</h4>
+                <p style="margin: 0; font-weight: 800; font-size: 16px; color: #6A1E2D;" id="printGuestName"></p>
+                <p style="margin: 4px 0; font-size: 12px; color: #555;" id="printGuestEmail"></p>
+                <p style="margin: 0; font-size: 12px; color: #555;" id="printGuestPhone"></p>
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ddd;">
+                    <p style="margin: 0; font-size: 10px; color: #888; line-height: 1.4; font-style: italic;" id="printGuestAddress"></p>
+                </div>
+            </div>
+            <div style="flex: 1; padding: 20px; border: 1px solid #eee; border-radius: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h4 style="text-transform: uppercase; font-size: 8px; letter-spacing: 2px; color: #999; margin: 0; font-weight: 800;">Stay Information</h4>
+                    <span id="printStatus" style="font-size: 7px; font-weight: 900; color: #D4AF37; border: 1px solid #D4AF37; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px;"></span>
+                </div>
+                    <p style="margin: 0; font-weight: 800; font-size: 16px; color: #6A1E2D;" id="printRoomType"></p>
+                    <p style="margin: 4px 0; font-size: 12px; color: #666;">Room Number: <span id="printRoomNumber" style="font-weight: 800; color: #6A1E2D;"></span></p>
+                </div>
+                <div style="background: #1a1a1a; padding: 15px; border-radius: 12px; color: #fff;">
+                    <div style="display: flex; justify-content: space-between; gap: 20px;">
+                        <div style="flex: 1;">
+                            <p style="font-size: 7px; opacity: 0.6; text-transform: uppercase;">Arrival</p>
+                            <p style="font-size: 10px; font-weight: 700;" id="printCheckIn"></p>
+                        </div>
+                        <div style="flex: 1;">
+                            <p style="font-size: 7px; opacity: 0.6; text-transform: uppercase;">Departure</p>
+                            <p style="font-size: 10px; font-weight: 700;" id="printCheckOut"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Finalized Ledger -->
+        <section style="margin-bottom: 30px; overflow: hidden; border: 1px solid #e5e7eb; border-radius: 16px;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+                        <th style="padding: 12px 20px; text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280;">Item Description</th>
+                        <th style="padding: 12px 20px; text-align: right; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280;">Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 15px 20px; border-bottom: 1px solid #f3f4f6;">
+                            <strong style="color: #6A1E2D; font-size: 13px; display: block;">Residency Suite Stay</strong>
+                            <span style="font-size: 10px; color: #9ca3af;">Base allocation and luxury provisions.</span>
+                        </td>
+                        <td style="padding: 15px 20px; border-bottom: 1px solid #f3f4f6; text-align: right; font-weight: 800; font-size: 14px; color: #1f2937;" id="printBasePrice">--</td>
+                    </tr>
+                    <tr id="printOrdersRow" style="display: none;">
+                        <td style="padding: 15px 20px; border-bottom: 1px solid #f3f4f6;">
+                            <strong style="color: #6A1E2D; font-size: 13px; display: block;">Auxiliary Orders & Dining</strong>
+                            <span style="font-size: 10px; color: #9ca3af;">Aggregate of room service and refreshments.</span>
+                        </td>
+                        <td style="padding: 15px 20px; border-bottom: 1px solid #f3f4f6; text-align: right; font-weight: 800; font-size: 14px; color: #1f2937;" id="printServicePrice">--</td>
+                    </tr>
+                </tbody>
+            </table>
+            <!-- Final Settlement Footer -->
+            <div style="background: #6A1E2D; padding: 25px; display: flex; justify-content: space-between; align-items: center; color: #fff;">
+                <div>
+                    <h2 style="font-family: 'Playfair Display', serif; font-size: 16px; margin: 0; font-style: italic; color: #D4AF37;">Final Audit Settlement</h2>
+                    <p style="margin: 2px 0 0 0; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6;">Document Verified</p>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-size: 9px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; font-weight: 800;">Balance Due (Paid)</span>
+                    <h2 style="margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -1px;" id="printTotalPrice">--</h2>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <section style="text-align: center; color: #9ca3af; padding-top: 20px; border-top: 1px solid #f3f4f6;">
+            <div style="display: flex; justify-content: center; gap: 20px; margin-bottom: 15px; opacity: 0.5;">
+                <span style="font-size: 7px; font-weight: 900; letter-spacing: 1px;">S.E.C.U.R.E. P.A.Y.</span>
+                <span style="font-size: 7px; font-weight: 900; letter-spacing: 1px;">FIVE-STAR ACCREDITATION</span>
+            </div>
+            <p style="font-size: 8px; line-height: 1.6; margin: 0; color: #6b7280;">
+                <strong style="color: #6A1E2D;">GRAND LUXE HOTEL & RESIDENCES</strong><br>
+                Marine Drive, Nariman Point, Mumbai • concierge@grandluxe.com • +91 22 1234 5678
+            </p>
+        </section>
     </div>
 
         <!-- Manage Profile Modal -->
@@ -787,10 +983,30 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
         function viewBooking(booking) {
             document.getElementById('modalBookingID').innerText = '#LX-' + booking.id.toString().padStart(4, '0');
             document.getElementById('modalGuestName').innerText = booking.guest_name;
-            document.getElementById('modalRoomType').innerText = booking.room_type + ' Suite';
-            document.getElementById('modalCheckIn').innerText = booking.check_in;
-            document.getElementById('modalCheckOut').innerText = booking.check_out;
-            document.getElementById('modalTotalPrice').innerText = '₹' + parseInt(booking.total_price).toLocaleString();
+            document.getElementById('modalGuestEmail').innerText = booking.guest_email || 'Not provided';
+            document.getElementById('modalGuestPhone').innerText = booking.guest_phone || 'Not provided';
+            document.getElementById('modalGuestID').innerText = `${booking.id_proof_type || 'ID'}: ${booking.id_proof_number || '---'}`;
+            document.getElementById('modalGuestAddress').innerText = booking.permanent_address || 'No address recorded.';
+            
+            document.getElementById('modalRoomType').innerText = booking.room_type + ' Suite (#' + booking.room_number + ')';
+            document.getElementById('modalCheckIn').innerText = booking.formatted_check_in || booking.check_in;
+            document.getElementById('modalCheckOut').innerText = (booking.status === 'Checked-Out' && booking.formatted_actual_checkout) ? 
+                booking.formatted_actual_checkout : (booking.formatted_check_out || booking.check_out);
+            
+            const isSettled = booking.status === 'Checked-Out' && booking.final_bill;
+            const finalPrice = isSettled ? booking.final_bill : booking.total_price;
+            document.getElementById('modalTotalPrice').innerText = '₹' + parseFloat(finalPrice).toLocaleString();
+            
+            const reqCont = document.getElementById('modalRequestsContainer');
+            if (booking.special_requests && booking.special_requests.trim() !== '') {
+                reqCont.classList.remove('hidden');
+                document.getElementById('modalSpecialRequests').innerText = booking.special_requests;
+            } else {
+                reqCont.classList.add('hidden');
+            }
+
+            // Sync print button
+            document.getElementById('modalPrintBtn').onclick = () => printBooking(booking);
             
             document.getElementById('viewModal').classList.remove('hidden');
             document.getElementById('viewModal').classList.add('flex');
@@ -802,17 +1018,165 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
         }
 
         function printBooking(booking) {
-            document.getElementById('printBookingID').innerText = '#LX-' + booking.id.toString().padStart(4, '0');
+            document.getElementById('printBookingID_H').innerText = '#LX-' + booking.id.toString().padStart(4, '0');
+            document.getElementById('printDate').innerText = 'Date: ' + new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+            
             document.getElementById('printGuestName').innerText = booking.guest_name;
+            document.getElementById('printGuestEmail').innerText = booking.guest_email || '';
+            document.getElementById('printGuestPhone').innerText = booking.guest_phone || '';
+            document.getElementById('printGuestAddress').innerText = booking.permanent_address || '';
+
             document.getElementById('printRoomType').innerText = booking.room_type + ' Suite';
             document.getElementById('printRoomNumber').innerText = booking.room_number;
-            document.getElementById('printCheckIn').innerText = booking.check_in;
-            document.getElementById('printCheckOut').innerText = booking.check_out;
-            document.getElementById('printTotalPrice').innerText = '₹' + parseInt(booking.total_price).toLocaleString();
+            document.getElementById('printCheckIn').innerText = booking.formatted_check_in || booking.check_in;
+            document.getElementById('printCheckOut').innerText = (booking.status === 'Checked-Out' && booking.formatted_actual_checkout) ? 
+                booking.formatted_actual_checkout : (booking.formatted_check_out || booking.check_out);
             
-            window.print();
+            document.getElementById('printStatus').innerText = 'Status: ' + booking.status;
+            
+            const isSettled = booking.status === 'Checked-Out' && booking.final_bill;
+            const finalTotal = isSettled ? booking.final_bill : booking.total_price;
+            const basePrice = parseFloat(booking.total_price);
+            const servicePrice = isSettled ? (parseFloat(booking.final_bill) - basePrice) : 0;
+
+            document.getElementById('printBasePrice').innerText = '₹' + basePrice.toLocaleString();
+            
+            const ordersRow = document.getElementById('printOrdersRow');
+            if (servicePrice > 0) {
+                ordersRow.style.display = 'table-row';
+                document.getElementById('printServicePrice').innerText = '₹' + servicePrice.toLocaleString();
+            } else {
+                ordersRow.style.display = 'none';
+            }
+
+            document.getElementById('printTotalPrice').innerText = '₹' + parseFloat(finalTotal).toLocaleString();
+            
+            setTimeout(() => {
+                window.print();
+            }, 500);
         }
         
+        let currentHistoryPage = <?php echo $page; ?>;
+        let totalHistoryPages = <?php echo $total_pages; ?>;
+
+        function fetchHistory(page = 1) {
+            currentHistoryPage = page;
+            const tbody = document.getElementById('historyTableBody');
+            tbody.classList.add('opacity-30'); // Visual feedback for loading
+
+            fetch(`php/get_booking_history.php?page=${page}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    totalHistoryPages = data.total_pages;
+                    renderHistoryTable(data.history);
+                    updateHistoryPaginationUI(data);
+                }
+            })
+            .finally(() => tbody.classList.remove('opacity-30'));
+        }
+
+        function renderHistoryTable(history) {
+            const tbody = document.getElementById('historyTableBody');
+            if (history.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-10 text-center text-gray-400 italic">No residency archives found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = history.map(row => {
+                const s = row.status.toLowerCase();
+                let sClass = '';
+                if (s === 'confirmed') sClass = 'status-confirmed';
+                else if (s === 'completed') sClass = 'status-completed';
+                else if (s === 'cancelled') sClass = 'status-cancelled';
+
+                // Check if cancel button should show
+                const canCancel = (row.status === 'Confirmed' && new Date(row.check_in) > new Date());
+                const cancelBtn = canCancel ? `
+                    <button onclick="cancelBooking(${row.id})" class="p-2 text-red-400 hover:text-red-600 transition-all duration-300 hover:scale-125" title="Cancel Booking">
+                        <i class="fas fa-times-circle"></i>
+                    </button>
+                ` : '';
+
+                return `
+                    <tr class="animate-fade-in">
+                        <td class="pl-10 font-bold maroon-text">#LX-${row.id.toString().padStart(4, '0')}</td>
+                        <td>
+                            <p class="font-bold">${row.room_type} Suite</p>
+                            <p class="text-[10px] text-gray-400 font-bold uppercase">Room ${row.room_number}</p>
+                        </td>
+                        <td>${row.formatted_check_in}</td>
+                        <td>
+                            ${row.status === 'Checked-Out' && row.formatted_actual_checkout ? 
+                                `<p class="font-bold text-teal-600">${row.formatted_actual_checkout}</p><p class="text-[9px] uppercase tracking-tighter opacity-50">Actual Departure</p>` : 
+                                row.formatted_check_out}
+                        </td>
+                        <td class="font-bold maroon-text">
+                            ₹${row.status === 'Checked-Out' && row.formatted_final_bill ? row.formatted_final_bill : row.formatted_price}
+                        </td>
+                        <td><span class="status-badge ${sClass}">${row.status}</span></td>
+                        <td class="pr-10 text-right">
+                            <div class="flex items-center justify-end gap-1 sm:gap-3">
+                                ${cancelBtn}
+                                <button onclick='viewBooking(${JSON.stringify(row)})' class="p-2 text-gray-300 hover:text-gold transition-all duration-300 hover:scale-125" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button onclick='printBooking(${JSON.stringify(row)})' class="p-2 text-gray-300 hover:text-maroon transition-all duration-300 hover:scale-125" title="Print Receipt">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateHistoryPaginationUI(data) {
+            const container = document.getElementById('paginationContainer');
+            if (data.total_pages <= 1) {
+                container.classList.add('hidden');
+                return;
+            }
+            container.classList.remove('hidden');
+
+            document.getElementById('showingStats').innerText = `Showing ${data.offset + 1}-${Math.min(data.offset + data.limit, data.total_items)} of ${data.total_items} Archives`;
+
+            const prev = document.getElementById('prevBtn');
+            const next = document.getElementById('nextBtn');
+            
+            prev.disabled = (data.current_page <= 1);
+            prev.classList.toggle('opacity-50', data.current_page <= 1);
+            prev.classList.toggle('cursor-not-allowed', data.current_page <= 1);
+
+            next.disabled = (data.current_page >= data.total_pages);
+            next.classList.toggle('opacity-50', data.current_page >= data.total_pages);
+            next.classList.toggle('cursor-not-allowed', data.current_page >= data.total_pages);
+
+            // Redraw numbers
+            const pageNumbers = document.getElementById('pageNumbers');
+            let html = '';
+            for (let i = 1; i <= data.total_pages; i++) {
+                if (i === 1 || i === data.total_pages || (i >= data.current_page - 1 && i <= data.current_page + 1)) {
+                    html += `
+                        <button onclick="fetchHistory(${i})"
+                            class="page-num-btn w-10 h-10 rounded-xl ${i === data.current_page ? 'bg-maroon text-white active-page' : 'border border-gray-100 text-gray-400 hover:bg-gray-50'} flex items-center justify-center text-xs font-bold transition-all duration-300">
+                            ${i}
+                        </button>
+                    `;
+                } else if ((i === data.current_page - 2 && i > 1) || (i === data.current_page + 2 && i < data.total_pages)) {
+                    html += '<span class="text-gray-300">...</span>';
+                }
+            }
+            pageNumbers.innerHTML = html;
+        }
+
+        function changeHistoryPage(dir) {
+            const nextP = currentHistoryPage + dir;
+            if (nextP >= 1 && nextP <= totalHistoryPages) {
+                fetchHistory(nextP);
+            }
+        }
+
         let bookingToCancel = null;
 
         function cancelBooking(id) {

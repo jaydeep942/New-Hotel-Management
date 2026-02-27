@@ -25,13 +25,21 @@ $created_at = $user_data['created_at'];
 // Fetch menu items
 $menu_sql = "SELECT * FROM menu_items WHERE is_available = 1 ORDER BY category";
 $menu_res = $conn->query($menu_sql);
-$menu_items = [];
+$food_items = [];
+$drink_items = [];
+$amenity_items = [];
 while($row = $menu_res->fetch_assoc()){
-    $menu_items[] = $row;
+    if ($row['category'] === 'Refreshments') {
+        $drink_items[] = $row;
+    } elseif ($row['category'] === 'Amenities') {
+        $amenity_items[] = $row;
+    } else {
+        $food_items[] = $row;
+    }
 }
 
 // SECURE ACCESS CHECK: Only allow checked-in guests to ORDER
-$booking_check_sql = "SELECT * FROM bookings WHERE user_id = ? AND status = 'Confirmed' AND CURRENT_DATE BETWEEN check_in AND check_out LIMIT 1";
+$booking_check_sql = "SELECT b.*, r.room_number FROM bookings b JOIN rooms r ON b.room_id = r.id WHERE b.user_id = ? AND b.status IN ('Confirmed', 'Checked-In') AND CURRENT_DATE BETWEEN b.check_in AND b.check_out LIMIT 1";
 $check_stmt = $conn->prepare($booking_check_sql);
 $check_stmt->bind_param("i", $user_id);
 $check_stmt->execute();
@@ -168,6 +176,113 @@ $canUseServices = $booking_status ? true : false;
         }
 
         .hidden-service { display: none !important; }
+
+        /* Modern Cart Styles */
+        .cart-container {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(106, 30, 45, 0.05);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        
+        .cart-item-image {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            object-fit: cover;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+        }
+
+        .qty-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--gold);
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e2e2; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--maroon); }
+
+        /* Food Order Style Bottom Bar */
+        .bottom-checkout-bar {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            width: calc(100% - 48px);
+            max-width: 600px;
+            background: var(--maroon);
+            padding: 16px 24px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 40px rgba(106, 30, 45, 0.3);
+        }
+
+        .bottom-checkout-bar.active {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .view-cart-btn {
+            background: white;
+            color: var(--maroon);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+        
+        .view-cart-btn:hover {
+            background: var(--gold);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        #mobileCartDrawer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: auto;
+            max-height: 85vh;
+            background: white;
+            z-index: 200;
+            transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+            border-radius: 40px 40px 0 0;
+            overflow: hidden;
+            box-shadow: 0 -20px 50px rgba(0,0,0,0.15);
+            transform: translateY(100%);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #mobileCartDrawer.open {
+            transform: translateY(0);
+        }
+
+        .bottom-checkout-bar.drawer-open {
+            opacity: 0;
+            transform: translateX(-50%) translateY(100px);
+            pointer-events: none;
+        }
     </style>
 </head>
 
@@ -250,7 +365,7 @@ $canUseServices = $booking_status ? true : false;
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
                 <!-- Type 1: In-Suite Dining -->
-                <div onclick="openService('dining')" class="service-card h-[500px] rounded-[40px] bg-[url('https://images.unsplash.com/photo-1544148103-0773bf10d330?auto=format&fit=crop&q=82&w=800')] bg-cover bg-center flex flex-col justify-end p-10 group" onerror="this.style.backgroundImage='url(https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=82&w=800)'">
+                <div onclick="openService('dining')" class="service-card h-[500px] rounded-[40px] bg-[url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=82&w=800')] bg-cover bg-center flex flex-col justify-end p-10 group">
                     <div class="relative z-10">
                         <div class="w-16 h-16 bg-white/20 backdrop-blur-xl rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                             <i class="fas fa-utensils text-white text-2xl"></i>
@@ -262,19 +377,19 @@ $canUseServices = $booking_status ? true : false;
                 </div>
 
                 <!-- Type 2: Beverage Service -->
-                <div onclick="openService('water')" class="service-card h-[500px] rounded-[40px] bg-[url('https://images.unsplash.com/photo-1559839914-17aae19cea9e?auto=format&fit=crop&q=82&w=800')] bg-cover bg-center flex flex-col justify-end p-10 group">
+                <div onclick="openService('water')" class="service-card h-[500px] rounded-[40px] bg-[url('https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=82&w=800')] bg-cover bg-center flex flex-col justify-end p-10 group">
                     <div class="relative z-10">
                         <div class="w-16 h-16 bg-white/20 backdrop-blur-xl rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                             <i class="fas fa-wine-bottle text-white text-2xl"></i>
                         </div>
                         <h3 class="text-3xl font-bold text-white mb-2" style="font-family: 'Playfair Display', serif;">Pure Refreshments</h3>
                         <p class="text-white/80 text-sm mb-6">Premium bottled water and chilled beverages at your door.</p>
-                        <span class="px-6 py-3 bg-white text-maroon font-bold rounded-xl text-xs uppercase tracking-widest group-hover:bg-teal group-hover:text-white transition-colors">Request Service</span>
+                        <span class="px-6 py-3 bg-white text-maroon font-bold rounded-xl text-xs uppercase tracking-widest group-hover:bg-teal group-hover:text-white transition-colors">Order Drinks</span>
                     </div>
                 </div>
 
                 <!-- Type 3: Guest Amenities -->
-                <div onclick="openService('amenities')" class="service-card h-[500px] rounded-[40px] bg-[url('https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&q=82&w=800')] bg-cover bg-center flex flex-col justify-end p-10 group">
+                <div onclick="openService('amenities')" class="service-card h-[500px] rounded-[40px] bg-[url('https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&q=82&w=800')] bg-cover bg-center flex flex-col justify-end p-10 group">
                     <div class="relative z-10">
                         <div class="w-16 h-16 bg-white/20 backdrop-blur-xl rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                             <i class="fas fa-bed text-white text-2xl"></i>
@@ -288,8 +403,8 @@ $canUseServices = $booking_status ? true : false;
         </div>
 
         <!-- STEP 2: FOOD SERVICE VIEW (Hidden initially) -->
-        <div id="diningService" class="hidden-service flex flex-col xl:flex-row gap-8 animate-up">
-            <div class="flex-1">
+        <div id="diningService" class="hidden-service animate-up">
+            <div class="w-full">
                 <button onclick="goBack()" class="mb-8 flex items-center space-x-2 text-gray-400 hover:text-maroon font-bold text-xs uppercase tracking-widest transition-all">
                     <i class="fas fa-arrow-left"></i> <span>Back to Services</span>
                 </button>
@@ -310,7 +425,7 @@ $canUseServices = $booking_status ? true : false;
 
                 <!-- Menu Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-8" id="menuGrid">
-                    <?php foreach($menu_items as $item): ?>
+                    <?php foreach($food_items as $item): ?>
                     <div class="menu-item bg-white rounded-[40px] overflow-hidden menu-item-card group" data-category="<?php echo $item['category']; ?>">
                         <div class="h-56 relative overflow-hidden">
                             <img src="<?php echo $item['image_url']; ?>" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="<?php echo $item['name']; ?>" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=82&w=800'">
@@ -326,12 +441,12 @@ $canUseServices = $booking_status ? true : false;
                             <p class="text-gray-400 text-xs leading-relaxed mb-6"><?php echo htmlspecialchars($item['description']); ?></p>
                             
                             <div class="flex items-center justify-between border-t border-gray-50 pt-4">
-                                <div class="flex items-center space-x-4 bg-gray-50 px-3 py-1.5 rounded-xl">
-                                    <button onclick="updateCartItem(<?php echo $item['id']; ?>, -1, '<?php echo addslashes($item['name']); ?>', <?php echo $item['price']; ?>)" class="text-maroon hover:scale-125 transition-transform"><i class="fas fa-minus text-[10px]"></i></button>
-                                    <span id="item-qty-<?php echo $item['id']; ?>" class="font-bold text-sm w-4 text-center">0</span>
-                                    <button onclick="updateCartItem(<?php echo $item['id']; ?>, 1, '<?php echo addslashes($item['name']); ?>', <?php echo $item['price']; ?>)" class="text-maroon hover:scale-125 transition-transform"><i class="fas fa-plus text-[10px]"></i></button>
+                                <div class="flex items-center space-x-4 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+                                    <button onclick="updateCartItem(<?php echo $item['id']; ?>, -1, '<?php echo addslashes($item['name']); ?>', <?php echo $item['price']; ?>, '<?php echo $item['image_url']; ?>')" class="text-maroon hover:scale-125 transition-transform"><i class="fas fa-minus text-[10px]"></i></button>
+                                    <span id="item-qty-<?php echo $item['id']; ?>" class="font-bold text-sm min-w-[20px] text-center">0</span>
+                                    <button onclick="updateCartItem(<?php echo $item['id']; ?>, 1, '<?php echo addslashes($item['name']); ?>', <?php echo $item['price']; ?>, '<?php echo $item['image_url']; ?>')" class="text-maroon hover:scale-125 transition-transform"><i class="fas fa-plus text-[10px]"></i></button>
                                 </div>
-                                <span class="text-[9px] font-black text-gold uppercase tracking-[2px]"><?php echo $item['category']; ?></span>
+                                <span class="text-[9px] font-black text-gold uppercase tracking-[2px] bg-gold/5 px-2 py-1 rounded-md"><?php echo $item['category']; ?></span>
                             </div>
                         </div>
                     </div>
@@ -339,32 +454,143 @@ $canUseServices = $booking_status ? true : false;
                 </div>
             </div>
 
-            <!-- Cart Sidebar -->
-            <div class="w-full xl:w-96">
-                <div class="bg-white rounded-[40px] p-10 premium-shadow sticky top-32">
-                    <h3 class="text-2xl font-bold maroon-text mb-8" style="font-family: 'Playfair Display', serif;">Your Gourmet Bag</h3>
-                    <div id="cartItems" class="space-y-6 mb-12 min-h-[50px] max-h-[300px] overflow-y-auto">
-                        <div class="text-center py-6 text-gray-300"><p class="text-[10px] uppercase tracking-[3px]">Cart is empty</p></div>
-                    </div>
-                    <div class="border-t-2 border-dashed border-gray-100 pt-8">
-                        <div class="flex justify-between items-center mb-8">
-                            <span class="text-gray-400 font-bold text-xs uppercase tracking-[3px]">Total</span>
-                            <span class="maroon-text font-black text-2xl">₹<span id="cartTotal">0.00</span></span>
+            </div>
+        </div>
+
+        <!-- STEP 3: REFRESHMENT SERVICE VIEW -->
+        <div id="refreshmentService" class="hidden-service animate-up">
+            <div class="w-full">
+                <button onclick="goBack()" class="mb-8 flex items-center space-x-2 text-gray-400 hover:text-teal font-bold text-xs uppercase tracking-widest transition-all">
+                    <i class="fas fa-arrow-left"></i> <span>Back to Services</span>
+                </button>
+
+                </div>
+
+                <!-- Beverages Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-8">
+                    <?php foreach($drink_items as $item): ?>
+                    <div class="bg-white rounded-[40px] overflow-hidden menu-item-card group border border-gray-50">
+                        <div class="h-56 relative overflow-hidden">
+                            <img src="<?php echo $item['image_url']; ?>" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="<?php echo $item['name']; ?>">
+                            <div class="absolute top-4 right-4 bg-teal/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-white font-bold text-[9px] uppercase tracking-[2px]">
+                                <?php echo $item['sub_category']; ?>
+                            </div>
                         </div>
-                        <button id="orderBtn" disabled onclick="placeDiningOrder()" class="w-full py-5 bg-maroon text-white rounded-2xl font-bold hover:bg-gold transition-all duration-300 shadow-xl shadow-maroon/10 disabled:opacity-20">Process Order</button>
+                        <div class="p-8">
+                            <div class="flex justify-between items-start mb-2">
+                                <h5 class="text-lg font-bold maroon-text"><?php echo htmlspecialchars($item['name']); ?></h5>
+                                <span class="font-black text-teal text-lg">₹<?php echo number_format($item['price'], 2); ?></span>
+                            </div>
+                            <p class="text-gray-400 text-xs leading-relaxed mb-6"><?php echo htmlspecialchars($item['description']); ?></p>
+                            
+                            <div class="flex items-center justify-between border-t border-gray-50 pt-4">
+                                <div class="flex items-center space-x-4 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+                                    <button onclick="updateCartItem(<?php echo $item['id']; ?>, -1, '<?php echo addslashes($item['name']); ?>', <?php echo $item['price']; ?>, '<?php echo $item['image_url']; ?>')" class="text-teal hover:scale-125 transition-transform"><i class="fas fa-minus text-[10px]"></i></button>
+                                    <span id="item-qty-<?php echo $item['id']; ?>" class="font-bold text-sm min-w-[20px] text-center">0</span>
+                                    <button onclick="updateCartItem(<?php echo $item['id']; ?>, 1, '<?php echo addslashes($item['name']); ?>', <?php echo $item['price']; ?>, '<?php echo $item['image_url']; ?>')" class="text-teal hover:scale-125 transition-transform"><i class="fas fa-plus text-[10px]"></i></button>
+                                </div>
+                                <span class="text-[9px] font-black text-teal/40 uppercase tracking-[2px] bg-teal/5 px-2 py-1 rounded-md">Premium</span>
+                            </div>
+                        </div>
                     </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+        <!-- STEP 4: AMENITIES SERVICE VIEW -->
+        <div id="amenitiesService" class="hidden-service animate-up">
+            <div class="w-full">
+                <button onclick="goBack()" class="mb-8 flex items-center space-x-2 text-gray-400 hover:text-gold font-bold text-xs uppercase tracking-widest transition-all">
+                    <i class="fas fa-arrow-left"></i> <span>Back to Services</span>
+                </button>
+
+                <!-- Amenities Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-8">
+                    <?php foreach($amenity_items as $item): ?>
+                    <div class="bg-white rounded-[40px] overflow-hidden menu-item-card group border border-gray-50">
+                        <div class="h-56 relative overflow-hidden">
+                            <img src="<?php echo $item['image_url']; ?>" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="<?php echo $item['name']; ?>">
+                            <div class="absolute top-4 right-4 bg-gold/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-white font-bold text-[9px] uppercase tracking-[2px]">
+                                <?php echo $item['sub_category']; ?>
+                            </div>
+                        </div>
+                        <div class="p-8">
+                            <div class="flex justify-between items-start mb-2">
+                                <h5 class="text-lg font-bold maroon-text"><?php echo htmlspecialchars($item['name']); ?></h5>
+                                <span class="font-black text-gold text-lg">₹<?php echo number_format($item['price'], 2); ?></span>
+                            </div>
+                            <p class="text-gray-400 text-xs leading-relaxed mb-6"><?php echo htmlspecialchars($item['description']); ?></p>
+                            
+                            <div class="flex items-center justify-between border-t border-gray-50 pt-4">
+                                <div class="flex items-center space-x-4 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+                                    <button onclick="updateCartItem(<?php echo $item['id']; ?>, -1, '<?php echo addslashes($item['name']); ?>', <?php echo $item['price']; ?>, '<?php echo $item['image_url']; ?>')" class="text-gold hover:scale-125 transition-transform"><i class="fas fa-minus text-[10px]"></i></button>
+                                    <span id="item-qty-<?php echo $item['id']; ?>" class="font-bold text-sm min-w-[20px] text-center">0</span>
+                                    <button onclick="updateCartItem(<?php echo $item['id']; ?>, 1, '<?php echo addslashes($item['name']); ?>', <?php echo $item['price']; ?>, '<?php echo $item['image_url']; ?>')" class="text-gold hover:scale-125 transition-transform"><i class="fas fa-plus text-[10px]"></i></button>
+                                </div>
+                                <span class="text-[9px] font-black text-gold/40 uppercase tracking-[2px] bg-gold/5 px-2 py-1 rounded-md">Luxury</span>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Success Toast -->
-    <div id="serviceToast" class="fixed bottom-10 right-10 z-[200] hidden">
-        <div class="bg-maroon p-6 rounded-[24px] text-white flex items-center space-x-4 premium-shadow animate-up">
-            <div class="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center"><i class="fas fa-check"></i></div>
-            <div><p class="font-bold" id="toastMsg">Order Placed!</p><p class="text-[10px] uppercase opacity-70" id="toastSub">Our concierge is on the way</p></div>
+    <!-- Mobile Sticky Checkout Bar -->
+    <div id="stickyCheckout" class="bottom-checkout-bar">
+        <div class="flex items-center gap-4 text-white">
+            <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                <i class="fas fa-shopping-basket text-lg"></i>
+            </div>
+            <div>
+                <p class="text-[10px] uppercase font-bold opacity-60 leading-none mb-1">Items Added</p>
+                <p class="font-black text-lg">₹<span class="cartTotalValue">0.00</span></p>
+            </div>
+        </div>
+        <button onclick="toggleMobileCart()" class="view-cart-btn">View My Basket</button>
+    </div>
+
+    <!-- Mobile Cart Drawer -->
+    <div id="mobileCartDrawer">
+        <div class="px-8 pt-10 pb-8 flex-1 overflow-y-auto custom-scrollbar">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h3 class="text-2xl font-bold maroon-text" style="font-family: 'Playfair Display', serif;">Your Selection</h3>
+                    <p class="text-[9px] uppercase tracking-[2px] text-gray-400 font-bold mt-1">Review Items</p>
+                </div>
+                <button onclick="toggleMobileCart()" class="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 hover:bg-maroon hover:text-white transition-all">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="mobileCartItemsList" class="space-y-6 mb-8">
+                <!-- Populated by JS -->
+            </div>
+
+            <div class="border-t border-dashed border-gray-100 pt-8 mt-4 space-y-3">
+                <div class="flex justify-between items-center text-xs font-bold text-gray-400 uppercase tracking-widest">
+                    <span>Subtotal</span>
+                    <span class="text-gray-600">₹<span class="subtotalValue">0.00</span></span>
+                </div>
+                <div class="flex justify-between items-center text-sm font-bold maroon-text pt-2">
+                    <span class="uppercase tracking-widest">Total Amount</span>
+                    <span class="text-xl">₹<span class="cartTotalValue">0.00</span></span>
+                </div>
+            </div>
+        </div>
+        <div class="px-8 pb-10">
+            <button onclick="placeDiningOrder('mobile')" class="w-full py-5 bg-maroon text-white rounded-[24px] font-bold shadow-xl shadow-maroon/20 flex items-center justify-center gap-3 hover:bg-gold transition-all">
+                <span>Place Order Now</span>
+                <i class="fas fa-arrow-right text-[10px]"></i>
+            </button>
         </div>
     </div>
+
+    <div id="drawerOverlay" onclick="toggleMobileCart()" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[190] hidden opacity-0 transition-opacity duration-300"></div>
+
+    <!-- Success Toast -->
+
 
         <!-- Manage Profile Modal -->
         <div id="profileModal" class="fixed inset-0 z-[110] hidden">
@@ -485,6 +711,23 @@ $canUseServices = $booking_status ? true : false;
             </div>
         </div>
 
+        <!-- Premium Alert Modal -->
+        <div id="premiumAlertModal" class="fixed inset-0 z-[300] hidden">
+            <div id="alertBackdrop" class="absolute inset-0 bg-black/20 backdrop-blur-md transition-opacity duration-300 opacity-0" onclick="closePremiumAlert()"></div>
+            <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+                <div id="alertContent" class="bg-white w-full max-w-sm rounded-[40px] shadow-2xl p-10 text-center transform scale-90 opacity-0 transition-all duration-300 pointer-events-auto border border-gray-100">
+                    <div id="alertIconContainer" class="w-20 h-20 bg-maroon/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i id="alertIcon" class="fas fa-shield-alt text-4xl text-maroon"></i>
+                    </div>
+                    <h3 id="alertTitle" class="text-2xl font-bold maroon-text mb-2" style="font-family: 'Playfair Display', serif;">Security Protocol</h3>
+                    <p id="alertMessage" class="text-gray-400 text-sm leading-relaxed mb-8">Access restricted for verified guests only.</p>
+                    <button onclick="closePremiumAlert()" class="w-full py-4 bg-maroon text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-maroon/20">
+                        Acknowledge
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Premium Toast -->
         <div id="premiumToast" class="fixed bottom-10 right-10 z-[200] hidden">
             <div id="toastInner" class="p-6 rounded-[28px] text-white flex items-center space-x-4 shadow-2xl transition-all duration-300 transform translate-y-10 opacity-0">
@@ -501,6 +744,7 @@ $canUseServices = $booking_status ? true : false;
     <script>
         let activeCuisine = 'all';
         let cart = {};
+        const canUseServices = <?php echo $canUseServices ? 'true' : 'false'; ?>;
 
         // Handle direct links from Dashboard
         window.onload = function() {
@@ -512,18 +756,33 @@ $canUseServices = $booking_status ? true : false;
         };
 
         function openService(type) {
-            document.getElementById('serviceSelection').classList.add('hidden-service');
+            document.getElementById('serviceSelection').classList.add('hidden');
+            document.getElementById('diningService').classList.add('hidden-service');
+            document.getElementById('refreshmentService').classList.add('hidden-service');
+            document.getElementById('amenitiesService').classList.add('hidden-service');
+
             if (type === 'dining') {
                 document.getElementById('diningService').classList.remove('hidden-service');
+                updateFilter('cuisine', 'all');
+            } else if (type === 'water') {
+                document.getElementById('refreshmentService').classList.remove('hidden-service');
+            } else if (type === 'amenities') {
+                document.getElementById('amenitiesService').classList.remove('hidden-service');
             } else {
+                if (!canUseServices) {
+                    showPremiumAlert("Access Restricted", "You are not curruntly stay in hotel");
+                    return;
+                }
                 showToast('Request Received!', 'Our staff will deliver to your room shortly.');
-                document.getElementById('serviceSelection').classList.remove('hidden-service');
+                document.getElementById('serviceSelection').classList.remove('hidden');
             }
         }
 
         function goBack() {
             document.getElementById('diningService').classList.add('hidden-service');
-            document.getElementById('serviceSelection').classList.remove('hidden-service');
+            document.getElementById('refreshmentService').classList.add('hidden-service');
+            document.getElementById('amenitiesService').classList.add('hidden-service');
+            document.getElementById('serviceSelection').classList.remove('hidden');
         }
 
         function updateFilter(type, value) {
@@ -537,32 +796,140 @@ $canUseServices = $booking_status ? true : false;
             });
         }
 
-        function updateCartItem(id, delta, name, price) {
-            if (!cart[id]) cart[id] = { name: name, price: price, qty: 0 };
+        function updateCartItem(id, delta, name, price, image) {
+            if (!cart[id]) {
+                if(delta < 0) return;
+                cart[id] = { name: name, price: price, qty: 0, image: image };
+            }
             cart[id].qty += delta;
             if (cart[id].qty < 0) cart[id].qty = 0;
-            document.getElementById('item-qty-' + id).innerText = cart[id].qty;
+            
+            // Update UI count in all possible grids
+            document.querySelectorAll('[id^="item-qty-' + id + '"]').forEach(el => el.innerText = cart[id].qty);
+            
             renderCart();
+        }
+
+        function toggleMobileCart() {
+            const drawer = document.getElementById('mobileCartDrawer');
+            const overlay = document.getElementById('drawerOverlay');
+            const stickyBar = document.getElementById('stickyCheckout');
+            
+            if (drawer.classList.contains('open')) {
+                drawer.classList.remove('open');
+                stickyBar.classList.remove('drawer-open');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+                document.body.classList.remove('overflow-hidden');
+            } else {
+                drawer.classList.add('open');
+                stickyBar.classList.add('drawer-open');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+                document.body.classList.add('overflow-hidden');
+            }
         }
 
         function renderCart() {
             const container = document.getElementById('cartItems');
-            let html = '', total = 0, count = 0;
+            const containerRef = document.getElementById('cartItemsRefresh');
+            const containerAme = document.getElementById('cartItemsAmenities');
+            const mobileContainer = document.getElementById('mobileCartItemsList');
+            let html = '', subtotal = 0;
+            
             for (const id in cart) {
                 if (cart[id].qty > 0) {
-                    const sub = cart[id].qty * cart[id].price;
-                    total += sub; count++;
-                    html += `<div class="flex justify-between items-center"><div class="text-xs font-bold maroon-text">${cart[id].name}<br><span class="text-[9px] text-gray-400">${cart[id].qty} x ₹${cart[id].price}</span></div><span class="text-xs font-black maroon-text">₹${sub.toFixed(2)}</span></div>`;
+                    const itemSub = cart[id].qty * cart[id].price;
+                    subtotal += itemSub;
+                    html += `
+                        <div class="flex items-center gap-4 group animate-fade-in">
+                            <div class="relative flex-shrink-0">
+                                <img src="${cart[id].image}" class="cart-item-image" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=82&w=800'">
+                                <div class="qty-badge">${cart[id].qty}</div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-sm font-bold maroon-text leading-tight truncate mb-1">${cart[id].name}</h4>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="updateCartItem(${id}, -1)" class="w-6 h-6 rounded-lg bg-gray-50 flex items-center justify-center text-[10px] text-gray-400 hover:bg-maroon hover:text-white transition-all"><i class="fas fa-minus"></i></button>
+                                    <button onclick="updateCartItem(${id}, 1)" class="w-6 h-6 rounded-lg bg-gray-50 flex items-center justify-center text-[10px] text-gray-400 hover:bg-teal hover:text-white transition-all"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[9px] text-gray-400 font-bold mb-1">₹${cart[id].price}</p>
+                                <span class="text-xs font-black maroon-text">₹${itemSub.toFixed(2)}</span>
+                            </div>
+                        </div>`;
                 }
             }
-            container.innerHTML = html || '<div class="text-center py-6 text-gray-300"><p class="text-[10px] uppercase tracking-[3px]">Empty Bag</p></div>';
-            document.getElementById('cartTotal').innerText = total.toFixed(2);
-            document.getElementById('orderBtn').disabled = total === 0;
+            
+            const emptyDiningHtml = `
+                <div class="flex flex-col items-center justify-center py-12 text-center">
+                    <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-gray-200">
+                        <i class="fas fa-utensils text-3xl"></i>
+                    </div>
+                    <p class="text-[10px] uppercase tracking-[3px] text-gray-300 font-bold">Your basket is empty</p>
+                </div>`;
+            
+            const emptyRefreshHtml = `
+                <div class="flex flex-col items-center justify-center py-12 text-center">
+                    <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-gray-200">
+                        <i class="fas fa-glass-whiskey text-3xl"></i>
+                    </div>
+                    <p class="text-[10px] uppercase tracking-[3px] text-gray-300 font-bold">Tray is Empty</p>
+                </div>`;
+
+            const emptyAmenityHtml = `
+                <div class="flex flex-col items-center justify-center py-12 text-center">
+                    <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-gray-200">
+                        <i class="fas fa-bed text-3xl"></i>
+                    </div>
+                    <p class="text-[10px] uppercase tracking-[3px] text-gray-300 font-bold">Selection Empty</p>
+                </div>`;
+            
+            if(container) container.innerHTML = html || emptyDiningHtml;
+            if(containerRef) containerRef.innerHTML = html || emptyRefreshHtml;
+            if(containerAme) containerAme.innerHTML = html || emptyAmenityHtml;
+            if(mobileContainer) mobileContainer.innerHTML = html || `<div class='text-center py-10 text-gray-300 text-xs font-bold uppercase tracking-widest'>No items selected</div>`;
+            
+            const total = subtotal; // Removing service charge for simplicity as it was confusing
+            
+            document.querySelectorAll('.subtotalValue').forEach(el => el.innerText = subtotal.toFixed(2));
+            document.querySelectorAll('.cartTotalValue, #cartTotal').forEach(el => el.innerText = total.toFixed(2));
+            
+            const orderBtn = document.getElementById('orderBtn');
+            const orderBtnRef = document.getElementById('orderBtnRefresh');
+            const orderBtnAme = document.getElementById('orderBtnAmenities');
+            if(orderBtn) orderBtn.disabled = subtotal === 0;
+            if(orderBtnRef) orderBtnRef.disabled = subtotal === 0;
+            if(orderBtnAme) orderBtnAme.disabled = subtotal === 0;
+
+            // Handle Sticky Checkout Bar visibility
+            const stickyBar = document.getElementById('stickyCheckout');
+            if (subtotal > 0) {
+                stickyBar.classList.add('active');
+            } else {
+                stickyBar.classList.remove('active');
+                if (document.getElementById('mobileCartDrawer').classList.contains('open')) {
+                    toggleMobileCart();
+                }
+            }
         }
 
-        function placeDiningOrder() {
-            const btn = document.getElementById('orderBtn');
-            const total = parseFloat(document.getElementById('cartTotal').innerText);
+        function placeDiningOrder(serviceType = 'dining') {
+            if (!canUseServices) {
+                showPremiumAlert("Access Restricted", "You are not curruntly stay in hotel");
+                return;
+            }
+            let btn;
+            if (serviceType === 'dining') btn = document.getElementById('orderBtn');
+            else if (serviceType === 'refresh') btn = document.getElementById('orderBtnRefresh');
+            else if (serviceType === 'amenities') btn = document.getElementById('orderBtnAmenities');
+            else btn = document.querySelector('#mobileCartDrawer button');
+            
+            let totalStr = "0.00";
+            const totalEl = document.querySelector('.cartTotalValue') || document.getElementById('cartTotal');
+            if(totalEl) totalStr = totalEl.innerText;
+            const totalVal = parseFloat(totalStr);
             
             const cartItems = [];
             for (const id in cart) {
@@ -575,35 +942,55 @@ $canUseServices = $booking_status ? true : false;
                 }
             }
 
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            if (cartItems.length === 0) return;
+
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
             btn.disabled = true;
 
             const formData = new FormData();
             formData.append('items', JSON.stringify(cartItems));
-            formData.append('total_price', total);
+            formData.append('total_price', totalVal);
 
             fetch('php/place_order.php', {
                 method: 'POST',
                 body: formData
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    showToast('Order Received!', 'Chef is preparing your meal.');
-                    cart = {}; 
-                    renderCart();
-                    document.querySelectorAll('[id^="item-qty-"]').forEach(el => el.innerText = '0');
-                    setTimeout(() => goBack(), 2000);
-                } else {
-                    alert('Failed to place order: ' + data.message);
+            .then(res => res.text()) // Get raw text first to handle non-json errors
+            .then(text => {
+                try {
+                    const data = JSON.parse(text);
+                    if (data.success) {
+                        let successTitle = 'Order Received!';
+                        let successMsg = 'Chef is preparing your meal.';
+                        
+                        if (serviceType === 'refresh') {
+                            successTitle = 'Beverage Request!';
+                            successMsg = 'Our barista is preparing your drinks.';
+                        } else if (serviceType === 'amenities' || serviceType === 'mobile' || serviceType === 'room') {
+                            successTitle = 'Request Received!';
+                            successMsg = 'Our staff will deliver to your room shortly.';
+                        }
+
+                        showPremiumMessage(successTitle, successMsg);
+                        cart = {}; 
+                        renderCart();
+                        document.querySelectorAll('[id^="item-qty-"]').forEach(el => el.innerText = '0');
+                        setTimeout(() => goBack(), 2000);
+                    } else {
+                        showPremiumAlert("Order Issue", data.message);
+                    }
+                } catch (e) {
+                    console.error("Non-JSON Response:", text);
+                    showPremiumAlert("System Error", "The server returned an invalid response. Please try again.");
                 }
-                btn.innerText = 'Process Order';
+                btn.innerHTML = originalText;
                 btn.disabled = false;
             })
             .catch(err => {
-                console.error(err);
-                alert('An error occurred while placing your order.');
-                btn.innerText = 'Process Order';
+                console.error("Fetch Error:", err);
+                showPremiumAlert("System Error", "An error occurred while connecting to the order service.");
+                btn.innerHTML = originalText;
                 btn.disabled = false;
             });
         }
@@ -768,12 +1155,49 @@ $canUseServices = $booking_status ? true : false;
         }
 
         function showToast(title, sub) {
-            const toast = document.getElementById('serviceToast');
-            document.getElementById('toastMsg').innerText = title;
-            document.getElementById('toastSub').innerText = sub;
-            toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 5000);
+            showPremiumMessage(title, sub, 'success');
         }
+
+        function showPremiumAlert(title, message, type = 'error') {
+            const modal = document.getElementById('premiumAlertModal');
+            const content = document.getElementById('alertContent');
+            const titleEl = document.getElementById('alertTitle');
+            const msgEl = document.getElementById('alertMessage');
+            const iconEl = document.getElementById('alertIcon');
+            const iconContainer = document.getElementById('alertIconContainer');
+
+            titleEl.innerText = title;
+            msgEl.innerText = message;
+            
+            if (type === 'error') {
+                iconEl.className = 'fas fa-shield-alt text-4xl text-maroon';
+                iconContainer.className = 'w-20 h-20 bg-maroon/10 rounded-full flex items-center justify-center mx-auto mb-6';
+            } else {
+                iconEl.className = 'fas fa-check-circle text-4xl text-teal';
+                iconContainer.className = 'w-20 h-20 bg-teal/10 rounded-full flex items-center justify-center mx-auto mb-6';
+            }
+
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            setTimeout(() => {
+                document.getElementById('alertBackdrop').classList.add('opacity-100');
+                content.classList.remove('scale-90', 'opacity-0');
+            }, 10);
+        }
+
+        function closePremiumAlert() {
+            const modal = document.getElementById('premiumAlertModal');
+            const content = document.getElementById('alertContent');
+            
+            document.getElementById('alertBackdrop').classList.remove('opacity-100');
+            content.classList.add('scale-90', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }, 300);
+        }
+
     </script>
 </body>
 </html>

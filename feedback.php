@@ -22,17 +22,39 @@ $nationality = $user_data['nationality'] ?? '';
 $dob = $user_data['dob'] ?? '';
 $created_at = $user_data['created_at'];
 
-// SECURE ACCESS CHECK: Only allow checked-in guests
-$booking_check_sql = "SELECT * FROM bookings WHERE user_id = ? AND status = 'Confirmed' AND CURRENT_DATE BETWEEN check_in AND check_out LIMIT 1";
+// AUTO-INITIALIZE FEEDBACK TABLE IF NOT EXISTS
+$table_init_sql = "CREATE TABLE IF NOT EXISTS feedbacks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    rating INT NOT NULL,
+    message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)";
+$conn->query($table_init_sql);
+
+// SECURE ACCESS CHECK: Only allow checked-in guests to SUBMIT
+$booking_check_sql = "SELECT * FROM bookings WHERE user_id = ? AND status IN ('Confirmed', 'Checked-In') AND CURRENT_DATE BETWEEN check_in AND check_out LIMIT 1";
 $check_stmt = $conn->prepare($booking_check_sql);
 $check_stmt->bind_param("i", $user_id);
 $check_stmt->execute();
 $booking_status = $check_stmt->get_result()->fetch_assoc();
+$canUseFeedback = $booking_status ? true : false;
 
-if (!$booking_status) {
-    header("Location: customer-dashboard.php?error=checkin_required");
-    exit();
-}
+// Fetch initial total pages for pagination
+$count_query = "SELECT COUNT(*) as total FROM feedbacks WHERE user_id = ?";
+$c_stmt = $conn->prepare($count_query);
+$c_stmt->bind_param("i", $user_id);
+$c_stmt->execute();
+$total_feedbacks = $c_stmt->get_result()->fetch_assoc()['total'];
+$total_pages = ceil($total_feedbacks / 6);
+
+// Fetch initial feedback history (first page)
+$history_sql = "SELECT category, rating, message, created_at FROM feedbacks WHERE user_id = ? ORDER BY created_at DESC LIMIT 6";
+$h_stmt = $conn->prepare($history_sql);
+$h_stmt->bind_param("i", $user_id);
+$h_stmt->execute();
+$feedback_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -150,23 +172,46 @@ if (!$booking_status) {
         }
         .animate-slide { animation: slideIn 0.5s ease-out forwards; }
 
-        /* Premium Modal & Inputs */
-        .modal-active { overflow: hidden; }
-        .input-group input, .input-group select {
-            width: 100%;
-            padding: 14px 20px;
-            background: #F9FAFB;
-            border: 2px solid transparent;
-            border-radius: 16px;
-            transition: all 0.3s;
-            outline: none;
-            font-size: 14px;
-        }
-        .input-group input:focus, .input-group select:focus {
+        .category-chip {
             background: white;
-            border-color: var(--maroon);
-            box-shadow: 0 8px 20px rgba(106, 30, 45, 0.05);
+            border: 1px solid #eee;
+            color: #666;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            cursor: pointer;
         }
+
+        .category-chip.active {
+            background: var(--maroon);
+            color: white;
+            border-color: var(--maroon);
+            box-shadow: 0 10px 25px rgba(106, 30, 45, 0.2);
+        }
+
+        .feedback-card {
+            background: white;
+            border-radius: 32px;
+            padding: 24px;
+            border: 1px solid #f8f8f8;
+            transition: all 0.3s;
+        }
+
+        .feedback-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(212, 175, 55, 0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.03);
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .animate-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
     </style>
 </head>
 
@@ -276,62 +321,125 @@ if (!$booking_status) {
             </div>
         </nav>
 
-        <div class="max-w-3xl mx-auto py-10">
-            <div id="feedbackForm"
-                class="bg-white rounded-[50px] p-16 premium-shadow border border-gray-50 text-center">
-                <div class="mb-12">
-                    <h2 class="text-4xl font-bold maroon-text mb-4" style="font-family: 'Playfair Display', serif;">How
-                        was your residency?</h2>
-                    <p class="text-gray-400">Your feedback helps us continue our legacy of excellence.</p>
+        <div class="max-w-6xl mx-auto py-10">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <!-- Submission Side -->
+                <div>
+                    <div id="feedbackForm" class="bg-white rounded-[50px] p-12 premium-shadow border border-gray-50 h-full">
+                        <div class="mb-10">
+                            <h2 class="text-4xl font-bold maroon-text mb-4" style="font-family: 'Playfair Display', serif;">Your Voice</h2>
+                            <p class="text-gray-400 text-sm">Help us refine our legacy of absolute luxury.</p>
+                        </div>
+
+                        <div class="space-y-10">
+
+                            <!-- Star Rating -->
+                        <div id="ratingBox" class="bg-gray-50 rounded-[40px] p-10 text-center transition-all duration-300">
+                                <label class="text-[10px] uppercase tracking-[4px] font-extrabold text-gray-400 mb-6 block">Satisfaction Rating</label>
+                                <div class="flex items-center justify-center space-x-4">
+                                    <i class="fas fa-star text-4xl text-gray-200 star-btn" onclick="rate(1)"></i>
+                                    <i class="fas fa-star text-4xl text-gray-200 star-btn" onclick="rate(2)"></i>
+                                    <i class="fas fa-star text-4xl text-gray-200 star-btn" onclick="rate(3)"></i>
+                                    <i class="fas fa-star text-4xl text-gray-200 star-btn" onclick="rate(4)"></i>
+                                    <i class="fas fa-star text-4xl text-gray-200 star-btn" onclick="rate(5)"></i>
+                                </div>
+                                <p id="ratingLabel" class="text-xs font-bold gold-text uppercase mt-4 opacity-0 transition-opacity">Outstanding Experience</p>
+                            </div>
+
+                            <!-- Detailed Feedback -->
+                            <div>
+                                <label class="text-[10px] uppercase tracking-[4px] font-extrabold text-gray-400 pl-2 mb-4 block">Experience Details</label>
+                                <textarea id="feedbackMessage" rows="5"
+                                    class="w-full p-8 bg-gray-50 rounded-[32px] border-none focus:ring-2 focus:ring-gold outline-none text-gray-700 resize-none text-sm leading-relaxed"
+                                    placeholder="Tell us what made your experience exceptional..."></textarea>
+                            </div>
+
+                            <button onclick="submitFeedback()"
+                                class="w-full py-6 bg-maroon text-white rounded-[24px] font-bold text-sm tracking-widest uppercase hover:bg-gold transition-all duration-500 shadow-2xl shadow-maroon/20 flex items-center justify-center space-x-3 group">
+                                <span>Send Feedback</span>
+                                <i class="fas fa-paper-plane text-xs transform group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="flex items-center justify-center space-x-4 mb-16">
-                    <i class="fas fa-star text-4xl text-gray-200 star-btn" onclick="rate(1)"></i>
-                    <i class="fas fa-star text-4xl text-gray-200 star-btn" onclick="rate(2)"></i>
-                    <i class="fas fa-star text-4xl text-gray-200 star-btn" onclick="rate(3)"></i>
-                    <i class="fas fa-star text-4xl text-gray-200 star-btn" onclick="rate(4)"></i>
-                    <i class="fas fa-star text-4xl text-gray-200 star-btn" onclick="rate(5)"></i>
-                </div>
-
-                <div class="space-y-8 text-left">
-                    <div>
-                        <label
-                            class="text-[10px] uppercase tracking-widest font-extrabold text-gray-400 pl-4 mb-3 block">Your
-                            Detailed Experience</label>
-                        <textarea rows="6"
-                            class="w-full p-8 bg-gray-50 rounded-[32px] border-none focus:ring-2 focus:ring-gold outline-none text-gray-700 resize-none"
-                            placeholder="Is there anything we could have done to make your stay even more exceptional?"></textarea>
+                <!-- History Side -->
+                <div class="space-y-8">
+                    <div class="flex items-center justify-between px-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="relative flex h-2 w-2">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-teal"></span>
+                                </span>
+                                <p class="text-[10px] uppercase tracking-[4px] font-bold text-gray-400">Contribution Log</p>
+                            </div>
+                            <h3 class="text-2xl font-bold maroon-text" style="font-family: 'Playfair Display', serif;">Recent Insights</h3>
+                        </div>
+                        <button onclick="refreshFeedbackHistory()" class="text-teal font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 hover:underline">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>Refresh Log</span>
+                        </button>
                     </div>
 
-                    <button onclick="submitFeedback()"
-                        class="w-full py-6 gradient-maroon text-white rounded-[24px] font-bold text-lg btn-glow transition flex items-center justify-center space-x-3 shadow-2xl">
-                        <span>Send Feedback</span>
-                        <i class="fas fa-paper-plane text-sm"></i>
-                    </button>
+                    <div id="feedbackHistoryGrid" class="space-y-4">
+                        <?php if (empty($feedback_history)): ?>
+                            <div class="bg-white/50 border-2 border-dashed border-gray-200 rounded-[40px] p-20 text-center">
+                                <i class="fas fa-comment-slash text-gray-200 text-5xl mb-6"></i>
+                                <p class="text-gray-400 font-bold uppercase tracking-widest text-[10px]">No Feedback Submitted Yet</p>
+                            </div>
+                        <?php else: ?>
+                            <?php foreach ($feedback_history as $fb): ?>
+                                <div class="feedback-card animate-slide">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <div>
+                                            <h6 class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                                                <?php echo date('d M, Y • H:i', strtotime($fb['created_at'])); ?>
+                                            </h6>
+                                        </div>
+                                        <div class="flex text-gold text-[10px]">
+                                            <?php for($i=0; $i<5; $i++): ?>
+                                                <i class="<?php echo $i < $fb['rating'] ? 'fas' : 'far'; ?> fa-star"></i>
+                                            <?php endfor; ?>
+                                        </div>
+                                    </div>
+                                    <p class="text-gray-600 text-sm leading-relaxed italic">"<?php echo htmlspecialchars($fb['message']); ?>"</p>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
 
-                    <p class="text-center text-gray-400 text-xs uppercase tracking-widest">All feedback is reviewed
-                        directly by our management team.</p>
+                    <!-- Pagination Controls -->
+                    <?php if ($total_pages > 1): ?>
+                    <div id="feedbackPagination" class="mt-10 flex items-center justify-between px-4">
+                        <p class="text-[10px] uppercase tracking-widest font-bold text-gray-400">
+                             Page <span id="currentPage">1</span> of <?php echo $total_pages; ?>
+                        </p>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="changeFeedbackPage(-1)" id="prevPageBtn" class="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-maroon hover:border-maroon transition-all opacity-50 cursor-not-allowed" disabled>
+                                <i class="fas fa-chevron-left text-xs"></i>
+                            </button>
+                            <div id="pageNumbers" class="flex space-x-2">
+                                <?php for($i=1; $i<=min(3, $total_pages); $i++): ?>
+                                    <button onclick="refreshFeedbackHistory(<?php echo $i; ?>)" class="page-num w-10 h-10 rounded-xl <?php echo $i===1 ? 'bg-maroon text-white font-bold' : 'bg-white text-gray-400 border border-gray-100'; ?> transition-all text-xs">
+                                        <?php echo $i; ?>
+                                    </button>
+                                <?php endfor; ?>
+                                <?php if($total_pages > 3): ?>
+                                    <span class="text-gray-300">...</span>
+                                <?php endif; ?>
+                            </div>
+                            <button onclick="changeFeedbackPage(1)" id="nextPageBtn" class="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-maroon hover:border-maroon transition-all">
+                                <i class="fas fa-chevron-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
-            </div>
-
-            <!-- Thank You Animation -->
-            <div id="thankYou" class="hidden text-center py-20 animate-bounce-in">
-                <div
-                    class="w-40 h-40 bg-maroon rounded-full flex items-center justify-center mx-auto mb-10 shadow-2xl shadow-maroon/30">
-                    <i class="fas fa heart text-white text-6xl"></i>
-                </div>
-                <h3 class="text-5xl font-bold maroon-text mb-6" style="font-family: 'Playfair Display', serif;">Thank
-                    You</h3>
-                <p class="text-gray-500 text-xl leading-relaxed max-w-lg mx-auto">We are honored by your kind words.
-                    Your feedback has been shared with the management team.</p>
-                <button onclick="location.reload()"
-                    class="mt-12 text-gold font-bold uppercase tracking-widest hover:underline">Provide another
-                    response</button>
             </div>
         </div>
     </main>
 
-    <script>
 
         <!-- Manage Profile Modal -->
         <div id="profileModal" class="fixed inset-0 z-[110] hidden">
@@ -448,6 +556,40 @@ if (!$booking_status) {
                             </form>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Premium Alert Modal -->
+        <div id="premiumAlertModal" class="fixed inset-0 z-[300] hidden">
+            <div id="alertBackdrop" class="absolute inset-0 bg-black/20 backdrop-blur-md transition-opacity duration-300 opacity-0" onclick="closePremiumAlert()"></div>
+            <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+                <div id="alertContent" class="bg-white w-full max-w-sm rounded-[40px] shadow-2xl p-10 text-center transform scale-90 opacity-0 transition-all duration-300 pointer-events-auto border border-gray-100">
+                    <div id="alertIconContainer" class="w-20 h-20 bg-maroon/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i id="alertIcon" class="fas fa-shield-alt text-4xl text-maroon"></i>
+                    </div>
+                    <h3 id="alertTitle" class="text-2xl font-bold maroon-text mb-2" style="font-family: 'Playfair Display', serif;">Security Protocol</h3>
+                    <p id="alertMessage" class="text-gray-400 text-sm leading-relaxed mb-8">Access restricted for verified guests only.</p>
+                    <button onclick="closePremiumAlert()" class="w-full py-4 bg-maroon text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-maroon/20">
+                        Acknowledge
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Feedback Success Modal -->
+        <div id="feedbackSuccessModal" class="fixed inset-0 z-[300] hidden">
+            <div id="successBackdrop" class="absolute inset-0 bg-maroon/10 backdrop-blur-md transition-opacity duration-300 opacity-0" onclick="closeSuccessModal()"></div>
+            <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+                <div id="successContent" class="bg-white w-full max-w-sm rounded-[40px] shadow-2xl p-12 text-center transform scale-90 opacity-0 transition-all duration-300 pointer-events-auto border border-white/20">
+                    <div class="w-24 h-24 bg-maroon rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-maroon/30 relative">
+                        <div class="absolute inset-0 rounded-full bg-maroon animate-ping opacity-20"></div>
+                        <i class="fas fa-heart text-white text-3xl"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold maroon-text mb-3" style="font-family: 'Playfair Display', serif;">Review Submitted</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed mb-10">Your elite insights have been logged successfully. We treasure your voice.</p>
+                    <button onclick="closeSuccessModal()" class="w-full py-5 bg-maroon text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-maroon/20">
+                        Acknowledge
+                    </button>
                 </div>
             </div>
         </div>
@@ -625,9 +767,21 @@ if (!$booking_status) {
             }
         }
         let currentRating = 0;
+        let selectedCategory = 'General';
+
+        const ratingLabels = {
+            1: "Room for Improvement",
+            2: "Standard Experience",
+            3: "Very Good Stay",
+            4: "Exceptional Service",
+            5: "Grand Luxury Defined"
+        };
+
         function rate(stars) {
             currentRating = stars;
             const starBtns = document.querySelectorAll('.star-btn');
+            const label = document.getElementById('ratingLabel');
+            
             starBtns.forEach((btn, index) => {
                 if (index < stars) {
                     btn.classList.add('active', 'text-gold');
@@ -637,11 +791,244 @@ if (!$booking_status) {
                     btn.classList.add('text-gray-200');
                 }
             });
-        }
-        function submitFeedback() {
 
-            document.getElementById('feedbackForm').classList.add('hidden');
-            document.getElementById('thankYou').classList.remove('hidden');
+            if (stars > 0) {
+                label.innerText = ratingLabels[stars];
+                label.classList.remove('opacity-0');
+            } else {
+                label.classList.add('opacity-0');
+            }
+        }
+
+
+
+        const canUseFeedback = <?php echo $canUseFeedback ? 'true' : 'false'; ?>;
+        function submitFeedback() {
+            if (!canUseFeedback) {
+                showPremiumAlert("Access Restricted", "Feedback submission is reserved for guests currently staying with us. Please check in to share your experience.", "error");
+                return;
+            }
+            if (currentRating === 0) {
+                const ratingBox = document.getElementById('ratingBox');
+                ratingBox.classList.add('animate-shake', 'ring-2', 'ring-maroon/20');
+                showPremiumAlert("Rating Required", "Please select a star rating to share your experience with us.", "error");
+                setTimeout(() => {
+                    ratingBox.classList.remove('animate-shake', 'ring-2', 'ring-maroon/20');
+                }, 1000);
+                return;
+            }
+
+            const message = document.getElementById('feedbackMessage').value;
+            const formData = new FormData();
+            formData.append('category', selectedCategory);
+            formData.append('rating', currentRating);
+            formData.append('message', message);
+
+            fetch('php/submit_feedback.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessModal();
+                    document.getElementById('feedbackMessage').value = '';
+                    rate(0);
+                    refreshFeedbackHistory();
+                } else {
+                    showPremiumAlert("Submission Error", data.message, "error");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showPremiumAlert("System Error", "Unable to reach service.", "error");
+            });
+        }
+
+        function showSuccessModal() {
+            const modal = document.getElementById('feedbackSuccessModal');
+            const backdrop = document.getElementById('successBackdrop');
+            const content = document.getElementById('successContent');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                backdrop.classList.add('opacity-100');
+                content.classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        }
+
+        function closeSuccessModal() {
+            const modal = document.getElementById('feedbackSuccessModal');
+            const backdrop = document.getElementById('successBackdrop');
+            const content = document.getElementById('successContent');
+            
+            backdrop.classList.remove('opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+
+        let currentPage = 1;
+        let totalFeedbackPages = <?php echo $total_pages; ?>;
+
+        function refreshFeedbackHistory(page = 1) {
+            currentPage = page;
+            const container = document.getElementById('feedbackHistoryGrid');
+            const paginationContainer = document.getElementById('feedbackPagination');
+            
+            fetch(`php/get_feedback_history.php?page=${page}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    totalFeedbackPages = data.total_pages;
+                    
+                    if (data.history.length > 0) {
+                        container.innerHTML = data.history.map(fb => {
+                            let stars = '';
+                            for(let i=0; i<5; i++) {
+                                stars += `<i class="${i < fb.rating ? 'fas' : 'far'} fa-star"></i>`;
+                            }
+
+                            const date = new Date(fb.created_at);
+                            const dateStr = `${date.getDate()} ${date.toLocaleString('default', { month: 'short' })}, ${date.getFullYear()} • ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+
+                            return `
+                                <div class="feedback-card animate-slide">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <div>
+                                            <h6 class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                                                ${dateStr}
+                                            </h6>
+                                        </div>
+                                        <div class="flex text-gold text-[10px]">
+                                            ${stars}
+                                        </div>
+                                    </div>
+                                    <p class="text-gray-600 text-sm leading-relaxed italic">"${fb.message}"</p>
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        container.innerHTML = `
+                            <div class="bg-white/50 border-2 border-dashed border-gray-200 rounded-[40px] p-20 text-center col-span-2">
+                                <i class="fas fa-comment-slash text-gray-200 text-5xl mb-6"></i>
+                                <p class="text-gray-400 font-bold uppercase tracking-widest text-[10px]">No Feedback Submitted Yet</p>
+                            </div>
+                        `;
+                    }
+                    
+                    updatePaginationUI(data);
+                }
+            })
+            .catch(err => console.error("History Refresh Error:", err));
+        }
+
+        function updatePaginationUI(data) {
+            const pagination = document.getElementById('feedbackPagination');
+            if (!pagination) return;
+
+            if (data.total_pages <= 1) {
+                pagination.classList.add('hidden');
+                return;
+            }
+            pagination.classList.remove('hidden');
+
+            document.getElementById('currentPage').innerText = data.current_page;
+            
+            const prevBtn = document.getElementById('prevPageBtn');
+            const nextBtn = document.getElementById('nextPageBtn');
+            
+            if (data.current_page <= 1) {
+                prevBtn.disabled = true;
+                prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                prevBtn.disabled = false;
+                prevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            if (data.current_page >= data.total_pages) {
+                nextBtn.disabled = true;
+                nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                nextBtn.disabled = false;
+                nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            // Update page numbers
+            const pageNumbers = document.getElementById('pageNumbers');
+            let html = '';
+            
+            const maxVisible = 3;
+            let start = Math.max(1, data.current_page - 1);
+            let end = Math.min(data.total_pages, start + maxVisible - 1);
+            
+            if (end - start < maxVisible - 1) {
+                start = Math.max(1, end - maxVisible + 1);
+            }
+
+            for (let i = start; i <= end; i++) {
+                html += `
+                    <button onclick="refreshFeedbackHistory(${i})" class="page-num w-10 h-10 rounded-xl ${i === data.current_page ? 'bg-maroon text-white font-bold' : 'bg-white text-gray-400 border border-gray-100'} transition-all text-xs">
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            if (end < data.total_pages) {
+                html += '<span class="text-gray-300">...</span>';
+            }
+            
+            pageNumbers.innerHTML = html;
+        }
+
+        function changeFeedbackPage(dir) {
+            const newPage = currentPage + dir;
+            if (newPage >= 1 && newPage <= totalFeedbackPages) {
+                refreshFeedbackHistory(newPage);
+            }
+        }
+
+        function showPremiumAlert(title, message, type = 'error') {
+            const modal = document.getElementById('premiumAlertModal');
+            const content = document.getElementById('alertContent');
+            const titleEl = document.getElementById('alertTitle');
+            const msgEl = document.getElementById('alertMessage');
+            const iconEl = document.getElementById('alertIcon');
+            const iconContainer = document.getElementById('alertIconContainer');
+
+            titleEl.innerText = title;
+            msgEl.innerText = message;
+            
+            if (type === 'error') {
+                iconEl.className = 'fas fa-shield-alt text-4xl text-maroon';
+                iconContainer.className = 'w-20 h-20 bg-maroon/10 rounded-full flex items-center justify-center mx-auto mb-6';
+            } else {
+                iconEl.className = 'fas fa-check-circle text-4xl text-teal';
+                iconContainer.className = 'w-20 h-20 bg-teal/10 rounded-full flex items-center justify-center mx-auto mb-6';
+            }
+
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            setTimeout(() => {
+                document.getElementById('alertBackdrop').classList.add('opacity-100');
+                content.classList.remove('scale-90', 'opacity-0');
+            }, 10);
+        }
+
+        function closePremiumAlert() {
+            const modal = document.getElementById('premiumAlertModal');
+            const content = document.getElementById('alertContent');
+            
+            document.getElementById('alertBackdrop').classList.remove('opacity-100');
+            content.classList.add('scale-90', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }, 300);
         }
     </script>
 </body>

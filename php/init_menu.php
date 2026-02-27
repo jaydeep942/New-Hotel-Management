@@ -44,7 +44,24 @@ if ($conn->query($sql_table) === TRUE) {
     -- SOUTH INDIAN (Pure Veg)
     ('Ghee Roast Masala Dosa', 'Golden, crispy rice and lentil crepe stuffed with a spiced potato filling.', 15.00, 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&q=82&w=800', 'South Indian', 'Breakfast', 'Breakfast'),
     ('Soft Steamed Idli-Sambar', 'Steam-soft steamed rice cakes served with hot lentil soup and fresh chutney.', 12.00, 'https://images.unsplash.com/photo-1630302484644-c24ee899ba82?auto=format&fit=crop&q=82&w=800', 'South Indian', 'Breakfast', 'Breakfast'),
-    ('Hyderabadi Veg Biryani', 'Aromatic basmati rice cooked on dum with exotic spices and tender vegetables.', 25.00, 'https://images.unsplash.com/photo-1563379091339-03b21bc4a4f8?auto=format&fit=crop&q=82&w=800', 'South Indian', 'Rice Items', 'Dinner')";
+    ('Hyderabadi Veg Biryani', 'Aromatic basmati rice cooked on dum with exotic spices and tender vegetables.', 25.00, 'https://images.unsplash.com/photo-1563379091339-03b21bc4a4f8?auto=format&fit=crop&q=82&w=800', 'South Indian', 'Rice Items', 'Dinner'),
+    
+    -- REFRESHMENTS
+    ('Royal Saffron Masala Chai', 'Traditional Indian Masala Chai served in a classic glass tumbler, showcasing its warm, spicy character and creamy texture.', 8.00, 'https://images.unsplash.com/photo-1577968897966-3d4325b36b61?auto=format&fit=crop&q=82&w=800', 'Refreshments', 'Hot Drinks', 'All Day'),
+    ('Artisan Cold Brew Coffee', 'A sophisticated glass of Artisan Cold Brew Coffee with large ice cubes, capturing the dark, smooth essence of the slow-steeped brew.', 15.00, 'assets/menu/artisan-cold-brew.jpg', 'Refreshments', 'Cold Drinks', 'All Day'),
+    ('Himalayan Mineral Water', 'Crystal clear Himalayan mineral water served in a clean glass, symbolizing purity and crisp refreshment.', 6.00, 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?auto=format&fit=crop&q=82&w=800', 'Refreshments', 'Water', 'All Day'),
+    ('Fresh Mint Lime Soda', 'Zesty Fresh Mint Lime Soda with vibrant mint leaves and lime slices, served in a condensation-covered glass.', 12.00, 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=82&w=800', 'Refreshments', 'Cold Drinks', 'All Day'),
+    ('Classic Cola on Ice', 'Classic Cola served over a mountain of crystal-clear ice cubes in a tall glass, fizzing with refreshing bubbles.', 10.00, 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=82&w=800', 'Refreshments', 'Sodas', 'All Day'),
+    ('Fresh Orange Nectar', 'A glass of fresh orange nectar with a slice of orange on the rim, capturing the bright and zesty essence of sun-ripened citrus.', 14.00, 'https://images.unsplash.com/photo-1567016376408-0226e4d0c1ea?auto=format&fit=crop&q=82&w=800', 'Refreshments', 'Juices', 'All Day'),
+    ('Iced Hibiscus Tea', 'Vibrant red Iced Hibiscus Tea served in a glass with ice and a lemon wedge, looking both tart and deeply refreshing.', 12.00, 'https://images.unsplash.com/photo-1556881286-fc6915169721?auto=format&fit=crop&q=82&w=800', 'Refreshments', 'Cold Drinks', 'All Day'),
+    ('Golden Mango Lassi', 'Creamy Golden Mango Lassi served in a glass, garnished with fresh mango cubes and a metal straw.', 18.00, 'https://images.unsplash.com/photo-1590137876181-2a5a7e340308?auto=format&fit=crop&q=82&w=800', 'Refreshments', 'Cold Drinks', 'All Day'),
+    ('Masala Chaas', 'Spiced Indian Buttermilk served chilled in a traditional copper mug, garnished with a sprig of fresh mint.', 10.00, 'https://images.unsplash.com/photo-1626202157971-da8707175594?auto=format&fit=crop&q=82&w=800', 'Refreshments', 'Cold Drinks', 'All Day'),
+    ('Zesty Lemon Iced Tea', 'Refreshing tall glass of lemon iced tea with plenty of ice and fresh lime slices, perfectly chilled.', 14.00, 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&q=82&w=800', 'Refreshments', 'Cold Drinks', 'All Day'),
+    ('Belgian Hot Chocolate', 'Rich, velvety Belgian hot chocolate in a white mug, topped with a generous serving of mini marshmallows.', 20.00, 'https://images.unsplash.com/photo-1544991523-289524029212?auto=format&fit=crop&q=82&w=800', 'Refreshments', 'Hot Drinks', 'All Day'),
+    ('Pure Coconut Water', 'Clear, refreshing coconut water in a glass, served alongside fresh coconut halves.', 16.00, 'https://images.unsplash.com/photo-1548518014-9724170cd76b?auto=format&fit=crop&q=82&w=800', 'Refreshments', 'Water', 'All Day'),
+    ('Organic Green Tea', 'A steaming cup of organic green tea in a clean white ceramic cup, perfect for a healthy break.', 10.00, 'https://images.unsplash.com/photo-1627435601361-ec25f5b1d0e5?auto=format&fit=crop&q=82&w=800', 'Refreshments', 'Hot Drinks', 'All Day'),
+    ('Strawberry Milkshake', 'Thick and creamy strawberry milkshake in a glass, featuring a beautiful soft pink hue and smooth texture.', 18.00, 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&q=82&w=800', 'Refreshments', 'Cold Drinks', 'All Day')";
+
     
     if (!$conn->query($insert_sql)) {
         die("Error inserting items: " . $conn->error);
