@@ -22,6 +22,17 @@ $nationality = $user_data['nationality'] ?? '';
 $dob = $user_data['dob'] ?? '';
 $created_at = $user_data['created_at'];
 
+// SECURE ACCESS CHECK: Only allow checked-in guests
+$booking_check_sql = "SELECT * FROM bookings WHERE user_id = ? AND status = 'Confirmed' AND CURRENT_DATE BETWEEN check_in AND check_out LIMIT 1";
+$check_stmt = $conn->prepare($booking_check_sql);
+$check_stmt->bind_param("i", $user_id);
+$check_stmt->execute();
+$booking_status = $check_stmt->get_result()->fetch_assoc();
+
+if (!$booking_status) {
+    header("Location: customer-dashboard.php?error=checkin_required");
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -202,6 +213,9 @@ $created_at = $user_data['created_at'];
             <a href="feedback.php"
                 class="sidebar-link active flex items-center space-x-4 p-4 rounded-2xl group text-sm"><i
                     class="fas fa-star w-5"></i><span class="font-semibold">Feedback</span></a>
+            <a href="complaints.php"
+                class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm"><i
+                    class="fas fa-exclamation-circle w-5"></i><span class="font-semibold">Complaints</span></a>
             <a href="history.php"
                 class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm"><i
                     class="fas fa-history w-5"></i><span class="font-semibold">Booking History</span></a>

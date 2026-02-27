@@ -140,6 +140,9 @@ $email = $user_data['email'];
             <a href="feedback.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
                 <i class="fas fa-star w-5"></i><span class="font-semibold">Feedback</span>
             </a>
+            <a href="complaints.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
+                <i class="fas fa-exclamation-circle w-5"></i><span class="font-semibold">Complaints</span>
+            </a>
             <a href="history.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
                 <i class="fas fa-history w-5"></i><span class="font-semibold">Booking History</span>
             </a>

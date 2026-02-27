@@ -49,9 +49,13 @@ if ($type != 'All Room Types') {
     $query .= " AND room_type = '" . $conn->real_escape_string($type) . "'";
 }
 
-// Optional: Filter out already booked rooms for these dates (Basic overlap check)
+// Logic: A room is unavailable if it has a confirmed booking that overlaps with the searched dates
 if (!empty($cin) && !empty($cout)) {
-    $query .= " AND id NOT IN (SELECT room_id FROM bookings WHERE (check_in <= '$cout' AND check_out >= '$cin'))";
+    $query .= " AND id NOT IN (
+        SELECT room_id FROM bookings 
+        WHERE status != 'Cancelled' 
+        AND (check_in < '$cout' AND check_out > '$cin')
+    )";
 }
 
 $rooms_result = $conn->query($query);
@@ -228,6 +232,10 @@ $rooms_result = $conn->query($query);
                 class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
                 <i class="fas fa-star w-5"></i><span class="font-semibold">Feedback</span>
             </a>
+            <a href="complaints.php"
+                class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
+                <i class="fas fa-exclamation-circle w-5"></i><span class="font-semibold">Complaints</span>
+            </a>
             <a href="history.php"
                 class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
                 <i class="fas fa-history w-5"></i><span class="font-semibold">Booking History</span>
@@ -267,16 +275,20 @@ $rooms_result = $conn->query($query);
         <nav
             class="glass-nav sticky top-0 flex flex-col md:flex-row justify-between items-center p-4 md:p-6 rounded-3xl mb-8 md:mb-12 z-40 premium-shadow border border-white/20 gap-4 md:gap-0">
             <div class="flex items-center space-x-4 w-full md:w-auto pl-14 lg:pl-0">
-                <div class="bg-maroon/5 p-3 rounded-2xl hidden sm:block"><i class="fas fa-calendar-alt maroon-text"></i>
-                </div>
                 <div>
-                    <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Reservation</p>
-                    <p class="font-bold text-sm">Plan Your Stay</p>
+                    <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Residency Suite</p>
+                    <h2 class="text-xl font-bold maroon-text">Select Sanctuary</h2>
                 </div>
             </div>
-            <div class="flex items-center justify-between md:justify-end w-full md:w-auto md:space-x-8">
-                
-                <div class="flex items-center space-x-4 pl-4 md:pl-8 border-l border-gray-100">
+            <div class="flex items-center space-x-6">
+                <!-- Room Cart Button -->
+                <div id="roomCartBtn" onclick="toggleCart()" class="relative cursor-pointer group">
+                    <div class="bg-maroon/5 p-3 rounded-2xl group-hover:bg-maroon/10 transition-colors">
+                        <i class="fas fa-shopping-basket maroon-text"></i>
+                    </div>
+                    <span id="cartCounter" class="absolute -top-2 -right-2 bg-gold text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm">0</span>
+                </div>
+                <div class="flex items-center space-x-4 pl-6 border-l border-gray-100">
                     <div class="text-right hidden sm:block">
                         <p class="font-bold text-sm"><?php echo htmlspecialchars($_SESSION['name']); ?></p>
                     </div>
@@ -412,10 +424,17 @@ $rooms_result = $conn->query($query);
                                     <span class="text-2xl font-bold maroon-text">₹<?php echo number_format($room['price_per_night'], 0); ?></span>
                                     <span class="text-xs text-gray-400 font-medium">/Night</span>
                                 </div>
-                                <button onclick="showBookingModal('<?php echo $room['room_type']; ?> Suite', <?php echo $room['price_per_night']; ?>, <?php echo $room['id']; ?>)" 
-                                        class="bg-maroon text-white px-6 py-3 rounded-2xl font-bold hover:bg-gold hover:shadow-xl hover:shadow-gold/20 transition-all duration-500 transform active:scale-95 flex items-center space-x-2 whitespace-nowrap group shrink-0">
-                                    <i class="fas fa-bed text-sm transition-transform duration-500 group-hover:scale-125"></i>
-                                    <span>Book Stay</span>
+                                <button id="room-btn-<?php echo $room['id']; ?>" 
+                                        onclick="toggleRoomSelection(<?php echo htmlspecialchars(json_encode([
+                                            'id' => $room['id'],
+                                            'name' => $suiteName,
+                                            'type' => $room['room_type'],
+                                            'price' => $room['price_per_night'],
+                                            'img' => $img
+                                        ])); ?>)" 
+                                        class="bg-maroon text-white px-6 py-3 rounded-2xl font-bold hover:bg-gold hover:shadow-xl transition-all duration-500 transform active:scale-95 flex items-center space-x-2 whitespace-nowrap group shrink-0">
+                                    <i class="fas fa-plus text-sm transition-transform duration-500 group-hover:rotate-90"></i>
+                                    <span>Add Stay</span>
                                 </button>
                             </div>
                         </div>
@@ -434,6 +453,33 @@ $rooms_result = $conn->query($query);
             </div>
         </div>
     </main>
+
+    <!-- Floating Room Cart Panel -->
+    <div id="cartPanel" class="fixed right-6 bottom-6 z-[100] w-[380px] hidden transform transition-all duration-500 translate-y-full opacity-0">
+        <div class="bg-white rounded-[40px] premium-shadow border border-maroon/5 overflow-hidden flex flex-col max-h-[600px]">
+            <div class="p-8 bg-maroon text-white flex justify-between items-center">
+                <div>
+                    <h4 class="font-bold text-lg">Residency Selection</h4>
+                    <p id="cartItemsCount" class="text-[10px] uppercase tracking-widest text-white/60">0 Suites Chosen</p>
+                </div>
+                <button onclick="toggleCart()" class="text-white/60 hover:text-white transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="cartItemsList" class="p-6 flex-1 overflow-y-auto space-y-4 min-h-[100px] max-h-[300px]">
+                <!-- Cart items will be injected here -->
+            </div>
+            <div class="p-8 border-t border-gray-50 bg-gray-50/50">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Est. Total (Per Night)</span>
+                    <span id="cartTotalPrice" class="text-2xl font-black maroon-text">₹0</span>
+                </div>
+                <button onclick="proceedToBooking()" class="w-full py-4 gradient-maroon text-white rounded-2xl font-bold btn-glow transition-all shadow-xl shadow-maroon/20">
+                    Book Selected Suites
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Booking Confirmation Modal -->
     <div id="bookingModal" class="modal hidden fixed inset-0 z-[100] flex items-center justify-center p-6 overflow-y-auto">
@@ -826,33 +872,111 @@ $rooms_result = $conn->query($query);
             }
         }
 
-        function showBookingModal(name, price, id) {
+        let roomCart = [];
+
+        function toggleRoomSelection(room) {
+            const index = roomCart.findIndex(r => r.id === room.id);
+            const btn = document.getElementById('room-btn-' + room.id);
+            
+            if (index === -1) {
+                // Add to cart
+                roomCart.push(room);
+                btn.innerHTML = '<i class="fas fa-check text-sm"></i><span>Added</span>';
+                btn.classList.replace('bg-maroon', 'bg-gold');
+            } else {
+                // Remove from cart
+                roomCart.splice(index, 1);
+                btn.innerHTML = '<i class="fas fa-plus text-sm"></i><span>Add Stay</span>';
+                btn.classList.replace('bg-gold', 'bg-maroon');
+            }
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const counter = document.getElementById('cartCounter');
+            const list = document.getElementById('cartItemsList');
+            const totalEl = document.getElementById('cartTotalPrice');
+            const countEl = document.getElementById('cartItemsCount');
+            const panel = document.getElementById('cartPanel');
+
+            counter.innerText = roomCart.length;
+            countEl.innerText = `${roomCart.length} ${roomCart.length === 1 ? 'Suite' : 'Suites'} Chosen`;
+
+            if (roomCart.length > 0) {
+                panel.classList.remove('hidden');
+                setTimeout(() => {
+                    panel.classList.remove('translate-y-full', 'opacity-0');
+                }, 10);
+            } else {
+                panel.classList.add('translate-y-full', 'opacity-0');
+                setTimeout(() => panel.classList.add('hidden'), 500);
+            }
+
+            let total = 0;
+            list.innerHTML = roomCart.map(room => {
+                total += parseFloat(room.price);
+                return `
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group">
+                        <div class="flex items-center space-x-4">
+                            <img src="${room.img}" class="w-12 h-12 rounded-xl object-cover shadow-sm">
+                            <div>
+                                <p class="font-bold text-xs maroon-text">${room.name}</p>
+                                <p class="text-[9px] uppercase tracking-widest text-gold font-bold">${room.type}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="font-bold text-xs text-maroon">₹${parseFloat(room.price).toLocaleString()}</span>
+                            <button onclick="toggleRoomSelection(${JSON.stringify(room).replace(/"/g, '&quot;')})" class="text-gray-300 hover:text-red-500 transition-colors">
+                                <i class="fas fa-trash-alt text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            totalEl.innerText = '₹' + total.toLocaleString();
+        }
+
+        function toggleCart() {
+            const panel = document.getElementById('cartPanel');
+            if (panel.classList.contains('translate-y-full')) {
+                updateCartUI();
+            } else {
+                panel.classList.add('translate-y-full', 'opacity-0');
+                setTimeout(() => panel.classList.add('hidden'), 500);
+            }
+        }
+
+        function proceedToBooking() {
             const cin = document.getElementById('cin').value;
             const cout = document.getElementById('cout').value;
 
             if (!cin || !cout) {
-                alert('Please select Check-In and Check-Out dates first.');
+                showPremiumMessage('Dates Missing', 'Please select Check-In and Check-Out dates first.', 'error');
                 document.getElementById('cin').focus();
                 return;
             }
 
-            selectedRoomId = id;
-            document.getElementById('modalRoomName').innerText = name;
+            const modal = document.getElementById('bookingModal');
+            const roomListModal = document.getElementById('modalRoomName');
+            
+            // Format rooms for modal
+            roomListModal.innerHTML = roomCart.map(r => `<div class="bg-maroon/5 p-3 rounded-xl mb-2 flex justify-between items-center"><span class="font-bold text-xs">${r.name}</span><span class="text-gold font-bold text-xs">₹${parseFloat(r.price).toLocaleString()}</span></div>`).join('');
+            
             document.getElementById('modalCin').innerText = cin;
             document.getElementById('modalCout').innerText = cout;
 
             // Simple night calculation
             const d1 = new Date(cin);
             const d2 = new Date(cout);
-            const diff = Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
-            const nights = diff > 0 ? diff : 1;
+            const timeDiff = d2.getTime() - d1.getTime();
+            const diff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+            const nights = (isNaN(diff) || diff <= 0) ? 1 : diff;
             
-            document.getElementById('modalTotal').innerText = '₹' + (price * nights);
-            document.getElementById('bookingModal').classList.remove('hidden');
-        }
-
-        function hideBookingModal() {
-            document.getElementById('bookingModal').classList.add('hidden');
+            const subtotal = roomCart.reduce((sum, r) => sum + parseFloat(r.price), 0);
+            document.getElementById('modalTotal').innerText = '₹' + (subtotal * nights).toLocaleString();
+            
+            modal.classList.remove('hidden');
         }
 
         function completeBooking() {
@@ -866,7 +990,7 @@ $rooms_result = $conn->query($query);
             const address = document.getElementById('guest_address').value.trim();
 
             if (!name || !email || !phone || !id_proof || !address) {
-                alert('All registration fields are mandatory. Please provide Name, Email, Phone, ID Proof, and Address.');
+                showPremiumMessage('Fields Required', 'All guest details are mandatory.', 'error');
                 return;
             }
 
@@ -874,12 +998,14 @@ $rooms_result = $conn->query($query);
             const loader = document.getElementById('btnLoader');
             const text = document.getElementById('confirmText');
 
-            text.innerText = "Finalizing...";
+            text.innerText = "Finalizing Stay...";
             loader.classList.remove('hidden');
             btn.style.pointerEvents = 'none';
 
+            const roomIds = roomCart.map(r => r.id).join(',');
+
             const formData = new FormData();
-            formData.append('room_id', selectedRoomId);
+            formData.append('room_ids', roomIds);
             formData.append('check_in', cin);
             formData.append('check_out', cout);
             formData.append('guest_name', name);
@@ -896,11 +1022,11 @@ $rooms_result = $conn->query($query);
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    hideBookingModal();
-                    showToast('Confirmed!', 'Your residency has been archived.');
+                    document.getElementById('bookingModal').classList.add('hidden');
+                    showToast('Residencies Confirmed!', 'Your multi-suite stay has been archived.');
                     setTimeout(() => window.location.href = 'customer-dashboard.php', 2000);
                 } else {
-                    alert(data.message);
+                    showPremiumMessage('Booking Error', data.message, 'error');
                     text.innerText = "Complete Residency";
                     loader.classList.add('hidden');
                     btn.style.pointerEvents = 'auto';
@@ -908,11 +1034,15 @@ $rooms_result = $conn->query($query);
             })
             .catch(err => {
                 console.error(err);
-                alert('An error occurred during booking.');
+                showPremiumMessage('System Error', 'Unable to complete reservation.', 'error');
                 text.innerText = "Complete Residency";
                 loader.classList.add('hidden');
                 btn.style.pointerEvents = 'auto';
             });
+        }
+
+        function hideBookingModal() {
+            document.getElementById('bookingModal').classList.add('hidden');
         }
 
         function showToast(title, desc) {

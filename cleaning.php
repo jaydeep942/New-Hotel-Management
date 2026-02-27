@@ -22,13 +22,23 @@ $nationality = $user_data['nationality'] ?? '';
 $dob = $user_data['dob'] ?? '';
 $created_at = $user_data['created_at'];
 
-// Fetch current booking room number for display
-$room_sql = "SELECT r.room_number FROM bookings b JOIN rooms r ON b.room_id = r.id WHERE b.user_id = ? AND b.status = 'Confirmed' LIMIT 1";
-$room_stmt = $conn->prepare($room_sql);
-$room_stmt->bind_param("i", $user_id);
-$room_stmt->execute();
-$room_res = $room_stmt->get_result()->fetch_assoc();
-$currentSuite = $room_res ? "Suite " . $room_res['room_number'] : "Not Checked In";
+// SECURE ACCESS CHECK: Only allow checked-in guests to REQUEST
+$booking_check_sql = "SELECT * FROM bookings WHERE user_id = ? AND status = 'Confirmed' AND CURRENT_DATE BETWEEN check_in AND check_out LIMIT 1";
+$check_stmt = $conn->prepare($booking_check_sql);
+$check_stmt->bind_param("i", $user_id);
+$check_stmt->execute();
+$booking_status = $check_stmt->get_result()->fetch_assoc();
+$canUseCleaning = $booking_status ? true : false;
+
+$currentSuite = "Not Checked In";
+if ($booking_status) {
+    $room_num_sql = "SELECT room_number FROM rooms WHERE id = ?";
+    $r_stmt = $conn->prepare($room_num_sql);
+    $r_stmt->bind_param("i", $booking_status['room_id']);
+    $r_stmt->execute();
+    $r_res = $r_stmt->get_result()->fetch_assoc();
+    $currentSuite = "Suite " . $r_res['room_number'];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -205,6 +215,9 @@ $currentSuite = $room_res ? "Suite " . $room_res['room_number'] : "Not Checked I
             <a href="feedback.php"
                 class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm"><i
                     class="fas fa-star w-5"></i><span class="font-semibold">Feedback</span></a>
+            <a href="complaints.php"
+                class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm"><i
+                    class="fas fa-exclamation-circle w-5"></i><span class="font-semibold">Complaints</span></a>
             <a href="history.php"
                 class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm"><i
                     class="fas fa-history w-5"></i><span class="font-semibold">Booking History</span></a>
@@ -279,11 +292,19 @@ $currentSuite = $room_res ? "Suite " . $room_res['room_number'] : "Not Checked I
                         <i class="fas fa-broom text-teal text-6xl"></i>
                     </div>
 
+                    <?php if($canUseCleaning): ?>
                     <button onclick="requestCleaning()"
                         class="clean-btn px-20 py-8 bg-teal text-white rounded-[32px] text-xl font-bold shadow-2xl flex items-center justify-center space-x-4 mx-auto btn-glow">
                         <i class="fas fa-magic"></i>
                         <span>Request Room Cleaning</span>
                     </button>
+                    <?php else: ?>
+                    <button onclick="showPremiumProfileMessage('Access Restricted', 'Cleaning requests are available after check-in.', 'error')"
+                        class="px-20 py-8 bg-gray-100 text-gray-400 rounded-[32px] text-xl font-bold flex items-center justify-center space-x-4 mx-auto cursor-not-allowed">
+                        <i class="fas fa-lock"></i>
+                        <span>Check-in Required</span>
+                    </button>
+                    <?php endif; ?>
 
                     <p class="text-gray-400 text-sm">Our world-class housekeeping team will arrive within 15 minutes.
                     </p>

@@ -17,7 +17,7 @@ $booking_id = intval($_POST['booking_id']);
 $user_id = $_SESSION['user_id'];
 
 // Verify booking belongs to user and is upcoming (can be cancelled)
-$sql = "SELECT status, check_in FROM bookings WHERE id = ? AND user_id = ?";
+$sql = "SELECT status, check_in, room_id FROM bookings WHERE id = ? AND user_id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ii", $booking_id, $user_id);
 $stmt->execute();
@@ -40,14 +40,28 @@ if (strtotime(date('Y-m-d', strtotime($booking['check_in']))) < strtotime(date('
     exit();
 }
 
-// Perform cancellation
-$update_sql = "UPDATE bookings SET status = 'Cancelled' WHERE id = ?";
-$update_stmt = $conn->prepare($update_sql);
-$update_stmt->bind_param("i", $booking_id);
+$room_id = $booking['room_id'];
 
-if ($update_stmt->execute()) {
-    echo json_encode(['success' => true, 'message' => 'Booking cancelled successfully']);
-} else {
-    echo json_encode(['success' => false, 'message' => 'Failed to cancel booking']);
+// Use a transaction for atomic update
+$conn->begin_transaction();
+
+try {
+    // Perform cancellation
+    $update_sql = "UPDATE bookings SET status = 'Cancelled' WHERE id = ?";
+    $update_stmt = $conn->prepare($update_sql);
+    $update_stmt->bind_param("i", $booking_id);
+    $update_stmt->execute();
+
+    // Make room automatically available
+    $room_sql = "UPDATE rooms SET status = 'Available' WHERE id = ?";
+    $room_stmt = $conn->prepare($room_sql);
+    $room_stmt->bind_param("i", $room_id);
+    $room_stmt->execute();
+
+    $conn->commit();
+    echo json_encode(['success' => true, 'message' => 'Booking cancelled and room is now available']);
+} catch (Exception $e) {
+    $conn->rollback();
+    echo json_encode(['success' => false, 'message' => 'Failed to cancel booking: ' . $e->getMessage()]);
 }
 ?>

@@ -215,6 +215,9 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
             <a href="feedback.php"
                 class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm"><i
                     class="fas fa-star w-5"></i><span class="font-semibold">Feedback</span></a>
+            <a href="complaints.php"
+                class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm"><i
+                    class="fas fa-exclamation-circle w-5"></i><span class="font-semibold">Complaints</span></a>
             <a href="history.php"
                 class="sidebar-link active flex items-center space-x-4 p-4 rounded-2xl group text-sm"><i
                     class="fas fa-history w-5"></i><span class="font-semibold">Booking History</span></a>
@@ -415,6 +418,27 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
             <button onclick="closeViewModal()" class="w-full mt-10 py-4 bg-maroon text-white rounded-2xl font-bold shadow-xl shadow-maroon/20 hover:scale-[1.02] transition-transform">
                 Close Archive
             </button>
+        </div>
+    </div>
+    
+    <!-- Premium Cancellation Modal -->
+    <div id="cancelConfirmModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-6">
+        <div class="absolute inset-0 bg-maroon/40 backdrop-blur-md" onclick="closeCancelModal()"></div>
+        <div class="bg-white rounded-[40px] p-10 max-w-sm w-full relative z-[201] premium-shadow border border-white/20 animate-slide text-center">
+            <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-exclamation-circle text-red-500 text-3xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold maroon-text mb-4" style="font-family: 'Playfair Display', serif;">Cancel Residency?</h3>
+            <p class="text-gray-400 text-sm mb-8">This action will release your suite and archive this booking as cancelled. Are you absolutely certain?</p>
+            
+            <div class="flex flex-col space-y-3">
+                <button id="confirmCancelBtn" class="w-full py-4 bg-red-500 text-white rounded-2xl font-bold shadow-xl shadow-red-200 hover:bg-red-600 transition-all transform active:scale-95">
+                    Yes, Cancel Stay
+                </button>
+                <button onclick="closeCancelModal()" class="w-full py-4 bg-gray-50 text-gray-400 rounded-2xl font-bold hover:bg-gray-100 transition-all tracking-widest text-[10px] uppercase">
+                    Keep Reservations
+                </button>
+            </div>
         </div>
     </div>
 
@@ -789,29 +813,56 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
             window.print();
         }
         
-        function cancelBooking(id) {
-            if (confirm('Are you want to cancel booking')) {
-                const formData = new FormData();
-                formData.append('booking_id', id);
+        let bookingToCancel = null;
 
-                fetch('php/cancel_booking.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message);
-                        location.reload();
-                    } else {
-                        alert(data.message);
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert('An error occurred while cancelling the booking.');
-                });
-            }
+        function cancelBooking(id) {
+            bookingToCancel = id;
+            const modal = document.getElementById('cancelConfirmModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Set up the confirmation button click handler
+            document.getElementById('confirmCancelBtn').onclick = executeCancellation;
+        }
+
+        function closeCancelModal() {
+            const modal = document.getElementById('cancelConfirmModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            bookingToCancel = null;
+        }
+
+        function executeCancellation() {
+            if (!bookingToCancel) return;
+            
+            const btn = document.getElementById('confirmCancelBtn');
+            btn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i>Processing...';
+            btn.style.pointerEvents = 'none';
+
+            const formData = new FormData();
+            formData.append('booking_id', bookingToCancel);
+
+            fetch('php/cancel_booking.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    closeCancelModal();
+                    showPremiumMessage('Stay Cancelled', 'Your residency has been released.', 'error');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showPremiumMessage('System Error', data.message, 'error');
+                    btn.innerHTML = 'Yes, Cancel Stay';
+                    btn.style.pointerEvents = 'auto';
+                }
+            })
+            .catch(() => {
+                showPremiumMessage('System error', 'Unable to cancel stay', 'error');
+                btn.innerHTML = 'Yes, Cancel Stay';
+                btn.style.pointerEvents = 'auto';
+            });
         }
     </script>
 </body>

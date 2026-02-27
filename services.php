@@ -29,6 +29,14 @@ $menu_items = [];
 while($row = $menu_res->fetch_assoc()){
     $menu_items[] = $row;
 }
+
+// SECURE ACCESS CHECK: Only allow checked-in guests to ORDER
+$booking_check_sql = "SELECT * FROM bookings WHERE user_id = ? AND status = 'Confirmed' AND CURRENT_DATE BETWEEN check_in AND check_out LIMIT 1";
+$check_stmt = $conn->prepare($booking_check_sql);
+$check_stmt->bind_param("i", $user_id);
+$check_stmt->execute();
+$booking_status = $check_stmt->get_result()->fetch_assoc();
+$canUseServices = $booking_status ? true : false;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -186,6 +194,7 @@ while($row = $menu_res->fetch_assoc()){
             <a href="services.php" class="sidebar-link active flex items-center space-x-4 p-4 rounded-2xl group text-sm"><i class="fas fa-concierge-bell w-5"></i><span class="font-semibold">Services</span></a>
             <a href="cleaning.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm"><i class="fas fa-broom w-5"></i><span class="font-semibold">Cleaning Request</span></a>
             <a href="feedback.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm"><i class="fas fa-star w-5"></i><span class="font-semibold">Feedback</span></a>
+            <a href="complaints.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm"><i class="fas fa-exclamation-circle w-5"></i><span class="font-semibold">Complaints</span></a>
             <a href="history.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm"><i class="fas fa-history w-5"></i><span class="font-semibold">Booking History</span></a>
             <!-- Manage Profile with Dropdown -->
             <div class="space-y-1">
@@ -312,7 +321,7 @@ while($row = $menu_res->fetch_assoc()){
                         <div class="p-8">
                             <div class="flex justify-between items-start mb-2">
                                 <h5 class="text-lg font-bold maroon-text"><?php echo htmlspecialchars($item['name']); ?></h5>
-                                <span class="font-black text-maroon text-lg">$<?php echo number_format($item['price'], 2); ?></span>
+                                <span class="font-black text-maroon text-lg">₹<?php echo number_format($item['price'], 2); ?></span>
                             </div>
                             <p class="text-gray-400 text-xs leading-relaxed mb-6"><?php echo htmlspecialchars($item['description']); ?></p>
                             
@@ -340,7 +349,7 @@ while($row = $menu_res->fetch_assoc()){
                     <div class="border-t-2 border-dashed border-gray-100 pt-8">
                         <div class="flex justify-between items-center mb-8">
                             <span class="text-gray-400 font-bold text-xs uppercase tracking-[3px]">Total</span>
-                            <span class="maroon-text font-black text-2xl">$<span id="cartTotal">0.00</span></span>
+                            <span class="maroon-text font-black text-2xl">₹<span id="cartTotal">0.00</span></span>
                         </div>
                         <button id="orderBtn" disabled onclick="placeDiningOrder()" class="w-full py-5 bg-maroon text-white rounded-2xl font-bold hover:bg-gold transition-all duration-300 shadow-xl shadow-maroon/10 disabled:opacity-20">Process Order</button>
                     </div>
@@ -553,14 +562,50 @@ while($row = $menu_res->fetch_assoc()){
 
         function placeDiningOrder() {
             const btn = document.getElementById('orderBtn');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            setTimeout(() => {
-                showToast('Order Received!', 'Chef is preparing your meal.');
-                cart = {}; renderCart();
-                document.querySelectorAll('[id^="item-qty-"]').forEach(el => el.innerText = '0');
-                goBack();
+            const total = parseFloat(document.getElementById('cartTotal').innerText);
+            
+            const cartItems = [];
+            for (const id in cart) {
+                if (cart[id].qty > 0) {
+                    cartItems.push({
+                        name: cart[id].name,
+                        price: cart[id].price,
+                        qty: cart[id].qty
+                    });
+                }
+            }
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('items', JSON.stringify(cartItems));
+            formData.append('total_price', total);
+
+            fetch('php/place_order.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Order Received!', 'Chef is preparing your meal.');
+                    cart = {}; 
+                    renderCart();
+                    document.querySelectorAll('[id^="item-qty-"]').forEach(el => el.innerText = '0');
+                    setTimeout(() => goBack(), 2000);
+                } else {
+                    alert('Failed to place order: ' + data.message);
+                }
                 btn.innerText = 'Process Order';
-            }, 1500);
+                btn.disabled = false;
+            })
+            .catch(err => {
+                console.error(err);
+                alert('An error occurred while placing your order.');
+                btn.innerText = 'Process Order';
+                btn.disabled = false;
+            });
         }
 
         function toggleSidebar() {

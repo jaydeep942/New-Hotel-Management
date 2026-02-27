@@ -22,6 +22,14 @@ $nationality = $user_data['nationality'] ?? '';
 $dob = $user_data['dob'] ?? '';
 $created_at = $user_data['created_at'];
 
+// SECURE ACCESS CHECK: Only allow checked-in guests to ORDER
+$booking_check_sql = "SELECT * FROM bookings WHERE user_id = ? AND status = 'Confirmed' AND CURRENT_DATE BETWEEN check_in AND check_out LIMIT 1";
+$check_stmt = $conn->prepare($booking_check_sql);
+$check_stmt->bind_param("i", $user_id);
+$check_stmt->execute();
+$booking_status = $check_stmt->get_result()->fetch_assoc();
+$canUseServices = $booking_status ? true : false;
+
 // Fetch the latest upcoming booking for this user
 $sql = "SELECT b.*, r.room_type, r.room_number 
         FROM bookings b 
@@ -35,13 +43,28 @@ $result = $stmt->get_result();
 
 $booking = $result->fetch_assoc();
 
+// Initialize variables with defaults for users without bookings
+$hasBooking = false;
+$bookingLabel = "No active booking";
+$isLive = false;
+$roomType = "No active residency";
+$currentBookingID = "N/A";
+$suiteNumber = "N/A";
+$check_in = "-- -- --";
+$check_out = "-- -- --";
+$total_price = 0;
+$progressPercent = 0;
+$currentDay = 1;
+$totalNights = 1;
+
 if ($booking) {
+    $hasBooking = true;
     $currentBookingID = "#LX-" . str_pad($booking['id'], 4, '0', STR_PAD_LEFT);
     $roomType = $booking['room_type'] . " Suite";
     $suiteNumber = $booking['room_number'];
     $check_in = date('d M Y', strtotime($booking['check_in']));
+    $check_out = date('d M Y', strtotime($booking['check_out']));
     $total_price = $booking['total_price'];
-    $hasBooking = true;
     
     // Check if booking is active (today is within stay) or upcoming
     $today = new DateTime('today');
@@ -239,17 +262,37 @@ while($row = $orders_res->fetch_assoc()){
                 <i class="fas fa-bed w-5"></i>
                 <span class="font-semibold">Book Room</span>
             </a>
-            <a href="services.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
-                <i class="fas fa-concierge-bell w-5"></i>
-                <span class="font-semibold">Services</span>
+            <a href="services.php" 
+               class="sidebar-link flex items-center justify-between p-4 rounded-2xl <?php echo $canUseServices ? 'text-gray-500 hover:text-maroon' : 'text-gray-400 hover:text-maroon'; ?> group text-sm">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-concierge-bell w-5"></i>
+                    <span class="font-semibold">Services</span>
+                </div>
+                <?php if(!$canUseServices): ?><i class="fas fa-eye text-[10px] opacity-40" title="View Only"></i><?php endif; ?>
             </a>
-            <a href="cleaning.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
-                <i class="fas fa-broom w-5"></i>
-                <span class="font-semibold">Cleaning Request</span>
+            <a href="cleaning.php" 
+               class="sidebar-link flex items-center justify-between p-4 rounded-2xl <?php echo $canUseServices ? 'text-gray-500 hover:text-maroon' : 'text-gray-400 hover:text-maroon'; ?> group text-sm">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-broom w-5"></i>
+                    <span class="font-semibold">Cleaning Request</span>
+                </div>
+                <?php if(!$canUseServices): ?><i class="fas fa-eye text-[10px] opacity-40" title="View Only"></i><?php endif; ?>
             </a>
-            <a href="feedback.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
-                <i class="fas fa-star w-5"></i>
-                <span class="font-semibold">Feedback</span>
+            <a href="feedback.php" 
+               class="sidebar-link flex items-center justify-between p-4 rounded-2xl <?php echo $canUseServices ? 'text-gray-500 hover:text-maroon' : 'text-gray-400 hover:text-maroon'; ?> group text-sm">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-star w-5"></i>
+                    <span class="font-semibold">Feedback</span>
+                </div>
+                <?php if(!$canUseServices): ?><i class="fas fa-eye text-[10px] opacity-40" title="View Only"></i><?php endif; ?>
+            </a>
+            <a href="complaints.php" 
+               class="sidebar-link flex items-center justify-between p-4 rounded-2xl <?php echo $canUseServices ? 'text-gray-500 hover:text-maroon' : 'text-gray-400 hover:text-maroon'; ?> group text-sm">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-exclamation-circle w-5"></i>
+                    <span class="font-semibold">Complaints</span>
+                </div>
+                <?php if(!$canUseServices): ?><i class="fas fa-eye text-[10px] opacity-40" title="View Only"></i><?php endif; ?>
             </a>
             <a href="history.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
                 <i class="fas fa-history w-5"></i>
@@ -369,15 +412,20 @@ while($row = $orders_res->fetch_assoc()){
                 <div class="gradient-maroon p-8 rounded-[32px] text-white premium-shadow hover:scale-105 transition-transform duration-500 relative overflow-hidden group">
                     <i class="fas fa-bookmark absolute -right-4 -bottom-4 text-8xl text-white/10 group-hover:scale-110 transition-transform"></i>
                     <p class="text-white/70 uppercase tracking-widest text-[10px] font-bold mb-2"><?php echo $bookingLabel; ?></p>
-                    <h3 class="text-2xl font-bold"><?php echo $hasBooking ? $currentBookingID : 'N/A'; ?></h3>
+                    <h3 class="text-2xl font-bold"><?php echo $currentBookingID; ?></h3>
                     <?php if($hasBooking): ?>
-                    <div class="mt-6 flex items-center space-x-2">
-                        <?php if($isLive): ?>
-                        <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                        <span class="text-xs font-semibold text-green-100">Live Now</span>
-                        <?php else: ?>
-                        <span class="w-2 h-2 bg-gold rounded-full opacity-50"></span>
-                        <span class="text-xs font-semibold text-white/70">Scheduled</span>
+                    <div class="mt-6 flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <?php if($isLive): ?>
+                            <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                            <span class="text-xs font-semibold text-green-100">Live Now</span>
+                            <?php else: ?>
+                            <span class="w-2 h-2 bg-gold rounded-full opacity-50"></span>
+                            <span class="text-xs font-semibold text-white/70">Scheduled</span>
+                            <?php endif; ?>
+                        </div>
+                        <?php if(!$isLive): ?>
+                        <button onclick="cancelBooking(<?php echo $booking['id']; ?>)" class="text-[10px] font-bold text-white/50 hover:text-white transition-colors uppercase tracking-widest">Cancel</button>
                         <?php endif; ?>
                     </div>
                     <?php else: ?>
@@ -388,23 +436,23 @@ while($row = $orders_res->fetch_assoc()){
                 <div class="bg-white p-8 rounded-[32px] premium-shadow border border-gray-50 hover:scale-105 transition-transform duration-500 group relative">
                      <i class="fas fa-couch absolute -right-4 -bottom-4 text-8xl text-gray-50 group-hover:scale-110 transition-transform"></i>
                     <p class="text-gray-400 uppercase tracking-widest text-[10px] font-bold mb-2">Room Type</p>
-                    <h3 class="text-xl font-bold maroon-text"><?php echo $hasBooking ? $roomType : 'No active residency'; ?></h3>
+                    <h3 class="text-xl font-bold maroon-text"><?php echo $roomType; ?></h3>
                     <p class="mt-4 text-gold font-bold text-sm"><?php echo $hasBooking ? 'Luxury Suite' : 'Ready for you'; ?></p>
                 </div>
 
                 <div class="bg-white p-8 rounded-[32px] premium-shadow border border-gray-50 hover:scale-105 transition-transform duration-500 group relative">
                     <i class="fas fa-calendar-check absolute -right-4 -bottom-4 text-8xl text-gray-50 group-hover:scale-110 transition-transform"></i>
                     <p class="text-gray-400 uppercase tracking-widest text-[10px] font-bold mb-2">Check-In</p>
-                    <h3 class="text-2xl font-bold teal-text"><?php echo $hasBooking ? $check_in : '-- -- --'; ?></h3>
+                    <h3 class="text-2xl font-bold teal-text"><?php echo $check_in; ?></h3>
                     <p class="mt-4 text-gray-400 text-sm">After 12:00 PM</p>
                 </div>
 
                 <div class="gradient-gold p-8 rounded-[32px] text-white premium-shadow hover:scale-105 transition-transform duration-500 group relative">
                     <i class="fas fa-door-open absolute -right-4 -bottom-4 text-8xl text-white/10 group-hover:scale-110 transition-transform"></i>
                     <p class="text-white/70 uppercase tracking-widest text-[10px] font-bold mb-2">Check-Out</p>
-                    <h3 class="text-2xl font-bold"><?php echo $hasBooking ? date('d M Y', strtotime($booking['check_out'])) : '-- -- --'; ?></h3>
+                    <h3 class="text-2xl font-bold"><?php echo $check_out; ?></h3>
                     <?php if($hasBooking): ?>
-                    <p class="mt-4 text-white/80 text-sm italic"><?php echo (strtotime($booking['check_out']) - strtotime($booking['check_in'])) / 86400; ?> Nights Stay</p>
+                    <p class="mt-4 text-white/80 text-sm italic"><?php echo $totalNights; ?> Nights Stay</p>
                     <?php else: ?>
                     <p class="mt-4 text-white/80 text-sm italic">Plan your getaway</p>
                     <?php endif; ?>
@@ -448,42 +496,50 @@ while($row = $orders_res->fetch_assoc()){
                 <!-- Recent Service Orders -->
                 <div class="bg-white rounded-[40px] p-10 premium-shadow overflow-hidden relative">
                     <div class="flex justify-between items-center mb-8">
-                        <h4 class="text-xl font-bold maroon-text">Recent Orders</h4>
-                        <a href="services.php?service=dining" class="px-4 py-2 bg-maroon/5 text-maroon hover:bg-maroon hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Order Now</a>
+                        <div>
+                            <h4 class="text-xl font-bold maroon-text">Recent Orders</h4>
+                            <a href="orders.php" class="text-[9px] font-black text-gold uppercase tracking-[2px] hover:underline mt-1 block">View Order Archive</a>
+                        </div>
+                        <?php if($canUseServices): ?>
+                            <a href="services.php?service=dining" class="px-4 py-2 bg-maroon/5 text-maroon hover:bg-maroon hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Order Now</a>
+                        <?php else: ?>
+                            <button onclick="showPremiumMessage('Access Restricted', 'Service features activate upon your arrival and check-in.', 'error')" class="px-4 py-2 bg-gray-100 text-gray-400 cursor-not-allowed rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Order Now</button>
+                        <?php endif; ?>
                     </div>
                     
-                    <?php if(empty($orders)): ?>
-                        <div class="flex flex-col items-center justify-center py-10 opacity-30">
-                            <i class="fas fa-utensils text-5xl mb-4"></i>
-                            <p class="text-xs font-bold uppercase tracking-widest">No recent orders</p>
-                        </div>
-                    <?php else: ?>
-                        <div class="space-y-6">
+                    <div id="recentOrdersContainer" class="space-y-6">
+                        <?php if(empty($orders)): ?>
+                            <div class="flex flex-col items-center justify-center py-10 opacity-30">
+                                <i class="fas fa-utensils text-5xl mb-4"></i>
+                                <p class="text-xs font-bold uppercase tracking-widest">No recent orders</p>
+                            </div>
+                        <?php else: ?>
                             <?php foreach($orders as $order): 
                                 $statusColor = 'bg-gray-100 text-gray-500';
                                 if($order['status'] == 'Pending') $statusColor = 'bg-gold/10 text-gold';
                                 if($order['status'] == 'Preparing') $statusColor = 'bg-teal/10 text-teal';
                                 if($order['status'] == 'Delivered') $statusColor = 'bg-green-50 text-green-600';
+                                if($order['status'] == 'Cancelled') $statusColor = 'bg-red-50 text-red-600';
                                 
                                 $items = json_decode($order['items'], true);
                                 $itemNames = array_map(function($i) { return $i['name']; }, $items);
                                 $summary = implode(', ', $itemNames);
                             ?>
-                                <div class="flex justify-between items-start border-b border-gray-50 pb-6 last:border-0 last:pb-0">
+                                <div class="flex justify-between items-start border-b border-gray-50 pb-6 last:border-0 last:pb-0 animate-fade-in">
                                     <div class="max-w-[180px]">
                                         <p class="text-sm font-bold maroon-text truncate"><?php echo $summary; ?></p>
                                         <p class="text-[10px] text-gray-400 mt-1"><?php echo date('d M, h:i A', strtotime($order['created_at'])); ?></p>
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-xs font-black maroon-text mb-2">$<?php echo number_format($order['total_price'], 2); ?></p>
+                                        <p class="text-xs font-black maroon-text mb-2">₹<?php echo number_format($order['total_price'], 2); ?></p>
                                         <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest <?php echo $statusColor; ?>">
                                             <?php echo $order['status']; ?>
                                         </span>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -778,6 +834,83 @@ while($row = $orders_res->fetch_assoc()){
                 });
             }
         }
+
+        function cancelBooking(id) {
+            if (confirm('Are you sure you want to cancel this booking?')) {
+                const formData = new FormData();
+                formData.append('booking_id', id);
+
+                fetch('php/cancel_booking.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage('Booking Cancelled', 'The room is now available.');
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        showMessage('Error', data.message, 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showMessage('System Error', 'Unable to cancel booking', 'error');
+                });
+            }
+        }
+
+        // Real-time Order Polling
+        function pollOrders() {
+            fetch('php/get_recent_orders.php')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.orders.length > 0) {
+                        const container = document.getElementById('recentOrdersContainer');
+                        let html = '';
+                        data.orders.forEach(order => {
+                            let statusColor = 'bg-gray-100 text-gray-500';
+                            if(order.status === 'Pending') statusColor = 'bg-gold/10 text-gold';
+                            if(order.status === 'Preparing') statusColor = 'bg-teal/10 text-teal';
+                            if(order.status === 'Delivered') statusColor = 'bg-green-50 text-green-600';
+                            if(order.status === 'Cancelled') statusColor = 'bg-red-50 text-red-600';
+
+                            html += `
+                                <div class="flex justify-between items-start border-b border-gray-50 pb-6 last:border-0 last:pb-0 animate-fade-in">
+                                    <div class="max-w-[180px]">
+                                        <p class="text-sm font-bold maroon-text truncate">${order.summary}</p>
+                                        <p class="text-[10px] text-gray-400 mt-1">${order.display_date}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs font-black maroon-text mb-2">₹${parseFloat(order.total_price).toFixed(2)}</p>
+                                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColor}">
+                                            ${order.status}
+                                        </span>
+                                    </div>
+                                </div>`;
+                        });
+                        container.innerHTML = html;
+                    } else if (data.success && data.orders.length === 0) {
+                        document.getElementById('recentOrdersContainer').innerHTML = `
+                            <div class="flex flex-col items-center justify-center py-10 opacity-30">
+                                <i class="fas fa-utensils text-5xl mb-4"></i>
+                                <p class="text-xs font-bold uppercase tracking-widest">No recent orders</p>
+                            </div>`;
+                    }
+                });
+        }
+
+        // Poll every 10 seconds
+        setInterval(pollOrders, 10000);
+        // Check for specific error parameters
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('error') === 'checkin_required') {
+                showPremiumMessage('Access Restricted', 'Service features activate upon your arrival and check-in.', 'error');
+                // Clean up URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
     </script>
 </body>
 </html>
