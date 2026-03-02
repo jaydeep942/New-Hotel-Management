@@ -187,30 +187,69 @@ $complaint_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                 <div class="flex items-center space-x-8">
                     <!-- Profile & Manage -->
                     <div class="flex items-center space-x-4">
-                        <div class="hidden sm:block text-right">
-                            <p class="font-bold text-sm maroon-text"><?php echo htmlspecialchars($_SESSION['name']); ?></p>
-                            <button onclick="openProfileModal()" class="text-[9px] uppercase font-black text-gold tracking-widest hover:text-maroon transition-colors shadow-sm bg-white px-2 py-0.5 rounded border border-gold/20">Manage Profile</button>
-                        </div>
-                        <div class="relative group cursor-pointer" onclick="openProfileModal()">
-                            <div class="w-10 h-10 rounded-xl overflow-hidden border-2 border-gold/20 p-1 transition-transform group-hover:scale-105">
+                    <!-- Profile & Dropdown -->
+                    <div class="relative group">
+                        <div class="flex items-center space-x-4 cursor-pointer py-1">
+                            <div class="hidden sm:block text-right">
+                                <p class="font-bold text-sm maroon-text leading-none"><?php echo htmlspecialchars($_SESSION['name']); ?></p>
+                                <p class="text-[9px] uppercase font-black text-gold tracking-widest mt-1 opacity-70">Premium Member</p>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl overflow-hidden border-2 border-gold/20 p-1 transition-all duration-500 group-hover:border-gold/50 group-hover:rotate-6 shadow-sm bg-white">
                                 <?php if ($profile_photo): ?>
-                                    <img src="<?php echo $profile_photo; ?>" class="w-full h-full object-cover rounded-lg" alt="Profile">
+                                    <img src="<?php echo $profile_photo; ?>" class="w-full h-full object-cover rounded-xl" alt="Profile">
                                 <?php else: ?>
-                                    <div class="w-full h-full bg-maroon rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                                    <div class="w-full h-full bg-maroon rounded-xl flex items-center justify-center text-white font-bold text-lg">
                                         <?php echo strtoupper(substr($_SESSION['name'], 0, 1)); ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
                         </div>
-                        <a href="php/logout.php" class="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm" title="Sign Out">
-                            <i class="fas fa-sign-out-alt"></i>
-                        </a>
-                        <!-- Mobile Menu Trigger -->
-                        <div class="xl:hidden">
-                            <button onclick="toggleMobileMenu()" class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center maroon-text">
-                                <i class="fas fa-bars-staggered"></i>
-                            </button>
+
+                        <!-- Premium Dropdown Menu -->
+                        <div class="absolute right-0 top-full pt-4 opacity-0 invisible translate-y-4 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 z-[100] w-64">
+                            <div class="bg-white rounded-[32px] shadow-2xl border border-gray-100 overflow-hidden premium-shadow p-3">
+                                <div class="space-y-1">
+                                    <button onclick="openProfileModal('profile-info')" class="w-full flex items-center space-x-3 p-4 rounded-2xl text-gray-600 hover:bg-maroon/5 hover:text-maroon transition-all group/item text-left">
+                                        <div class="w-8 h-8 rounded-xl bg-maroon/5 flex items-center justify-center text-maroon group-hover/item:scale-110 transition-transform">
+                                            <i class="fas fa-id-card text-xs"></i>
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-bold">Personal Details</span>
+                                            <span class="text-[9px] uppercase tracking-wider text-gray-400">Identity & Contact</span>
+                                        </div>
+                                    </button>
+
+                                    <button onclick="openProfileModal('security-settings')" class="w-full flex items-center space-x-3 p-4 rounded-2xl text-gray-600 hover:bg-maroon/5 hover:text-maroon transition-all group/item text-left">
+                                        <div class="w-8 h-8 rounded-xl bg-maroon/5 flex items-center justify-center text-maroon group-hover/item:scale-110 transition-transform">
+                                            <i class="fas fa-shield-halved text-xs"></i>
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-bold">Security & Password</span>
+                                            <span class="text-[9px] uppercase tracking-wider text-gray-400">Lock & Key Access</span>
+                                        </div>
+                                    </button>
+
+                                    <div class="h-px bg-gray-100 mx-4 my-2"></div>
+
+                                    <a href="php/logout.php" class="w-full flex items-center space-x-3 p-4 rounded-2xl text-red-500 hover:bg-red-50 transition-all group/item">
+                                        <div class="w-8 h-8 rounded-xl bg-red-100/50 flex items-center justify-center text-red-500 group-hover/item:scale-110 transition-transform">
+                                            <i class="fas fa-sign-out-alt text-xs"></i>
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-bold">Sign Out</span>
+                                            <span class="text-[9px] uppercase tracking-wider text-red-400 opacity-70">End Current Session</span>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
+                    </div>
+
+                    <!-- Mobile Menu Trigger -->
+                    <div class="xl:hidden">
+                        <button onclick="toggleMobileMenu()" class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center maroon-text">
+                            <i class="fas fa-bars-staggered"></i>
+                        </button>
                     </div>
                 </div>
             </div>
