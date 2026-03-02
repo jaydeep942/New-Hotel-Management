@@ -404,45 +404,16 @@ $rooms_result = $conn->query($query);
 
         <div class="max-w-[1600px] mx-auto p-4 md:p-8">
             <div class="animate-slide">
-                <div class="mb-12">
-                    <h2 class="text-3xl font-bold maroon-text" style="font-family: 'Playfair Display', serif;">Find Your Perfect Room</h2>
-                    <p class="text-gray-500 mt-1">Select your dates and preferred room type to view our availability.</p>
-                </div>
 
-            <!-- Booking Filter -->
-            <div class="bg-white rounded-[40px] p-10 premium-shadow mb-12">
-                <?php $today = date('Y-m-d'); ?>
-                <form action="book-room.php" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-8 items-end">
-                    <div class="space-y-3">
-                        <label class="text-[10px] uppercase tracking-widest font-extrabold text-gray-400 pl-2">Check-In
-                            Date</label>
-                        <input type="date" id="cin" name="cin" value="<?php echo $cin; ?>" min="<?php echo $today; ?>" onchange="document.getElementById('cout').min = this.value"
-                            class="w-full p-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-gold outline-none">
-                    </div>
-                    <div class="space-y-3">
-                        <label class="text-[10px] uppercase tracking-widest font-extrabold text-gray-400 pl-2">Check-Out
-                            Date</label>
-                        <input type="date" id="cout" name="cout" value="<?php echo $cout; ?>" min="<?php echo $today; ?>"
-                            class="w-full p-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-gold outline-none">
-                    </div>
-                    <div class="space-y-3">
-                        <label class="text-[10px] uppercase tracking-widest font-extrabold text-gray-400 pl-2">Room
-                            Type</label>
-                        <select name="room_type"
-                            class="w-full p-4 rounded-2xl bg-gray-50 border-none focus:ring-2 focus:ring-gold outline-none appearance-none">
-                            <option <?php echo $type == 'All Room Types' ? 'selected' : ''; ?>>All Room Types</option>
-                            <option <?php echo $type == 'Standard' ? 'selected' : ''; ?>>Standard</option>
-                            <option <?php echo $type == 'Deluxe' ? 'selected' : ''; ?>>Deluxe</option>
-                            <option <?php echo $type == 'Executive' ? 'selected' : ''; ?>>Executive</option>
-                            <option <?php echo $type == 'Presidential' ? 'selected' : ''; ?>>Presidential</option>
-                        </select>
-                    </div>
-                    <button type="submit"
-                        class="w-full gradient-maroon text-white p-5 rounded-2xl font-bold btn-glow transition shadow-lg flex items-center justify-center space-x-2">
-                        <i class="fas fa-search"></i>
-                        <span>Check Availability</span>
-                    </button>
-                </form>
+            <!-- Simplified Header -->
+            <div class="flex flex-col md:flex-row justify-between items-end mb-12 animate-slide">
+                <div>
+                    <h2 class="text-3xl font-black maroon-text" style="font-family: 'Playfair Display', serif;">Explore Our Portfolio</h2>
+                    <p class="text-gold text-[10px] uppercase tracking-[3px] font-black mt-2">Discover premium suites for your next residency</p>
+                </div>
+                <div class="hidden md:block">
+                     <p class="text-gray-400 text-[10px] uppercase tracking-widest font-bold">Residencies available: <span class="text-maroon"><?php echo $rooms_result->num_rows; ?></span></p>
+                </div>
             </div>
 
             <!-- Room Cards -->
@@ -579,89 +550,126 @@ $rooms_result = $conn->query($query);
         </div>
     </div>
 
-    <!-- Booking Confirmation Modal -->
-    <div id="bookingModal" class="modal hidden fixed inset-0 z-[100] flex items-center justify-center p-6 overflow-y-auto">
-        <div class="absolute inset-0 bg-maroon/40 backdrop-blur-md"></div>
-        <div class="bg-white rounded-[40px] p-8 md:p-10 max-width-xl relative w-full family-sans max-w-lg premium-shadow z-[101] my-8 overflow-y-auto max-h-[90vh]">
-            <button onclick="hideBookingModal()" class="absolute top-6 right-6 text-gray-400 hover:text-maroon transition"><i class="fas fa-times text-xl"></i></button>
-            <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-check-circle text-gold text-3xl"></i></div>
-                <h3 class="text-2xl font-bold maroon-text">Finalize Registration</h3>
-                <p class="text-gray-400 text-sm mt-1">Complete the residency archives below.</p>
-            </div>
+    <!-- Booking Confirmation Modal (Step-Based) -->
+    <div id="bookingModal" class="modal hidden fixed inset-0 z-[150] flex items-center justify-center p-6 overflow-y-auto">
+        <div class="absolute inset-0 bg-maroon/40 backdrop-blur-md" onclick="hideBookingModal()"></div>
+        <div class="bg-white rounded-[40px] p-8 md:p-10 relative w-full family-sans max-w-xl premium-shadow z-[101] my-8 overflow-y-auto max-h-[95vh] animate-fade-in shadow-2xl border border-white/20">
+            <button onclick="hideBookingModal()" class="absolute top-8 right-8 text-gray-400 hover:text-maroon transition-all transform hover:rotate-90">
+                <i class="fas fa-times text-xl"></i>
+            </button>
             
-            <div class="space-y-4 mb-6">
-                <div class="bg-gray-50 rounded-2xl p-4 flex justify-between items-center">
-                    <span class="text-gray-400 text-[10px] uppercase font-bold tracking-widest">Suite Selected</span>
-                    <span id="modalRoomName" class="font-bold text-sm maroon-text text-right">--</span>
+            <!-- STEP 1: DATE SELECTION -->
+            <div id="bookingStep1">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-gold/10 rounded-[28px] flex items-center justify-center mx-auto mb-4 border border-gold/20">
+                        <i class="fas fa-calendar-alt text-gold text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-black maroon-text" style="font-family: 'Playfair Display', serif;">Schedule Residency</h3>
+                    <p class="text-gray-400 text-[10px] uppercase tracking-[2px] mt-2 font-bold">When will you be staying with us?</p>
+                </div>
+
+                <div class="space-y-6 mb-8">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase tracking-widest font-extrabold text-gray-400 pl-4 block">Arrival Date</label>
+                            <input type="date" id="book_cin" min="<?php echo date('Y-m-d'); ?>"
+                                class="w-full p-5 rounded-[24px] bg-gray-50 border-none focus:ring-2 focus:ring-gold outline-none text-xs font-bold">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase tracking-widest font-extrabold text-gray-400 pl-4 block">Departure</label>
+                            <input type="date" id="book_cout" min="<?php echo date('Y-m-d'); ?>"
+                                class="w-full p-5 rounded-[24px] bg-gray-50 border-none focus:ring-2 focus:ring-gold outline-none text-xs font-bold">
+                        </div>
+                    </div>
+
+                    <div id="modalRoomListStep1" class="space-y-3">
+                        <!-- Preview selected rooms -->
+                    </div>
+                </div>
+
+                <button onclick="verifyAvailability()" id="verifyBtn" class="w-full py-5 gradient-maroon text-white rounded-[24px] font-black uppercase tracking-[3px] text-[11px] btn-glow transition-all shadow-xl flex items-center justify-center space-x-3">
+                    <span id="verifyText">Verify Availability</span>
+                    <div id="verifyLoader" class="hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                </button>
+            </div>
+
+            <!-- STEP 2: PERSONAL DETAILS -->
+            <div id="bookingStep2" class="hidden">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-gold/10 rounded-[28px] flex items-center justify-center mx-auto mb-4 border border-gold/20 shadow-inner">
+                        <i class="fas fa-id-card text-gold text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-black maroon-text" style="font-family: 'Playfair Display', serif;">Finalize Your Portfolio</h3>
+                    <p class="text-gray-400 text-[10px] uppercase tracking-[2px] mt-2 font-bold">Suites verified. Complete your identification.</p>
                 </div>
                 
+                <div class="space-y-6 mb-8">
+                    <div class="bg-gray-50/50 p-8 rounded-[32px] border border-gray-100 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-[10px] uppercase tracking-widest font-extrabold text-gray-400 pl-4 block">Identity Name</label>
+                                <input type="text" id="guest_name" value="<?php echo htmlspecialchars($_SESSION['name']); ?>"
+                                    class="w-full p-4 rounded-2xl bg-white border border-gray-200 focus:border-maroon focus:ring-0 outline-none text-xs font-bold transition-all">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[10px] uppercase tracking-widest font-extrabold text-gray-400 pl-4 block">Archive Email</label>
+                                <input type="email" id="guest_email" value="<?php echo htmlspecialchars($_SESSION['email']); ?>"
+                                    class="w-full p-4 rounded-2xl bg-white border border-gray-200 focus:border-maroon focus:ring-0 outline-none text-xs font-bold transition-all">
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-[10px] uppercase tracking-widest font-extrabold text-gray-400 pl-4 block">Contact Number</label>
+                                <input type="text" id="guest_phone" value="<?php echo htmlspecialchars($_SESSION['phone'] ?? ''); ?>"
+                                    class="w-full p-4 rounded-2xl bg-white border border-gray-200 focus:border-maroon focus:ring-0 outline-none text-xs font-bold transition-all">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[10px] uppercase tracking-widest font-extrabold text-gray-400 pl-4 block">ID Document Proof</label>
+                                <div class="relative">
+                                    <select id="id_proof_type" 
+                                        class="w-full p-4 rounded-2xl bg-white border border-gray-200 focus:border-maroon focus:ring-0 outline-none text-xs font-bold appearance-none transition-all">
+                                        <option value="Aadhar">Indian Aadhar Card</option>
+                                        <option value="Passport">International Passport</option>
+                                        <option value="PAN">PAN Document</option>
+                                        <option value="VoterID">Voter Identification</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down absolute right-5 top-1/2 -translate-y-1/2 text-gold pointer-events-none"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-[10px] uppercase tracking-widest font-extrabold text-gray-400 pl-4 block">Archive Identity ID</label>
+                                <input type="text" id="id_proof" placeholder="Identity Document Number"
+                                    class="w-full p-4 rounded-2xl bg-white border border-gray-200 focus:border-maroon focus:ring-0 outline-none text-xs font-bold transition-all">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[10px] uppercase tracking-widest font-extrabold text-gray-400 pl-4 block">Permanent Residence</label>
+                                <input type="text" id="guest_address" placeholder="Residential City/State/Country"
+                                    class="w-full p-4 rounded-2xl bg-white border border-gray-200 focus:border-maroon focus:ring-0 outline-none text-xs font-bold transition-all">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center p-6 bg-maroon/5 rounded-[28px] border border-maroon/10 shadow-inner">
+                        <div class="flex flex-col">
+                            <span class="font-black text-gray-400 text-[10px] uppercase tracking-widest">Grand Portfolio Total</span>
+                            <span class="text-[10px] italic text-gold mt-1" id="nightsText">Total for 1 Night</span>
+                        </div>
+                        <span id="modalTotal" class="text-3xl font-black maroon-text tracking-tighter">₹0</span>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-gray-50 rounded-2xl p-3">
-                        <p class="text-gray-400 text-[9px] uppercase font-bold tracking-widest mb-1 text-center">Arrival</p>
-                        <p id="modalCin" class="font-bold text-xs text-center maroon-text">--</p>
-                    </div>
-                    <div class="bg-gray-50 rounded-2xl p-3">
-                        <p class="text-gray-400 text-[9px] uppercase font-bold tracking-widest mb-1 text-center">Departure</p>
-                        <p id="modalCout" class="font-bold text-xs text-center maroon-text">--</p>
-                    </div>
-                </div>
-
-                <!-- DETAILED REGISTRATION FIELDS -->
-                <div class="space-y-4 pt-2">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="space-y-1">
-                            <label class="text-[9px] uppercase tracking-widest font-extrabold text-gray-400 pl-2">Full Name</label>
-                            <input type="text" id="guest_name" value="<?php echo htmlspecialchars($_SESSION['name']); ?>"
-                                class="w-full p-3 rounded-xl bg-gray-50 border border-gray-100 focus:ring-2 focus:ring-gold outline-none text-xs">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[9px] uppercase tracking-widest font-extrabold text-gray-400 pl-2">Email Address</label>
-                            <input type="email" id="guest_email" value="<?php echo htmlspecialchars($_SESSION['email']); ?>"
-                                class="w-full p-3 rounded-xl bg-gray-50 border border-gray-100 focus:ring-2 focus:ring-gold outline-none text-xs">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="space-y-1">
-                            <label class="text-[9px] uppercase tracking-widest font-extrabold text-gray-400 pl-2">Phone Number</label>
-                            <input type="text" id="guest_phone" value="<?php echo htmlspecialchars($_SESSION['phone'] ?? ''); ?>"
-                                class="w-full p-3 rounded-xl bg-gray-50 border border-gray-100 focus:ring-2 focus:ring-gold outline-none text-xs">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[9px] uppercase tracking-widest font-extrabold text-gray-400 pl-2">ID Proof Type</label>
-                            <select id="id_proof_type" 
-                                class="w-full p-3 rounded-xl bg-gray-50 border border-gray-100 focus:ring-2 focus:ring-gold outline-none text-xs appearance-none">
-                                <option value="Aadhar">Aadhar Card</option>
-                                <option value="Passport">Passport</option>
-                                <option value="PAN">PAN Card</option>
-                                <option value="VoterID">Voter ID</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="space-y-1">
-                            <label class="text-[9px] uppercase tracking-widest font-extrabold text-gray-400 pl-2">ID Proof Number</label>
-                            <input type="text" id="id_proof" placeholder="Enter ID Number"
-                                class="w-full p-3 rounded-xl bg-gray-50 border border-gray-100 focus:ring-2 focus:ring-gold outline-none text-xs">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[9px] uppercase tracking-widest font-extrabold text-gray-400 pl-2">Permanent Address</label>
-                            <input type="text" id="guest_address" placeholder="Residential City/State"
-                                class="w-full p-3 rounded-xl bg-gray-50 border border-gray-100 focus:ring-2 focus:ring-gold outline-none text-xs">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex justify-between items-center p-4 bg-maroon/5 rounded-2xl border border-maroon/10">
-                    <span class="font-bold text-gray-500 text-sm">Residency Calculation</span>
-                    <span id="modalTotal" class="text-xl font-bold maroon-text">₹0</span>
+                    <button onclick="backToStep1()" class="py-5 bg-gray-50 text-gray-400 rounded-[24px] font-black uppercase tracking-[3px] text-[11px] hover:text-maroon transition-all">Back</button>
+                    <button onclick="completeBooking()" id="confirmBtn" class="py-5 gradient-maroon text-white rounded-[24px] font-black uppercase tracking-[3px] text-[11px] btn-glow transition-all shadow-xl flex items-center justify-center space-x-3 hover:scale-[1.02]">
+                        <span id="confirmText">Seal Agreement</span>
+                        <div id="btnLoader" class="hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    </button>
                 </div>
             </div>
-
-            <button onclick="completeBooking()" id="confirmBtn" class="w-full py-4 gradient-maroon text-white rounded-2xl font-bold btn-glow transition shadow-xl flex items-center justify-center space-x-3">
-                <span id="confirmText">Complete Residency</span>
-                <div id="btnLoader" class="hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            </button>
         </div>
     </div>
 
@@ -1045,41 +1053,141 @@ $rooms_result = $conn->query($query);
             }
         }
 
-        function proceedToBooking() {
-            const cin = document.getElementById('cin').value;
-            const cout = document.getElementById('cout').value;
+        function toggleRoomSelection(room) {
+            const index = roomCart.findIndex(item => item.id === room.id);
+            const btn = document.getElementById(`room-btn-${room.id}`);
+            
+            if (index > -1) {
+                roomCart.splice(index, 1);
+                if(btn) {
+                    btn.classList.remove('bg-gold');
+                    btn.classList.add('bg-maroon');
+                    btn.querySelector('span').innerText = 'Add Stay';
+                    btn.querySelector('i').className = 'fas fa-plus text-sm group-hover:rotate-90 transition-transform';
+                }
+            } else {
+                roomCart.push(room);
+                if(btn) {
+                    btn.classList.remove('bg-maroon');
+                    btn.classList.add('bg-gold');
+                    btn.querySelector('span').innerText = 'Selected';
+                    btn.querySelector('i').className = 'fas fa-check text-sm';
+                }
+            }
+            updateCartUI();
+        }
 
-            if (!cin || !cout) {
-                showPremiumMessage('Dates Missing', 'Please select Check-In and Check-Out dates first.', 'error');
-                document.getElementById('cin').focus();
-                return;
+        function updateCartUI() {
+            const panel = document.getElementById('cartPanel');
+            const list = document.getElementById('cartItemsList');
+            const totalEl = document.getElementById('cartTotalPrice');
+            const countText = document.getElementById('cartItemsCount');
+            const bubble = document.getElementById('cartCounter');
+
+            if(bubble) bubble.innerText = roomCart.length;
+            if(countText) countText.innerText = `${roomCart.length} Suite${roomCart.length === 1 ? '' : 's'} Chosen`;
+
+            if (roomCart.length > 0) {
+                panel.classList.remove('hidden');
+                setTimeout(() => {
+                    panel.classList.remove('translate-y-full', 'opacity-0');
+                }, 10);
+            } else {
+                panel.classList.add('translate-y-full', 'opacity-0');
+                setTimeout(() => panel.classList.add('hidden'), 500);
             }
 
-            const modal = document.getElementById('bookingModal');
-            const roomListModal = document.getElementById('modalRoomName');
-            
-            // Format rooms for modal
-            roomListModal.innerHTML = roomCart.map(r => `<div class="bg-maroon/5 p-3 rounded-xl mb-2 flex justify-between items-center"><span class="font-bold text-xs">${r.name}</span><span class="text-gold font-bold text-xs">₹${parseFloat(r.price).toLocaleString()}</span></div>`).join('');
-            
-            document.getElementById('modalCin').innerText = cin;
-            document.getElementById('modalCout').innerText = cout;
+            let total = 0;
+            list.innerHTML = roomCart.map(room => {
+                total += parseFloat(room.price);
+                return `
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group hover:border-gold/30 transition-all">
+                        <div class="flex items-center space-x-3">
+                            <img src="${room.img}" class="w-12 h-12 rounded-xl object-cover shadow-sm">
+                            <div>
+                                <p class="font-bold text-xs maroon-text">${room.name}</p>
+                                <p class="text-[9px] uppercase tracking-widest text-gold font-bold">₹${parseFloat(room.price).toLocaleString()}</p>
+                            </div>
+                        </div>
+                        <button onclick='toggleRoomSelection(${JSON.stringify(room).replace(/"/g, '&quot;')})' class="text-gray-300 hover:text-red-500 transition-colors">
+                            <i class="fas fa-trash-alt text-[10px]"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
 
-            // Simple night calculation
-            const d1 = new Date(cin);
-            const d2 = new Date(cout);
-            const timeDiff = d2.getTime() - d1.getTime();
-            const diff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
-            const nights = (isNaN(diff) || diff <= 0) ? 1 : diff;
+            totalEl.innerText = '₹' + total.toLocaleString();
+        }
+
+        function proceedToBooking() {
+            const modal = document.getElementById('bookingModal');
+            const roomListModal = document.getElementById('modalRoomListStep1');
             
-            const subtotal = roomCart.reduce((sum, r) => sum + parseFloat(r.price), 0);
-            document.getElementById('modalTotal').innerText = '₹' + (subtotal * nights).toLocaleString();
+            document.getElementById('bookingStep1').classList.remove('hidden');
+            document.getElementById('bookingStep2').classList.add('hidden');
+
+            roomListModal.innerHTML = roomCart.map(r => `
+                <div class="p-4 bg-maroon/5 rounded-2xl flex justify-between items-center border border-maroon/5">
+                    <span class="font-black text-xs maroon-text uppercase tracking-tight">${r.name}</span>
+                    <span class="text-gold font-bold text-xs">₹${parseFloat(r.price).toLocaleString()} <span class="text-[9px] text-gray-400">/ Night</span></span>
+                </div>`).join('');
             
             modal.classList.remove('hidden');
         }
 
+        async function verifyAvailability() {
+            const cin = document.getElementById('book_cin').value;
+            const cout = document.getElementById('book_cout').value;
+
+            if (!cin || !cout) {
+                showPremiumMessage('Dates Required', 'Please select arrival and departure dates.', 'error');
+                return;
+            }
+
+            const loader = document.getElementById('verifyLoader');
+            const text = document.getElementById('verifyText');
+            loader.classList.remove('hidden');
+            text.innerText = "Checking Portals...";
+
+            const roomIds = roomCart.map(r => r.id).join(',');
+            
+            try {
+                // We use the same booking script with a check-only dry run logic if added, 
+                // but since we want it "Live", we can check if rooms are available in one go.
+                const response = await fetch(`php/check_availability_batch.php?room_ids=${roomIds}&cin=${cin}&cout=${cout}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    // Calculate totals
+                    const d1 = new Date(cin);
+                    const d2 = new Date(cout);
+                    const nights = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) || 1;
+                    const subtotal = roomCart.reduce((sum, r) => sum + parseFloat(r.price), 0);
+                    
+                    document.getElementById('modalTotal').innerText = '₹' + (subtotal * nights).toLocaleString();
+                    document.getElementById('nightsText').innerText = `Total for ${nights} Night${nights > 1 ? 's' : ''}`;
+                    
+                    document.getElementById('bookingStep1').classList.add('hidden');
+                    document.getElementById('bookingStep2').classList.remove('hidden');
+                } else {
+                    showPremiumMessage('Suites Occupied', data.message, 'error');
+                }
+            } catch (err) {
+                showPremiumMessage('Sync Error', 'Unable to verify availability.', 'error');
+            } finally {
+                loader.classList.add('hidden');
+                text.innerText = "Verify Availability";
+            }
+        }
+
+        function backToStep1() {
+            document.getElementById('bookingStep1').classList.remove('hidden');
+            document.getElementById('bookingStep2').classList.add('hidden');
+        }
+
         function completeBooking() {
-            const cin = document.getElementById('cin').value;
-            const cout = document.getElementById('cout').value;
+            const cin = document.getElementById('book_cin').value;
+            const cout = document.getElementById('book_cout').value;
             const name = document.getElementById('guest_name').value.trim();
             const email = document.getElementById('guest_email').value.trim();
             const phone = document.getElementById('guest_phone').value.trim();
@@ -1088,7 +1196,7 @@ $rooms_result = $conn->query($query);
             const address = document.getElementById('guest_address').value.trim();
 
             if (!name || !email || !phone || !id_proof || !address) {
-                showPremiumMessage('Fields Required', 'All guest details are mandatory.', 'error');
+                showPremiumMessage('Verification Required', 'Please complete all identification fields.', 'error');
                 return;
             }
 
@@ -1096,12 +1204,11 @@ $rooms_result = $conn->query($query);
             const loader = document.getElementById('btnLoader');
             const text = document.getElementById('confirmText');
 
-            text.innerText = "Finalizing Stay...";
+            text.innerText = "Finalizing Archive...";
             loader.classList.remove('hidden');
             btn.style.pointerEvents = 'none';
 
             const roomIds = roomCart.map(r => r.id).join(',');
-
             const formData = new FormData();
             formData.append('room_ids', roomIds);
             formData.append('check_in', cin);
@@ -1113,27 +1220,23 @@ $rooms_result = $conn->query($query);
             formData.append('id_proof', id_proof);
             formData.append('guest_address', address);
 
-            fetch('php/book_room.php', {
-                method: 'POST',
-                body: formData
-            })
+            fetch('php/book_room.php', { method: 'POST', body: formData })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    document.getElementById('bookingModal').classList.add('hidden');
-                    showToast('Residencies Confirmed!', 'Your multi-suite stay has been archived.');
+                    hideBookingModal();
+                    showToast('Residency Secured!', 'Your luxurious stays have been archived.');
                     setTimeout(() => window.location.href = 'customer-dashboard.php', 2000);
                 } else {
-                    showPremiumMessage('Booking Error', data.message, 'error');
-                    text.innerText = "Complete Residency";
+                    showPremiumMessage('Archive Failed', data.message, 'error');
+                    text.innerText = "Seal Agreement";
                     loader.classList.add('hidden');
                     btn.style.pointerEvents = 'auto';
                 }
             })
             .catch(err => {
-                console.error(err);
                 showPremiumMessage('System Error', 'Unable to complete reservation.', 'error');
-                text.innerText = "Complete Residency";
+                text.innerText = "Seal Agreement";
                 loader.classList.add('hidden');
                 btn.style.pointerEvents = 'auto';
             });
