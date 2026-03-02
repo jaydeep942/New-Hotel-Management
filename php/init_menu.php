@@ -25,26 +25,37 @@ if ($conn->query($sql_table) === TRUE) {
     // I am using very specific Unsplash IDs to ensure 100% match
     $insert_sql = "INSERT INTO menu_items (name, description, price, image_url, category, sub_category, meal_type) VALUES 
     -- GUJARATI (Pure Veg)
+    ('Bataka Poha', 'A popular Gujarati breakfast made with flattened rice, potatoes, and peanuts.', 12.00, 'https://i.ytimg.com/vi/Cw7Dl30ZwOk/mqdefault.jpg', 'Gujarati', 'Starters', 'Breakfast'),
     ('Authentic Khaman Dhokla', 'Soft and spongy steamed gram flour cakes tempered with mustard seeds and green chillies.', 12.00, 'https://images.unsplash.com/photo-1626132647523-66f5bf380027?auto=format&fit=crop&q=82&w=800', 'Gujarati', 'Starters', 'Breakfast'),
-    ('Pure Veg Gujarati Thali', 'A grand platter with Rotli, Dal, Bhaat, Shaak, Kathol, Farsan, and Sweet.', 28.00, 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&q=82&w=800', 'Gujarati', 'Thali', 'Lunch'),
+    ('Royal Gujarati Thali', 'A grand platter with Rotli, Dal, Bhaat, Shaak, Kathol, Farsan, and Sweet.', 28.00, 'https://www.gujaratexpert.com/blog/wp-content/uploads/2024/01/Toran-Dining-Hall-Ahmedabad.jpg', 'Gujarati', 'Thali', 'Lunch'),
+    ('Dal Dhokli', 'Traditional Gujarati comfort food - wheat flour dumplings in lentil stew.', 18.00, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRjkZkg7Rzoq_IAPVzPGkywO2S4XxMXn3xJfw&s', 'Gujarati', 'Main Course', 'All Day'),
     ('Surti Undhiyu', 'Slow-cooked winter vegetable medley with special spices and small dumplings.', 20.00, 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&q=82&w=800', 'Gujarati', 'Main Course', 'Dinner'),
-    ('Rose-Infused Gulab Jamun', 'Warm milk-solid dumplings soaked in a delicate rose-flavored cardamom syrup.', 10.00, 'https://images.unsplash.com/photo-1589119908995-c6837fa14848?auto=format&fit=crop&q=82&w=800', 'Gujarati', 'Dessert', 'All Day'),
+    ('Saffron Gulab Jamun', 'Warm milk-solid dumplings soaked in a delicate saffron-flavored cardamom syrup.', 12.00, 'https://t3.ftcdn.net/jpg/17/52/27/34/360_F_1752273443_L54iRo0qI5oCNOEJOAy9v4FJFZ3Ero4L.jpg', 'Gujarati', 'Dessert', 'All Day'),
 
     -- PUNJABI (Pure Veg)
     ('Paneer Butter Masala', 'Fresh paneer cubes simmered in a rich, buttery tomato gravy finished with cream.', 24.00, 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&q=82&w=800', 'Punjabi', 'Main Course', 'Dinner'),
     ('Tandoori Paneer Tikka', 'Char-grilled skewers of marinated paneer, bell peppers, and onions.', 18.00, 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?auto=format&fit=crop&q=82&w=800', 'Punjabi', 'Starters', 'All Day'),
     ('Dal Makhani Deluxe', 'Traditional black lentils slow-cooked overnight with cream and house-made white butter.', 22.00, 'https://images.unsplash.com/photo-1546241072-48010ad28c2c?auto=format&fit=crop&q=82&w=800', 'Punjabi', 'Main Course', 'Dinner'),
-    ('Chole Bhature Platter', 'Tangy and spicy chickpea curry served with two large puffed bhaturas.', 16.00, 'https://images.unsplash.com/photo-1626132647523-66f5bf380027?auto=format&fit=crop&q=82&w=800', 'Punjabi', 'Main Course', 'Lunch'),
+    ('Chole Bhature', 'Tangy and spicy chickpea curry served with two large puffed bhaturas.', 16.00, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZWmOmPmfjkEYU-IW9KimKG1jJWKEh1p5v2w&s', 'Punjabi', 'Main Course', 'Lunch'),
+    ('Amritsari Kulcha', 'Authentic Punjabi stuffed bread served with Chole and Chutney.', 18.00, 'https://www.spicingyourlife.com/wp-content/uploads/2014/06/Punjabi-Amritsari-Kulcha-1.jpg', 'Punjabi', 'Main Course', 'All Day'),
 
     -- CHINESE (Pure Veg)
     ('Veg Hakka Noodles', 'Thin noodles stir-fried with julienned vegetables and a touch of light soy.', 15.00, 'https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&q=82&w=800', 'Chinese', 'Main Course', 'Lunch'),
+    ('Veg Manchow Soup', 'Spicy Indo-Chinese soup served with crispy fried noodles.', 14.00, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlH7LTbA9HXKb1blb8r3celL3bTKIAM2nXnA&s', 'Chinese', 'Starters', 'All Day'),
     ('Vegetable Fried Rice', 'Fragrant long-grain rice tossed with colorful vegetables and aromatic herbs.', 14.00, 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&q=82&w=800', 'Chinese', 'Main Course', 'Dinner'),
     ('Crispy Chilli Paneer', 'Crispy batter-fried paneer cubes tossed in a spicy and tangy chili sauce.', 18.00, 'https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&q=82&w=800', 'Chinese', 'Starters', 'All Day'),
+    ('Veg Manchurian', 'Golden fried vegetable balls tossed in a tangy soy-garlic Manchurian sauce.', 16.00, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHRESiYmwBMp2OS85ffLQN4SYrRJIcyYqJag&s', 'Chinese', 'Main Course', 'All Day'),
 
     -- SOUTH INDIAN (Pure Veg)
-    ('Ghee Roast Masala Dosa', 'Golden, crispy rice and lentil crepe stuffed with a spiced potato filling.', 15.00, 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&q=82&w=800', 'South Indian', 'Breakfast', 'Breakfast'),
+    ('Masala Dosa', 'Golden, crispy rice and lentil crepe stuffed with a spiced potato filling.', 15.00, 'https://images.unsplash.com/photo-1743615467204-8fdaa85ff2db?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8bWFzYWxhJTIwZG9zYXxlbnwwfHwwfHx8MA%3D%3D', 'South Indian', 'Breakfast', 'Breakfast'),
     ('Soft Steamed Idli-Sambar', 'Steam-soft steamed rice cakes served with hot lentil soup and fresh chutney.', 12.00, 'https://images.unsplash.com/photo-1630302484644-c24ee899ba82?auto=format&fit=crop&q=82&w=800', 'South Indian', 'Breakfast', 'Breakfast'),
     ('Hyderabadi Veg Biryani', 'Aromatic basmati rice cooked on dum with exotic spices and tender vegetables.', 25.00, 'https://images.unsplash.com/photo-1563379091339-03b21bc4a4f8?auto=format&fit=crop&q=82&w=800', 'South Indian', 'Rice Items', 'Dinner'),
+    ('Rava Idli', 'Popular South Indian breakfast made from semolina, served with Sambar and Chutney.', 12.00, 'https://media.istockphoto.com/id/1424489174/photo/idly-sambar-or-idly-with-sambhar-and-green-red-chutney-popular-south-indian-breakfast.jpg?s=612x612&w=0&k=20&c=ttthhsPnjSnct6CRmVUn3kzHJIbYF2XTWNADMUaktHo=', 'South Indian', 'Breakfast', 'Breakfast'),
+
+    -- CONTINENTAL (Pure Veg)
+    ('Truffle Mushroom Risotto', 'Creamy Arborio rice slow-cooked with wild mushrooms and finished with truffle oil.', 32.00, 'https://www.lakeshorelady.com/wp-content/uploads/2021/02/mushroom-risotto-8-735x1132.jpg', 'Continental', 'Main Course', 'Dinner'),
+    ('Pesto Genovese Pasta', 'Fresh al dente pasta tossed in a vibrant basil pesto with pine nuts and parmesan.', 28.00, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDc2uqlI8QfOUgZgMjxNZXAoR75rP6AyjAqA&s', 'Continental', 'Main Course', 'All Day'),
+    ('Belgian Chocolate Mousse', 'Fluffy and rich mousse made with premium Belgian chocolate and fresh cream.', 22.00, 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLe3WHajMAE1sQh3m0KEQzL5TZOiInr3tP-A&s', 'Continental', 'Dessert', 'All Day'),
     
     -- REFRESHMENTS
     ('Royal Saffron Masala Chai', 'Traditional Indian Masala Chai served in a classic glass tumbler, showcasing its warm, spicy character and creamy texture.', 8.00, 'https://images.unsplash.com/photo-1577968897966-3d4325b36b61?auto=format&fit=crop&q=82&w=800', 'Refreshments', 'Hot Drinks', 'All Day'),
