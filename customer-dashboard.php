@@ -128,6 +128,7 @@ $cumulative_ledger = $total_price + $running_service_total;
     <title>Dashboard | Grand Luxe Hotel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -913,18 +914,26 @@ $cumulative_ledger = $total_price + $running_service_total;
                         </div>
                     </div>
 
-                    <!-- Total Calculation -->
-                    <div class="pt-6 border-t-2 border-dashed border-gray-100">
-                        <div class="flex justify-between items-center px-2">
+                    <!-- Settlement Summary -->
+                    <div class="pt-6 border-t-2 border-dashed border-gray-100 space-y-3">
+                        <div class="flex justify-between items-center px-2 text-xs">
+                            <span class="font-bold text-gray-400 uppercase tracking-widest">Grand Total Stay</span>
+                            <span id="checkoutGrandTotal" class="font-black maroon-text">--</span>
+                        </div>
+                        <div class="flex justify-between items-center px-2 text-xs">
+                            <span class="font-bold text-teal uppercase tracking-widest">Paid via Digital Portal</span>
+                            <span id="checkoutPaidAtBooking" class="font-black text-teal">--</span>
+                        </div>
+                        <div class="flex justify-between items-center px-2 pt-4 border-t border-gray-50">
                             <div>
-                                <h4 class="text-xl font-bold maroon-text">Grand Total</h4>
-                                <p class="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Incl. all taxes & services</p>
+                                <h4 class="text-xl font-bold maroon-text">Due Now</h4>
+                                <p class="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Settlement for Services</p>
                             </div>
-                            <span id="checkoutGrandTotal" class="text-3xl font-black maroon-text">--</span>
+                            <span id="checkoutDueNow" class="text-3xl font-black maroon-text">--</span>
                         </div>
                     </div>
 
-                    <button id="confirmCheckoutBtn" onclick="processCheckout()" class="w-full py-5 gradient-maroon text-white rounded-[24px] font-bold shadow-xl shadow-maroon/20 hover:scale-[1.02] transition-transform flex items-center justify-center space-x-3">
+                    <button id="confirmCheckoutBtn" class="w-full py-5 gradient-maroon text-white rounded-[24px] font-bold shadow-xl shadow-maroon/20 hover:scale-[1.02] transition-transform flex items-center justify-center space-x-3">
                         <i class="fas fa-credit-card"></i>
                         <span>Settle & Check-Out</span>
                     </button>
@@ -1043,8 +1052,8 @@ $cumulative_ledger = $total_price + $running_service_total;
                     btn.style.pointerEvents = 'auto';
                 }
             }
-        </script>
-        <script>
+        
+        function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
             
@@ -1306,8 +1315,40 @@ $cumulative_ledger = $total_price + $running_service_total;
                         ordersContainer.classList.add('hidden');
                     }
                     
-                    document.getElementById('checkoutGrandTotal').innerText = `₹${parseFloat(data.grand_total).toLocaleString()}`;
-                    document.getElementById('confirmCheckoutBtn').onclick = () => processCheckout(bookingId);
+                    document.getElementById('checkoutGrandTotal').innerText = `₹${parseFloat(data.grand_total_stay).toLocaleString()}`;
+                    document.getElementById('checkoutPaidAtBooking').innerText = `- ₹${parseFloat(data.booking_paid).toLocaleString()}`;
+                    document.getElementById('checkoutDueNow').innerText = `₹${parseFloat(data.due_now).toLocaleString()}`;
+
+                    const settlementBtn = document.getElementById('confirmCheckoutBtn');
+                    const settlementIcon = settlementBtn.querySelector('i');
+                    const settlementText = settlementBtn.querySelector('span');
+
+                    if (data.due_now > 0) {
+                        settlementText.innerText = "Settle Balance & Departure";
+                        settlementBtn.onclick = () => {
+                            const options = {
+                                key: "rzp_test_GdsfXdgH2WnNY1",
+                                amount: Math.round(data.due_now * 100),
+                                currency: "INR",
+                                name: "Grand Luxe Hotel",
+                                description: "Final Service Settlement",
+                                handler: function (response) {
+                                    finalizeCheckout(bookingId, response.razorpay_payment_id);
+                                },
+                                prefill: {
+                                    name: "<?php echo $_SESSION['name']; ?>",
+                                    email: "<?php echo $_SESSION['email']; ?>"
+                                },
+                                theme: { color: "#6A1E2D" }
+                            };
+                            const rzp = new Razorpay(options);
+                            rzp.open();
+                        };
+                    } else {
+                        settlementText.innerText = "Confirm Happy Departure";
+                        settlementIcon.className = "fas fa-check-circle";
+                        settlementBtn.onclick = () => finalizeCheckout(bookingId, 'PAID_IN_FULL');
+                    }
                 } else {
                     showMessage('Checkout Error', data.message, 'error');
                     closeCheckoutModal();
@@ -1325,21 +1366,21 @@ $cumulative_ledger = $total_price + $running_service_total;
             modal.classList.remove('flex');
         }
 
-        function processCheckout(bookingId) {
+        function finalizeCheckout(bookingId, paymentId) {
             const btn = document.getElementById('confirmCheckoutBtn');
             const originalContent = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Processing...</span>';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Finalizing Archive...</span>';
             btn.disabled = true;
 
             fetch('php/process_checkout.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `booking_id=${bookingId}`
+                body: `booking_id=${bookingId}&payment_id=${paymentId}`
             })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    showMessage('Departure Finalized', 'Your stay has been successfully completed. Farewell!');
+                    showMessage('Departure Finalized', 'Your settlement is secured. Farewell!');
                     setTimeout(() => location.reload(), 2000);
                 } else {
                     showMessage('Checkout Error', data.message, 'error');
@@ -1348,7 +1389,7 @@ $cumulative_ledger = $total_price + $running_service_total;
                 }
             })
             .catch(() => {
-                showMessage('System Error', 'An unexpected error occurred.', 'error');
+                showMessage('System Error', 'Unable to complete departure record.', 'error');
                 btn.innerHTML = originalContent;
                 btn.disabled = false;
             });

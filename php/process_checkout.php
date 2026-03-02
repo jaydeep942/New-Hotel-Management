@@ -10,6 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 $conn = require_once __DIR__ . '/../config/db.php';
 $user_id = $_SESSION['user_id'];
 $booking_id = $_POST['booking_id'] ?? null;
+$payment_id = $_POST['payment_id'] ?? null;
 
 if (!$booking_id) {
     echo json_encode(['success' => false, 'message' => 'Missing booking ID']);
@@ -48,8 +49,8 @@ try {
     $final_bill = $booking['total_price'] + $service_total;
 
     // 2. Update booking status and final bill
-    $update_booking = $conn->prepare("UPDATE bookings SET status = 'Checked-Out', actual_checkout = NOW(), final_bill = ? WHERE id = ? AND user_id = ?");
-    $update_booking->bind_param("dii", $final_bill, $booking_id, $user_id);
+    $update_booking = $conn->prepare("UPDATE bookings SET status = 'Checked-Out', actual_checkout = NOW(), final_bill = ?, razorpay_payment_id = ? WHERE id = ? AND user_id = ?");
+    $update_booking->bind_param("dsii", $final_bill, $payment_id, $booking_id, $user_id);
     
     if (!$update_booking->execute()) {
         throw new Exception("Unable to finalize checkout settlement.");

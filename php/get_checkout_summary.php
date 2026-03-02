@@ -31,13 +31,14 @@ if (!$booking) {
     exit();
 }
 
-// 2. Calculate Nights (to show "time" as requested)
+// 2. Calculate Nights
 $cin = new DateTime($booking['check_in']);
 $cout = new DateTime($booking['check_out']);
 $nights = $cin->diff($cout)->days;
 $nights = $nights > 0 ? $nights : 1;
 
-// 3. Fetch Service Orders for this stay (based on room and date)
+// 3. Fetch Pending Service Orders for this stay
+// We assume anything NOT cancelled should be settled at checkout
 $orders_sql = "SELECT * FROM service_orders 
                WHERE user_id = ? AND room_number = ? 
                AND created_at >= ? 
@@ -48,19 +49,24 @@ $orders_stmt->bind_param("iss", $user_id, $booking['room_number'], $start_date);
 $orders_stmt->execute();
 $orders_res = $orders_stmt->get_result();
 $orders = [];
-$orders_total = 0;
+$pending_services_total = 0;
 
 while($row = $orders_res->fetch_assoc()) {
     $orders[] = $row;
-    $orders_total += $row['total_price'];
+    $pending_services_total += $row['total_price'];
 }
 
-$grand_total = $booking['total_price'] + $orders_total;
+$booking_paid = $booking['total_price']; // Already paid during booking
+$grand_total_stay = $booking_paid + $pending_services_total;
+$due_now = $pending_services_total; // Only charge for the extra services
 
 echo json_encode([
     'success' => true,
     'booking' => $booking,
     'nights' => $nights,
     'orders' => $orders,
-    'grand_total' => $grand_total
+    'booking_paid' => $booking_paid,
+    'pending_services' => $pending_services_total,
+    'grand_total_stay' => $grand_total_stay,
+    'due_now' => $due_now
 ]);

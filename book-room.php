@@ -69,6 +69,7 @@ $rooms_result = $conn->query($query);
     <title>Book Room | Grand Luxe Hotel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -1200,6 +1201,51 @@ $rooms_result = $conn->query($query);
                 return;
             }
 
+            // --- RAZORPAY PAYMENT INITIATION ---
+            const d1 = new Date(cin);
+            const d2 = new Date(cout);
+            const nights = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) || 1;
+            const subtotal = roomCart.reduce((sum, r) => sum + parseFloat(r.price), 0);
+            const grandTotal = subtotal * nights;
+
+            const options = {
+                key: "rzp_test_GdsfXdgH2WnNY1",
+                amount: grandTotal * 100, // Amount in paise
+                currency: "INR",
+                name: "Grand Luxe Hotel",
+                description: "Luxury Regency Booking",
+                image: "https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg?auto=compress&cs=tinysrgb&w=100",
+                handler: function (response) {
+                    finalizeBooking(response.razorpay_payment_id);
+                },
+                prefill: {
+                    name: name,
+                    email: email,
+                    contact: phone
+                },
+                theme: {
+                    color: "#6A1E2D"
+                }
+            };
+            const rzp = new Razorpay(options);
+            
+            rzp.on('payment.failed', function (response){
+                showPremiumMessage('Payment Failed', response.error.description, 'error');
+            });
+
+            rzp.open();
+        }
+
+        function finalizeBooking(paymentId) {
+            const cin = document.getElementById('book_cin').value;
+            const cout = document.getElementById('book_cout').value;
+            const name = document.getElementById('guest_name').value.trim();
+            const email = document.getElementById('guest_email').value.trim();
+            const phone = document.getElementById('guest_phone').value.trim();
+            const id_proof_type = document.getElementById('id_proof_type').value;
+            const id_proof = document.getElementById('id_proof').value.trim();
+            const address = document.getElementById('guest_address').value.trim();
+
             const btn = document.getElementById('confirmBtn');
             const loader = document.getElementById('btnLoader');
             const text = document.getElementById('confirmText');
@@ -1219,6 +1265,7 @@ $rooms_result = $conn->query($query);
             formData.append('id_proof_type', id_proof_type);
             formData.append('id_proof', id_proof);
             formData.append('guest_address', address);
+            formData.append('razorpay_payment_id', paymentId);
 
             fetch('php/book_room.php', { method: 'POST', body: formData })
             .then(res => res.json())

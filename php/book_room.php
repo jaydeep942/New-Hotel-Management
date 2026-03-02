@@ -65,9 +65,11 @@ try {
             $total_price = $room_data['price_per_night'] * $nights;
             $grand_total += $total_price;
             
+            $razorpay_payment_id = $_POST['razorpay_payment_id'] ?? null;
+
             // Insert single booking record
-            $stmt = $conn->prepare("INSERT INTO bookings (user_id, guest_name, guest_email, guest_phone, room_id, check_in, check_out, total_price, id_proof_type, id_proof_number, permanent_address, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Confirmed')");
-            $stmt->bind_param("isssissdsss", $user_id, $guest_name, $guest_email, $guest_phone, $r_id, $check_in, $check_out, $total_price, $id_proof_type, $id_proof_number, $permanent_address);
+            $stmt = $conn->prepare("INSERT INTO bookings (user_id, guest_name, guest_email, guest_phone, room_id, check_in, check_out, total_price, id_proof_type, id_proof_number, permanent_address, status, razorpay_payment_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Confirmed', ?)");
+            $stmt->bind_param("isssissdssss", $user_id, $guest_name, $guest_email, $guest_phone, $r_id, $check_in, $check_out, $total_price, $id_proof_type, $id_proof_number, $permanent_address, $razorpay_payment_id);
             
             if ($stmt->execute()) {
                 $conn->query("UPDATE rooms SET status = 'Occupied' WHERE id = $r_id");
