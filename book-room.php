@@ -665,7 +665,7 @@ $rooms_result = $conn->query($query);
                 <div class="grid grid-cols-2 gap-4">
                     <button onclick="backToStep1()" class="py-5 bg-gray-50 text-gray-400 rounded-[24px] font-black uppercase tracking-[3px] text-[11px] hover:text-maroon transition-all">Back</button>
                     <button onclick="completeBooking()" id="confirmBtn" class="py-5 gradient-maroon text-white rounded-[24px] font-black uppercase tracking-[3px] text-[11px] btn-glow transition-all shadow-xl flex items-center justify-center space-x-3 hover:scale-[1.02]">
-                        <span id="confirmText">Seal Agreement</span>
+                        <span id="confirmText">Confirm Booking</span>
                         <div id="btnLoader" class="hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                     </button>
                 </div>
@@ -1229,14 +1229,14 @@ $rooms_result = $conn->query($query);
                     setTimeout(() => window.location.href = 'customer-dashboard.php', 2000);
                 } else {
                     showPremiumMessage('Archive Failed', data.message, 'error');
-                    text.innerText = "Seal Agreement";
+                    text.innerText = "Confirm Booking";
                     loader.classList.add('hidden');
                     btn.style.pointerEvents = 'auto';
                 }
             })
             .catch(err => {
                 showPremiumMessage('System Error', 'Unable to complete reservation.', 'error');
-                text.innerText = "Seal Agreement";
+                text.innerText = "Confirm Booking";
                 loader.classList.add('hidden');
                 btn.style.pointerEvents = 'auto';
             });
