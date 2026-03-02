@@ -199,18 +199,81 @@ $cumulative_ledger = $total_price + $running_service_total;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
         }
 
-        .glass-nav {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+        .gradient-maroon {
+            background: linear-gradient(135deg, #6A1E2D 0%, #4A141E 100%) !important;
+            color: white !important;
         }
 
-        .gradient-gold { background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%); }
-        .gradient-teal { background: linear-gradient(135deg, #2CA6A4 0%, #228B89 100%); }
-        .gradient-maroon { background: linear-gradient(135deg, #6A1E2D 0%, #4A1520 100%); }
+        .gradient-teal {
+            background: linear-gradient(135deg, #1D6A68 0%, #144A48 100%) !important;
+            color: white !important;
+        }
 
-        .btn-glow:hover {
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+        .gradient-pearl {
+            background: linear-gradient(135deg, #FFFFFF 0%, #F5F0E6 100%) !important;
+            border: 1px solid rgba(212, 175, 55, 0.2) !important;
+        }
+
+        .gradient-gold {
+            background: linear-gradient(135deg, #D4AF37 0%, #B8962E 100%) !important;
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        /* Simple Premium Navbar Styles */
+        .nav-link {
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .nav-link span {
+            position: relative;
+            z-index: 20;
+        }
+
+        /* Simple Centered Pill Background */
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: var(--maroon);
+            border-radius: 12px;
+            transform: translate(-50%, -50%) scale(0.6, 0.4);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 5;
+        }
+
+        .nav-link:hover::before {
+            transform: translate(-50%, -50%) scale(0.8, 0.6);
+            opacity: 0.05;
+        }
+
+        .nav-link.active::before {
+            transform: translate(-50%, -50%) scale(0.85, 0.65);
+            opacity: 1;
+            background: var(--maroon);
+            box-shadow: 0 8px 20px rgba(106, 30, 45, 0.15);
+        }
+
+        .nav-link.active {
+            color: white !important;
+        }
+
+        .nav-link:not(.active):hover {
+            color: var(--maroon) !important;
         }
 
         /* Animations */
@@ -262,26 +325,26 @@ $cumulative_ledger = $total_price + $running_service_total;
                     </div>
 
                     <!-- Navigation Links (Desktop) -->
-                    <div class="hidden xl:flex items-center space-x-1">
-                        <a href="customer-dashboard.php" class="nav-link active flex items-center px-6 py-3.5 rounded-2xl text-[13px] font-bold transition-all">
+                    <div class="hidden xl:flex items-center space-x-2">
+                        <a href="customer-dashboard.php" class="nav-link active flex items-center px-7 py-4 rounded-2xl text-[15px] font-bold transition-all">
                             <span>Dashboard</span>
                         </a>
-                        <a href="book-room.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                        <a href="book-room.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Book Room</span>
                         </a>
-                        <a href="services.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl <?php echo $canUseServices ? 'text-gray-500 hover:text-maroon' : 'text-gray-400'; ?> text-[13px] font-bold transition-all">
+                        <a href="services.php" class="nav-link flex items-center px-7 py-4 rounded-2xl <?php echo $canUseServices ? 'text-gray-500 hover:text-maroon' : 'text-gray-400'; ?> text-[15px] font-bold transition-all">
                             <span>Services</span>
                         </a>
-                        <a href="cleaning.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl <?php echo $canUseServices ? 'text-gray-500 hover:text-maroon' : 'text-gray-400'; ?> text-[13px] font-bold transition-all">
+                        <a href="cleaning.php" class="nav-link flex items-center px-7 py-4 rounded-2xl <?php echo $canUseServices ? 'text-gray-500 hover:text-maroon' : 'text-gray-400'; ?> text-[15px] font-bold transition-all">
                             <span>Cleaning</span>
                         </a>
-                        <a href="history.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                        <a href="history.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>History</span>
                         </a>
-                        <a href="feedback.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                        <a href="feedback.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Feedback</span>
                         </a>
-                        <a href="complaints.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                        <a href="complaints.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Complaints</span>
                         </a>
                     </div>
@@ -460,54 +523,54 @@ $cumulative_ledger = $total_price + $running_service_total;
 
             <!-- Summary Cards -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-                <div class="gradient-maroon p-8 rounded-[32px] text-white premium-shadow hover:scale-105 transition-transform duration-500 relative overflow-hidden group shimmer-card">
-                    <i class="fas fa-bookmark absolute -right-4 -bottom-4 text-8xl text-white/10 group-hover:scale-110 transition-transform"></i>
-                    <p class="text-white/70 uppercase tracking-widest text-[10px] font-black mb-2"><?php echo $bookingLabel; ?></p>
-                    <h3 class="text-3xl font-black italic tracking-tighter" style="font-family: 'Playfair Display', serif;"><?php echo $currentBookingID; ?></h3>
+                <div class="gradient-maroon p-8 rounded-[32px] text-white premium-shadow hover:scale-110 transition-transform duration-500 relative overflow-hidden group shimmer-card">
+                    <i class="fas fa-bookmark absolute -right-4 -bottom-4 text-8xl text-white/5 opacity-40 group-hover:scale-110 transition-transform"></i>
+                    <p class="text-white/60 uppercase tracking-widest text-[9px] font-black mb-2"><?php echo $bookingLabel; ?></p>
+                    <h3 class="text-3xl font-black italic tracking-tighter text-[#F8F5F0]" style="font-family: 'Playfair Display', serif;"><?php echo $currentBookingID; ?></h3>
                     <?php if($hasBooking): ?>
-                    <div class="mt-6 flex items-center justify-between">
+                    <div class="mt-8 flex items-center justify-between">
                         <div class="flex items-center space-x-2">
                             <?php if($isLive): ?>
-                            <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(74,222,128,0.5)]"></span>
-                            <span class="text-[10px] font-black uppercase tracking-widest text-white">Live Residency</span>
+                            <span class="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_15px_rgba(74,222,128,0.8)]"></span>
+                            <span class="text-[9px] font-black uppercase tracking-widest text-white/90">Resident Active</span>
                             <?php else: ?>
-                            <span class="w-2 h-2 bg-gold rounded-full opacity-50"></span>
-                            <span class="text-[10px] font-black uppercase tracking-widest text-white/70">Scheduled Stay</span>
+                            <span class="w-2.5 h-2.5 bg-gold rounded-full opacity-60"></span>
+                            <span class="text-[9px] font-black uppercase tracking-widest text-white/60">Upcoming Stay</span>
                             <?php endif; ?>
                         </div>
                         <?php if($isLive): ?>
-                        <button onclick="initiateCheckout(<?php echo $booking['id']; ?>)" class="px-5 py-2 bg-gold text-maroon hover:bg-white rounded-xl text-[10px] font-black transition-all uppercase tracking-[2px] shadow-xl btn-glow">Check-Out</button>
-                        <?php elseif(!$isLive): ?>
-                        <button onclick="cancelBooking(<?php echo $booking['id']; ?>)" class="text-[10px] font-black text-white/50 hover:text-white transition-colors uppercase tracking-[2px]">Cancel</button>
+                        <button onclick="initiateCheckout(<?php echo $booking['id']; ?>)" class="px-6 py-2.5 bg-gold text-maroon hover:bg-white hover:text-maroon rounded-full text-[9px] font-black tracking-[2px] uppercase shadow-lg transition-all duration-300 transform group-hover:scale-105">CHECK-OUT</button>
                         <?php endif; ?>
                     </div>
                     <?php else: ?>
-                    <a href="book-room.php" class="mt-6 inline-block text-xs font-bold text-gold hover:underline">Book Your Stay →</a>
+                    <a href="book-room.php" class="mt-8 inline-block text-[10px] font-black uppercase tracking-widest text-gold hover:text-white transition-colors">Start Your Journey →</a>
                     <?php endif; ?>
                 </div>
 
                 <div class="bg-white p-8 rounded-[32px] premium-shadow border border-gray-50 hover:scale-105 transition-transform duration-500 group relative">
                      <i class="fas fa-couch absolute -right-4 -bottom-4 text-8xl text-gray-50 group-hover:scale-110 transition-transform"></i>
                     <p class="text-gray-400 uppercase tracking-widest text-[10px] font-bold mb-2">Room Type</p>
-                    <h3 class="text-xl font-bold maroon-text"><?php echo $roomType; ?></h3>
-                    <p class="mt-4 text-gold font-bold text-sm"><?php echo $hasBooking ? 'Luxury Suite' : 'Ready for you'; ?></p>
+                    <h3 class="text-xl font-bold maroon-text leading-tight"><?php echo $roomType; ?></h3>
+                    <p class="mt-4 text-gold font-bold text-[10px] uppercase tracking-widest opacity-70"><?php echo $hasBooking ? 'Confirmed Resident' : 'Ready for you'; ?></p>
                 </div>
 
                 <div class="bg-white p-8 rounded-[32px] premium-shadow border border-gray-50 hover:scale-105 transition-transform duration-500 group relative">
                     <i class="fas fa-calendar-check absolute -right-4 -bottom-4 text-8xl text-gray-50 group-hover:scale-110 transition-transform"></i>
                     <p class="text-gray-400 uppercase tracking-widest text-[10px] font-bold mb-2">Check-In</p>
-                    <h3 class="text-2xl font-bold teal-text"><?php echo $check_in; ?></h3>
-                    <p class="mt-4 text-gray-400 text-sm">After 12:00 PM</p>
+                    <h3 class="text-2xl font-black maroon-text leading-tight"><?php echo $check_in; ?></h3>
+                    <p class="mt-4 text-gold font-bold text-[10px] uppercase tracking-widest opacity-60">After 12:00 PM</p>
                 </div>
 
-                <div class="gradient-gold p-8 rounded-[32px] text-white premium-shadow hover:scale-105 transition-transform duration-500 group relative">
-                    <i class="fas fa-door-open absolute -right-4 -bottom-4 text-8xl text-white/10 group-hover:scale-110 transition-transform"></i>
-                    <p class="text-white/70 uppercase tracking-widest text-[10px] font-bold mb-2">Check-Out</p>
-                    <h3 class="text-2xl font-bold"><?php echo $check_out; ?></h3>
+                <div class="gradient-gold p-8 rounded-[32px] text-maroon premium-shadow hover:scale-110 transition-transform duration-500 group relative overflow-hidden">
+                    <i class="fas fa-door-open absolute -right-4 -bottom-4 text-8xl text-maroon/5 group-hover:scale-110 transition-transform"></i>
+                    <p class="text-maroon/60 uppercase tracking-widest text-[10px] font-black mb-2">Check-Out</p>
+                    <h3 class="text-2xl font-black maroon-text leading-tight drop-shadow-sm"><?php echo $check_out; ?></h3>
                     <?php if($hasBooking): ?>
-                    <p class="mt-4 text-white/80 text-sm italic"><?php echo $totalNights; ?> Nights Stay</p>
+                    <p class="mt-4 text-maroon font-black text-[10px] uppercase tracking-widest opacity-60 flex items-center">
+                        <i class="fas fa-moon mr-2 text-[8px]"></i><?php echo $totalNights; ?> Nights Duration
+                    </p>
                     <?php else: ?>
-                    <p class="mt-4 text-white/80 text-sm italic">Plan your getaway</p>
+                    <p class="mt-4 text-maroon font-black text-[10px] uppercase tracking-widest opacity-40 italic">Plan your getaway</p>
                     <?php endif; ?>
                 </div>
             </div>

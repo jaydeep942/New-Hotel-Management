@@ -124,8 +124,61 @@ $feedback_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         }
 
         .glass-nav {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        /* Simple Premium Navbar Styles */
+        .nav-link {
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .nav-link span {
+            position: relative;
+            z-index: 20;
+        }
+
+        /* Simple Centered Pill Background */
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: var(--maroon);
+            border-radius: 12px;
+            transform: translate(-50%, -50%) scale(0.6, 0.4);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 5;
+        }
+
+        .nav-link:hover::before {
+            transform: translate(-50%, -50%) scale(0.8, 0.6);
+            opacity: 0.05;
+        }
+
+        .nav-link.active::before {
+            transform: translate(-50%, -50%) scale(0.85, 0.65);
+            opacity: 1;
+            background: var(--maroon);
+            box-shadow: 0 8px 20px rgba(106, 30, 45, 0.15);
+        }
+
+        .nav-link.active {
+            color: white !important;
+        }
+
+        .nav-link:not(.active):hover {
+            color: var(--maroon) !important;
         }
 
         .star-btn {
@@ -231,26 +284,26 @@ $feedback_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                     </div>
 
                     <!-- Navigation Links (Desktop) -->
-                    <div class="hidden xl:flex items-center space-x-1">
-                        <a href="customer-dashboard.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                    <div class="hidden xl:flex items-center space-x-2">
+                        <a href="customer-dashboard.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Dashboard</span>
                         </a>
-                        <a href="book-room.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                        <a href="book-room.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Book Room</span>
                         </a>
-                        <a href="services.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                        <a href="services.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Services</span>
                         </a>
-                        <a href="cleaning.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                        <a href="cleaning.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Cleaning</span>
                         </a>
-                        <a href="history.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                        <a href="history.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>History</span>
                         </a>
-                        <a href="feedback.php" class="nav-link active flex items-center px-6 py-3.5 rounded-2xl text-[13px] font-bold transition-all">
+                        <a href="feedback.php" class="nav-link active flex items-center px-7 py-4 rounded-2xl text-[15px] font-bold transition-all">
                             <span>Feedback</span>
                         </a>
-                        <a href="complaints.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                        <a href="complaints.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Complaints</span>
                         </a>
                     </div>
