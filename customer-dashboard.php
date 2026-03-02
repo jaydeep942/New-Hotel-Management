@@ -540,10 +540,15 @@ $cumulative_ledger = $total_price + $running_service_total;
                         </div>
                         <?php if($isLive): ?>
                         <button onclick="initiateCheckout(<?php echo $booking['id']; ?>)" class="px-6 py-2.5 bg-gold text-maroon hover:bg-white hover:text-maroon rounded-full text-[9px] font-black tracking-[2px] uppercase shadow-lg transition-all duration-300 transform group-hover:scale-105">CHECK-OUT</button>
+                        <?php else: ?>
+                        <button onclick="openEditBookingModal(<?php echo $booking['id']; ?>, '<?php echo $booking['check_in']; ?>', '<?php echo $booking['check_out']; ?>')" 
+                                class="px-6 py-2.5 bg-white/20 border border-white/20 text-white hover:bg-gold hover:text-maroon hover:border-gold rounded-full text-[9px] font-black tracking-[2px] uppercase shadow-lg transition-all duration-300 transform group-hover:scale-105">
+                            EDIT STAY
+                        </button>
                         <?php endif; ?>
                     </div>
                     <?php else: ?>
-                    <a href="book-room.php" class="mt-8 inline-block text-[10px] font-black uppercase tracking-widest text-gold hover:text-white transition-colors">Start Your Journey →</a>
+                    <a href="book-room.php" class="mt-8 inline-block text-[10px] font-black uppercase tracking-widest text-gold hover:text-white transition-colors">Start Your Booking →</a>
                     <?php endif; ?>
                 </div>
 
@@ -557,14 +562,28 @@ $cumulative_ledger = $total_price + $running_service_total;
                 <div class="bg-white p-8 rounded-[32px] premium-shadow border border-gray-50 hover:scale-105 transition-transform duration-500 group relative">
                     <i class="fas fa-calendar-check absolute -right-4 -bottom-4 text-8xl text-gray-50 group-hover:scale-110 transition-transform"></i>
                     <p class="text-gray-400 uppercase tracking-widest text-[10px] font-bold mb-2">Check-In</p>
-                    <h3 class="text-2xl font-black maroon-text leading-tight"><?php echo $check_in; ?></h3>
+                    <div class="flex justify-between items-start">
+                        <h3 class="text-2xl font-black maroon-text leading-tight"><?php echo $check_in; ?></h3>
+                        <?php if($hasBooking && !$isLive): ?>
+                        <button onclick="openEditBookingModal(<?php echo $booking['id']; ?>, '<?php echo $booking['check_in']; ?>', '<?php echo $booking['check_out']; ?>')" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-maroon hover:bg-gold/10 transition-colors">
+                            <i class="fas fa-edit text-[10px]"></i>
+                        </button>
+                        <?php endif; ?>
+                    </div>
                     <p class="mt-4 text-gold font-bold text-[10px] uppercase tracking-widest opacity-60">After 12:00 PM</p>
                 </div>
 
                 <div class="gradient-gold p-8 rounded-[32px] text-maroon premium-shadow hover:scale-110 transition-transform duration-500 group relative overflow-hidden">
                     <i class="fas fa-door-open absolute -right-4 -bottom-4 text-8xl text-maroon/5 group-hover:scale-110 transition-transform"></i>
                     <p class="text-maroon/60 uppercase tracking-widest text-[10px] font-black mb-2">Check-Out</p>
-                    <h3 class="text-2xl font-black maroon-text leading-tight drop-shadow-sm"><?php echo $check_out; ?></h3>
+                    <div class="flex justify-between items-start">
+                        <h3 class="text-2xl font-black maroon-text leading-tight drop-shadow-sm"><?php echo $check_out; ?></h3>
+                        <?php if($hasBooking && !$isLive): ?>
+                        <button onclick="openEditBookingModal(<?php echo $booking['id']; ?>, '<?php echo $booking['check_in']; ?>', '<?php echo $booking['check_out']; ?>')" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-maroon hover:bg-white transition-colors">
+                            <i class="fas fa-edit text-[10px]"></i>
+                        </button>
+                        <?php endif; ?>
+                    </div>
                     <?php if($hasBooking): ?>
                     <p class="mt-4 text-maroon font-black text-[10px] uppercase tracking-widest opacity-60 flex items-center">
                         <i class="fas fa-moon mr-2 text-[8px]"></i><?php echo $totalNights; ?> Nights Duration
@@ -926,11 +945,106 @@ $cumulative_ledger = $total_price + $running_service_total;
                 </div>
             </div>
         </div>
+            <!-- Edit Booking Modal -->
+        <div id="editBookingModal" class="fixed inset-0 z-[120] hidden items-center justify-center p-6 overflow-y-auto">
+            <div class="absolute inset-0 bg-maroon/40 backdrop-blur-md" onclick="closeEditBookingModal()"></div>
+            <div class="bg-white rounded-[40px] p-8 md:p-10 relative w-full max-w-lg premium-shadow animate-fade-in z-[121]">
+                <button onclick="closeEditBookingModal()" class="absolute top-8 right-8 text-gray-400 hover:text-maroon transition-all transform hover:rotate-90">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-gold/10 rounded-[28px] flex items-center justify-center mx-auto mb-4 border border-gold/20">
+                        <i class="fas fa-calendar-alt text-gold text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-black maroon-text" style="font-family: 'Playfair Display', serif;">Reschedule Stay</h3>
+                    <p class="text-gray-400 text-[10px] uppercase tracking-[2px] mt-2 font-bold">Modify your timeline for archive #LX-0000</p>
+                </div>
+
+                <form id="editBookingForm" onsubmit="handleUpdateBooking(event)" class="space-y-6">
+                    <input type="hidden" id="edit_booking_id">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase tracking-widest font-extrabold text-gray-400 pl-4 block">New Arrival</label>
+                            <input type="date" id="new_cin" min="<?php echo date('Y-m-d'); ?>" required
+                                class="w-full p-5 rounded-[24px] bg-gray-50 border-none focus:ring-2 focus:ring-gold outline-none text-xs font-bold">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase tracking-widest font-extrabold text-gray-400 pl-4 block">New Departure</label>
+                            <input type="date" id="new_cout" min="<?php echo date('Y-m-d'); ?>" required
+                                class="w-full p-5 rounded-[24px] bg-gray-50 border-none focus:ring-2 focus:ring-gold outline-none text-xs font-bold">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="rescheduleBtn" class="w-full py-5 gradient-maroon text-white rounded-[24px] font-black uppercase tracking-[3px] text-[11px] btn-glow transition-all shadow-xl flex items-center justify-center space-x-3">
+                        <span id="rescheduleText">Update Journey</span>
+                        <div id="rescheduleLoader" class="hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    </button>
+                </form>
+            </div>
+        </div>
         </div>
     </main>
 
     <script>
-        function toggleSidebar() {
+            function openEditBookingModal(id, cin, cout) {
+                document.getElementById('edit_booking_id').value = id;
+                document.getElementById('new_cin').value = cin;
+                document.getElementById('new_cout').value = cout;
+                const modal = document.getElementById('editBookingModal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.classList.add('modal-active');
+            }
+
+            function closeEditBookingModal() {
+                const modal = document.getElementById('editBookingModal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.classList.remove('modal-active');
+            }
+
+            async function handleUpdateBooking(e) {
+                e.preventDefault();
+                const id = document.getElementById('edit_booking_id').value;
+                const cin = document.getElementById('new_cin').value;
+                const cout = document.getElementById('new_cout').value;
+                const btn = document.getElementById('rescheduleBtn');
+                const loader = document.getElementById('rescheduleLoader');
+                const text = document.getElementById('rescheduleText');
+
+                if (new Date(cin) >= new Date(cout)) {
+                    alert('Check-out must be after check-in.');
+                    return;
+                }
+
+                text.innerText = "Syncing with Portals...";
+                loader.classList.remove('hidden');
+                btn.style.pointerEvents = 'none';
+
+                try {
+                    const response = await fetch('php/update_booking_dates.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `booking_id=${id}&check_in=${cin}&check_out=${cout}`
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                } catch (err) {
+                    alert('System error occurred.');
+                } finally {
+                    text.innerText = "Update Journey";
+                    loader.classList.add('hidden');
+                    btn.style.pointerEvents = 'auto';
+                }
+            }
+        </script>
+        <script>
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
             
