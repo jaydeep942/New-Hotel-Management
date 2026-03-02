@@ -109,79 +109,137 @@ $email = $user_data['email'];
 </head>
 <body class="bg-[#F8F5F0] min-h-screen">
 
-    <!-- Sidebar Trigger (Mobile) -->
-    <div class="lg:hidden fixed top-6 left-6 z-[60]">
-        <button onclick="toggleSidebar()" class="w-12 h-12 bg-white rounded-2xl premium-shadow flex items-center justify-center maroon-text">
-            <i class="fas fa-bars-staggered text-xl"></i>
-        </button>
-    </div>
+    <!-- Main Content (Full Width now) -->
+    <main class="min-h-screen">
+        <!-- New Primary Navbar (Replaces Sidebar) -->
+        <nav class="glass-nav sticky top-0 z-[60] premium-shadow border-b border-white/20">
+            <div class="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
+                <!-- Brand Section -->
+                <div class="flex items-center space-x-12">
+                    <div class="flex flex-col">
+                        <h1 class="text-2xl font-bold tracking-tighter maroon-text" style="font-family: 'Playfair Display', serif;">
+                            GRAND<span class="gold-text">LUXE</span>
+                        </h1>
+                        <p class="text-[9px] uppercase tracking-[3px] font-bold text-gray-400 mt-1">EXCELLENCE DEFINED</p>
+                    </div>
 
-    <aside id="sidebar" class="w-72 bg-white fixed h-full border-r border-gray-100 px-6 py-8 z-[55] overflow-y-auto transition-transform duration-300 -translate-x-full lg:translate-x-0">
-        <div class="mb-12 px-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold tracking-tighter maroon-text" style="font-family: 'Playfair Display', serif;">
-                GRAND<span class="gold-text">LUXE</span>
-            </h1>
-            <button onclick="toggleSidebar()" class="lg:hidden text-gray-400 hover:text-maroon"><i class="fas fa-times"></i></button>
+                    <!-- Navigation Links (Desktop) -->
+                    <div class="hidden xl:flex items-center space-x-1">
+                        <a href="customer-dashboard.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="book-room.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                            <span>Book Room</span>
+                        </a>
+                        <a href="services.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                            <span>Services</span>
+                        </a>
+                        <a href="cleaning.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                            <span>Cleaning</span>
+                        </a>
+                        <a href="history.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                            <span>History</span>
+                        </a>
+                        <a href="feedback.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                            <span>Feedback</span>
+                        </a>
+                        <a href="complaints.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                            <span>Complaints</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right Section: Profile -->
+                <div class="flex items-center space-x-8">
+                    <!-- Profile & Manage -->
+                    <div class="flex items-center space-x-4">
+                        <div class="hidden sm:block text-right">
+                            <p class="font-bold text-sm maroon-text"><?php echo htmlspecialchars($user_data['name']); ?></p>
+                            <a href="profile.php" class="text-[9px] uppercase font-black text-gold tracking-widest hover:text-maroon transition-colors shadow-sm bg-white px-2 py-0.5 rounded border border-gold/20">Manage Profile</a>
+                        </div>
+                        <div class="relative group cursor-pointer" onclick="window.location.href='profile.php'">
+                            <div class="w-10 h-10 rounded-xl overflow-hidden border-2 border-gold/20 p-1 transition-transform group-hover:scale-105">
+                                <?php if ($profile_photo): ?>
+                                    <img src="<?php echo $profile_photo; ?>" class="w-full h-full object-cover rounded-lg" alt="Profile">
+                                <?php else: ?>
+                                    <div class="w-full h-full bg-maroon rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                                        <?php echo strtoupper(substr($user_data['name'], 0, 1)); ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <a href="php/logout.php" class="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm" title="Sign Out">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                        <!-- Mobile Menu Trigger -->
+                        <div class="xl:hidden">
+                            <button onclick="toggleMobileMenu()" class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center maroon-text">
+                                <i class="fas fa-bars-staggered"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile Navigation Drawer -->
+        <div id="mobileMenu" class="fixed inset-0 z-[100] hidden">
+            <div id="mobileOverlay" onclick="toggleMobileMenu()" class="absolute inset-0 bg-maroon/20 backdrop-blur-sm transition-opacity duration-300 opacity-0"></div>
+            <div id="mobileDrawer" class="absolute inset-y-0 right-0 w-80 bg-white shadow-2xl p-8 transform translate-x-full transition-transform duration-300 overflow-y-auto h-full">
+                <div class="flex justify-between items-center mb-10">
+                    <h2 class="text-xl font-bold maroon-text">Menu</h2>
+                    <button onclick="toggleMobileMenu()" class="text-gray-400"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <nav class="space-y-3">
+                    <a href="customer-dashboard.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 font-bold hover:bg-gray-50">
+                        <i class="fas fa-th-large"></i><span>Dashboard</span>
+                    </a>
+                    <a href="book-room.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 font-bold hover:bg-gray-50">
+                        <i class="fas fa-bed"></i><span>Book Room</span>
+                    </a>
+                    <a href="services.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 font-bold hover:bg-gray-50">
+                        <i class="fas fa-concierge-bell"></i><span>Services</span>
+                    </a>
+                    <a href="cleaning.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 font-bold hover:bg-gray-50">
+                        <i class="fas fa-broom"></i><span>Cleaning Request</span>
+                    </a>
+                    <a href="feedback.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 font-bold hover:bg-gray-50">
+                        <i class="fas fa-star"></i><span>Feedback</span>
+                    </a>
+                    <a href="complaints.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 font-bold hover:bg-gray-50">
+                        <i class="fas fa-exclamation-circle"></i><span>Complaints</span>
+                    </a>
+                    <a href="history.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 font-bold hover:bg-gray-50">
+                        <i class="fas fa-history"></i><span>Booking History</span>
+                    </a>
+                    <a href="profile.php" class="sidebar-link active flex items-center space-x-4 p-4 rounded-2xl font-bold">
+                        <i class="fas fa-user-circle"></i><span>Manage Profile</span>
+                    </a>
+                </nav>
+            </div>
         </div>
 
-        <nav class="space-y-2">
-            <a href="customer-dashboard.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
-                <i class="fas fa-th-large w-5"></i><span class="font-semibold">Dashboard</span>
-            </a>
-            <a href="book-room.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
-                <i class="fas fa-bed w-5"></i><span class="font-semibold">Book Room</span>
-            </a>
-            <a href="services.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
-                <i class="fas fa-concierge-bell w-5"></i><span class="font-semibold">Services</span>
-            </a>
-            <a href="cleaning.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
-                <i class="fas fa-broom w-5"></i><span class="font-semibold">Cleaning Request</span>
-            </a>
-            <a href="feedback.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
-                <i class="fas fa-star w-5"></i><span class="font-semibold">Feedback</span>
-            </a>
-            <a href="complaints.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
-                <i class="fas fa-exclamation-circle w-5"></i><span class="font-semibold">Complaints</span>
-            </a>
-            <a href="history.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
-                <i class="fas fa-history w-5"></i><span class="font-semibold">Booking History</span>
-            </a>
-            <a href="profile.php" class="sidebar-link active flex items-center space-x-4 p-4 rounded-2xl group text-sm">
-                <i class="fas fa-user-circle w-5"></i><span class="font-semibold">Manage Profile</span>
-            </a>
-            <div class="pt-10">
-                <a href="php/logout.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-red-500 hover:bg-red-50 text-sm">
-                    <i class="fas fa-sign-out-alt w-5"></i><span class="font-bold uppercase tracking-wider text-xs">Sign Out</span>
-                </a>
-            </div>
-        </nav>
-    </aside>
+        <script>
+            function toggleMobileMenu() {
+                const drawer = document.getElementById('mobileDrawer');
+                const overlay = document.getElementById('mobileOverlay');
+                const menu = document.getElementById('mobileMenu');
+                
+                if(menu.classList.contains('hidden')) {
+                    menu.classList.remove('hidden');
+                    setTimeout(() => {
+                        overlay.classList.add('opacity-100');
+                        drawer.classList.remove('translate-x-full');
+                    }, 10);
+                } else {
+                    overlay.classList.remove('opacity-100');
+                    drawer.classList.add('translate-x-full');
+                    setTimeout(() => menu.classList.add('hidden'), 300);
+                }
+            }
+        </script>
 
-    <main class="flex-1 lg:ml-72 p-4 md:p-8">
-        <nav class="glass-nav sticky top-0 flex justify-between items-center p-6 rounded-3xl mb-12 z-40 premium-shadow border border-white/20">
-            <div class="flex items-center space-x-4 pl-14 lg:pl-0">
-                <!-- Branding or subtle indicator -->
-                <div class="bg-gold/5 p-3 rounded-2xl hidden md:block animate-pulse"><i class="fas fa-crown gold-text"></i></div>
-                <div>
-                    <h2 class="text-xl font-bold maroon-text tracking-tight uppercase" style="font-family: 'Playfair Display', serif;">Elite <span class="gold-text">Circle</span></h2>
-                    <p class="text-[9px] uppercase tracking-[3px] text-gray-400 font-extrabold -mt-1 opacity-60">Verified Member Lounge</p>
-                </div>
-            </div>
-             <div class="flex items-center space-x-4">
-                <div class="text-right hidden sm:block">
-                    <p class="font-bold text-sm"><?php echo htmlspecialchars($user_data['name']); ?></p>
-                </div>
-                <div class="w-12 h-12 rounded-2xl border-2 border-gold/20 p-1">
-                    <?php if ($profile_photo): ?>
-                        <img src="<?php echo $profile_photo; ?>" class="w-full h-full object-cover rounded-xl" alt="Profile">
-                    <?php else: ?>
-                        <div class="w-full h-full bg-maroon rounded-xl flex items-center justify-center text-white font-bold text-lg">
-                            <?php echo strtoupper(substr($user_data['name'], 0, 1)); ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </nav>
+        <div class="max-w-[1600px] mx-auto p-4 md:p-8">
 
         <div class="max-w-4xl mx-auto animate-fade">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">

@@ -168,9 +168,9 @@ $cumulative_ledger = $total_price + $running_service_total;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .sidebar-link.active {
-            background: linear-gradient(135deg, var(--maroon) 0%, #832537 100%);
+            background: var(--maroon);
             color: white;
-            box-shadow: 0 10px 20px rgba(106, 30, 45, 0.2);
+            box-shadow: 0 10px 20px rgba(106, 30, 45, 0.15);
         }
         .sidebar-link:not(.active):hover {
             background-color: rgba(106, 30, 45, 0.05);
@@ -247,150 +247,145 @@ $cumulative_ledger = $total_price + $running_service_total;
 </head>
 <body class="bg-[#F8F5F0] min-h-screen">
 
-    <!-- Mobile Sidebar Toggle -->
-    <div class="lg:hidden fixed top-6 left-6 z-[60]">
-        <button onclick="toggleSidebar()" class="w-12 h-12 bg-white rounded-2xl premium-shadow flex items-center justify-center maroon-text">
-            <i class="fas fa-bars-staggered text-xl"></i>
-        </button>
-    </div>
+    <!-- Main Content (Full Width now) -->
+    <main class="min-h-screen">
+        <!-- New Primary Navbar (Replaces Sidebar) -->
+        <nav class="glass-nav sticky top-0 z-[60] premium-shadow border-b border-white/20">
+            <div class="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
+                <!-- Brand Section -->
+                <div class="flex items-center space-x-12">
+                    <div class="flex flex-col">
+                        <h1 class="text-2xl font-bold tracking-tighter maroon-text" style="font-family: 'Playfair Display', serif;">
+                            GRAND<span class="gold-text">LUXE</span>
+                        </h1>
+                        <p class="text-[9px] uppercase tracking-[3px] font-bold text-gray-400 mt-1">EXCELLENCE DEFINED</p>
+                    </div>
 
-    <!-- Sidebar Overlay (Mobile) -->
-    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-maroon/20 backdrop-blur-sm z-[51] hidden lg:hidden transition-opacity duration-300 opacity-0"></div>
+                    <!-- Navigation Links (Desktop) -->
+                    <div class="hidden xl:flex items-center space-x-1">
+                        <a href="customer-dashboard.php" class="nav-link active flex items-center px-6 py-3.5 rounded-2xl text-[13px] font-bold transition-all">
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="book-room.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                            <span>Book Room</span>
+                        </a>
+                        <a href="services.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl <?php echo $canUseServices ? 'text-gray-500 hover:text-maroon' : 'text-gray-400'; ?> text-[13px] font-bold transition-all">
+                            <span>Services</span>
+                        </a>
+                        <a href="cleaning.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl <?php echo $canUseServices ? 'text-gray-500 hover:text-maroon' : 'text-gray-400'; ?> text-[13px] font-bold transition-all">
+                            <span>Cleaning</span>
+                        </a>
+                        <a href="history.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                            <span>History</span>
+                        </a>
+                        <a href="feedback.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                            <span>Feedback</span>
+                        </a>
+                        <a href="complaints.php" class="nav-link flex items-center px-6 py-3.5 rounded-2xl text-gray-500 hover:text-maroon text-[13px] font-bold transition-all">
+                            <span>Complaints</span>
+                        </a>
+                    </div>
+                </div>
 
-    <!-- Sidebar -->
-    <aside id="sidebar" class="w-72 bg-white fixed h-full border-r border-gray-100 px-6 py-8 z-[55] overflow-y-auto transition-transform duration-300 -translate-x-full lg:translate-x-0">
-        <div class="mb-12 px-4 flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold tracking-tighter maroon-text" style="font-family: 'Playfair Display', serif;">
-                    GRAND<span class="gold-text">LUXE</span>
-                </h1>
-                <p class="text-[10px] uppercase tracking-[4px] font-bold text-gray-400 mt-1">Excellence Defined</p>
-            </div>
-            <button onclick="toggleSidebar()" class="lg:hidden text-gray-400 hover:text-maroon">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
+                <!-- Right Section: Booking & Profile -->
+                <div class="flex items-center space-x-8">
+                    <!-- Current Booking Summary (Compact) -->
+                    <div class="hidden lg:flex items-center space-x-3 bg-maroon/5 py-2 px-4 rounded-xl border border-maroon/10">
+                        <i class="fas fa-key maroon-text text-xs opacity-50"></i>
+                        <div class="text-right">
+                            <p class="text-[8px] uppercase font-black text-gray-400 tracking-tighter">Current Stay</p>
+                            <p class="font-bold text-[10px] maroon-text"><?php echo $hasBooking ? $currentBookingID : 'No active residency'; ?></p>
+                        </div>
+                    </div>
 
-        <nav class="space-y-2">
-            <a href="customer-dashboard.php" class="sidebar-link active flex items-center space-x-4 p-4 rounded-2xl group text-sm">
-                <i class="fas fa-th-large w-5"></i>
-                <span class="font-semibold">Dashboard</span>
-            </a>
-            <a href="book-room.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
-                <i class="fas fa-bed w-5"></i>
-                <span class="font-semibold">Book Room</span>
-            </a>
-            <a href="services.php" 
-               class="sidebar-link flex items-center justify-between p-4 rounded-2xl <?php echo $canUseServices ? 'text-gray-500 hover:text-maroon' : 'text-gray-400 hover:text-maroon'; ?> group text-sm">
-                <div class="flex items-center space-x-4">
-                    <i class="fas fa-concierge-bell w-5"></i>
-                    <span class="font-semibold">Services</span>
-                </div>
-                <?php if(!$canUseServices): ?><i class="fas fa-eye text-[10px] opacity-40" title="View Only"></i><?php endif; ?>
-            </a>
-            <a href="cleaning.php" 
-               class="sidebar-link flex items-center justify-between p-4 rounded-2xl <?php echo $canUseServices ? 'text-gray-500 hover:text-maroon' : 'text-gray-400 hover:text-maroon'; ?> group text-sm">
-                <div class="flex items-center space-x-4">
-                    <i class="fas fa-broom w-5"></i>
-                    <span class="font-semibold">Cleaning Request</span>
-                </div>
-                <?php if(!$canUseServices): ?><i class="fas fa-eye text-[10px] opacity-40" title="View Only"></i><?php endif; ?>
-            </a>
-            <a href="feedback.php" 
-               class="sidebar-link flex items-center justify-between p-4 rounded-2xl <?php echo $canUseServices ? 'text-gray-500 hover:text-maroon' : 'text-gray-400 hover:text-maroon'; ?> group text-sm">
-                <div class="flex items-center space-x-4">
-                    <i class="fas fa-star w-5"></i>
-                    <span class="font-semibold">Feedback</span>
-                </div>
-                <?php if(!$canUseServices): ?><i class="fas fa-eye text-[10px] opacity-40" title="View Only"></i><?php endif; ?>
-            </a>
-            <a href="complaints.php" 
-               class="sidebar-link flex items-center justify-between p-4 rounded-2xl <?php echo $canUseServices ? 'text-gray-500 hover:text-maroon' : 'text-gray-400 hover:text-maroon'; ?> group text-sm">
-                <div class="flex items-center space-x-4">
-                    <i class="fas fa-exclamation-circle w-5"></i>
-                    <span class="font-semibold">Complaints</span>
-                </div>
-                <?php if(!$canUseServices): ?><i class="fas fa-eye text-[10px] opacity-40" title="View Only"></i><?php endif; ?>
-            </a>
-            <a href="history.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm">
-                <i class="fas fa-history w-5"></i>
-                <span class="font-semibold">Booking History</span>
-            </a>
-            <!-- Manage Profile with Dropdown -->
-            <div class="space-y-1">
-                <button onclick="toggleProfileMenu()" class="w-full sidebar-link flex items-center justify-between p-4 rounded-2xl text-gray-500 hover:text-maroon group text-sm transition-all">
+                    <!-- Profile & Manage -->
                     <div class="flex items-center space-x-4">
-                        <i class="fas fa-user-circle w-5"></i>
-                        <span class="font-semibold">Manage Profile</span>
-                    </div>
-                    <i id="profileChevron" class="fas fa-chevron-down text-[10px] transition-transform duration-300"></i>
-                </button>
-                <div id="profileSubmenu" class="hidden pl-12 space-y-3 py-2 animate-slide">
-                    <button onclick="openProfileModal('profile-info')" class="flex items-center space-x-3 text-xs font-bold text-gray-400 hover:text-maroon transition-colors w-full text-left">
-                        <div class="w-1.5 h-1.5 rounded-full bg-current opacity-20"></div>
-                        <span>Personal Details</span>
-                    </button>
-                    <button onclick="openProfileModal('security-settings')" class="flex items-center space-x-3 text-xs font-bold text-gray-400 hover:text-maroon transition-colors w-full text-left">
-                        <div class="w-1.5 h-1.5 rounded-full bg-current opacity-20"></div>
-                        <span>Security & Password</span>
-                    </button>
-                </div>
-            </div>
-            <div class="pt-10">
-                <a href="php/logout.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-red-500 hover:bg-red-50 transition text-sm">
-                    <i class="fas fa-sign-out-alt w-5"></i>
-                    <span class="font-bold uppercase tracking-wider text-xs">Sign Out</span>
-                </a>
-            </div>
-        </nav>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="flex-1 lg:ml-72 p-4 md:p-8">
-        <!-- Top Navbar -->
-        <nav class="glass-nav sticky top-0 flex flex-col md:flex-row justify-between items-center p-4 md:p-6 rounded-3xl mb-8 md:mb-12 z-40 premium-shadow border border-white/20 gap-4 md:gap-0">
-            <div class="flex items-center space-x-4 w-full md:w-auto pl-14 lg:pl-0">
-                <div class="bg-maroon/5 p-3 rounded-2xl hidden sm:block">
-                    <i class="fas fa-key maroon-text"></i>
-                </div>
-                <div>
-                    <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Current Booking</p>
-                    <?php if($hasBooking): ?>
-                    <p class="font-bold text-sm"><?php echo $currentBookingID; ?> (Suite <?php echo $suiteNumber; ?>)</p>
-                    <?php else: ?>
-                    <p class="font-bold text-sm text-gray-400 italic">No active booking</p>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <div class="flex items-center justify-between md:justify-end w-full md:w-auto md:space-x-8">
-                
-                <div class="flex items-center space-x-4 pl-4 md:pl-8 border-l border-gray-100">
-                    <div class="text-right hidden sm:block">
-                        <p class="font-bold text-sm"><?php echo htmlspecialchars($_SESSION['name']); ?></p>
-                    </div>
-                    <div class="relative group">
-                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-2xl overflow-hidden border-2 border-gold/20 p-1 cursor-pointer transition-transform hover:scale-105" onclick="document.getElementById('profileInput').click()">
-                            <?php if ($profile_photo): ?>
-                                <img src="<?php echo $profile_photo; ?>" id="avatarPreview" class="w-full h-full object-cover rounded-xl" alt="Profile">
-                            <?php else: ?>
-                                <div id="avatarPlaceholder" class="w-full h-full bg-maroon rounded-xl flex items-center justify-center text-white font-bold text-lg">
-                                    <?php echo strtoupper(substr($_SESSION['name'], 0, 1)); ?>
-                                </div>
-                            <?php endif; ?>
-                            <!-- Upload Overlay -->
-                            <div class="absolute inset-0 bg-black/40 items-center justify-center hidden group-hover:flex rounded-xl transition-all">
-                                <i class="fas fa-camera text-white text-xs"></i>
+                        <div class="hidden sm:block text-right">
+                            <p class="font-bold text-sm maroon-text"><?php echo htmlspecialchars($_SESSION['name']); ?></p>
+                            <button onclick="openProfileModal()" class="text-[9px] uppercase font-black text-gold tracking-widest hover:text-maroon transition-colors shadow-sm bg-white px-2 py-0.5 rounded border border-gold/20">Manage Profile</button>
+                        </div>
+                        <div class="relative group cursor-pointer" onclick="openProfileModal()">
+                            <div class="w-10 h-10 rounded-xl overflow-hidden border-2 border-gold/20 p-1 transition-transform group-hover:scale-105">
+                                <?php if ($profile_photo): ?>
+                                    <img src="<?php echo $profile_photo; ?>" class="w-full h-full object-cover rounded-lg" alt="Profile">
+                                <?php else: ?>
+                                    <div class="w-full h-full bg-maroon rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                                        <?php echo strtoupper(substr($_SESSION['name'], 0, 1)); ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
-                        <input type="file" id="profileInput" class="hidden" accept="image/*" onchange="uploadPhoto(this)">
+                        <a href="php/logout.php" class="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all shadow-sm" title="Sign Out">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                        <!-- Mobile Menu Trigger -->
+                        <div class="xl:hidden">
+                            <button onclick="toggleMobileMenu()" class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center maroon-text">
+                                <i class="fas fa-bars-staggered"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </nav>
 
-        <!-- Dashboard Home Content -->
-        <div class="animate-slide">
+        <!-- Mobile Navigation Drawer -->
+        <div id="mobileMenu" class="fixed inset-0 z-[100] hidden">
+            <div id="mobileOverlay" onclick="toggleMobileMenu()" class="absolute inset-0 bg-maroon/20 backdrop-blur-sm transition-opacity duration-300 opacity-0"></div>
+            <div id="mobileDrawer" class="absolute inset-y-0 right-0 w-80 bg-white shadow-2xl p-8 transform translate-x-full transition-transform duration-300 overflow-y-auto">
+                <div class="flex justify-between items-center mb-10">
+                    <h2 class="text-xl font-bold maroon-text">Menu</h2>
+                    <button onclick="toggleMobileMenu()" class="text-gray-400"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <nav class="space-y-3">
+                    <a href="customer-dashboard.php" class="sidebar-link active flex items-center space-x-4 p-4 rounded-2xl font-bold">
+                        <i class="fas fa-th-large"></i><span>Dashboard</span>
+                    </a>
+                    <a href="book-room.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 font-bold hover:bg-gray-50">
+                        <i class="fas fa-bed"></i><span>Book Room</span>
+                    </a>
+                    <a href="services.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 font-bold hover:bg-gray-50">
+                        <i class="fas fa-concierge-bell"></i><span>Services</span>
+                    </a>
+                    <a href="cleaning.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 font-bold hover:bg-gray-50">
+                        <i class="fas fa-broom"></i><span>Cleaning Request</span>
+                    </a>
+                    <a href="feedback.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 font-bold hover:bg-gray-50">
+                        <i class="fas fa-star"></i><span>Feedback</span>
+                    </a>
+                    <a href="complaints.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 font-bold hover:bg-gray-50">
+                        <i class="fas fa-exclamation-circle"></i><span>Complaints</span>
+                    </a>
+                    <a href="history.php" class="sidebar-link flex items-center space-x-4 p-4 rounded-2xl text-gray-500 font-bold hover:bg-gray-50">
+                        <i class="fas fa-history"></i><span>Booking History</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <script>
+            function toggleMobileMenu() {
+                const drawer = document.getElementById('mobileDrawer');
+                const overlay = document.getElementById('mobileOverlay');
+                const menu = document.getElementById('mobileMenu');
+                
+                if(menu.classList.contains('hidden')) {
+                    menu.classList.remove('hidden');
+                    setTimeout(() => {
+                        overlay.classList.add('opacity-100');
+                        drawer.classList.remove('translate-x-full');
+                    }, 10);
+                } else {
+                    overlay.classList.remove('opacity-100');
+                    drawer.classList.add('translate-x-full');
+                    setTimeout(() => menu.classList.add('hidden'), 300);
+                }
+            }
+        </script>
+
+        <div class="max-w-[1600px] mx-auto p-4 md:p-8">
+            <!-- Dashboard Home Content -->
+            <div class="animate-slide">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
                 <div>
                     <h2 class="text-2xl md:text-3xl font-bold maroon-text" style="font-family: 'Playfair Display', serif;">Welcome Back, <?php echo htmlspecialchars($_SESSION['name']); ?></h2>
@@ -399,6 +394,7 @@ $cumulative_ledger = $total_price + $running_service_total;
                 <div class="text-left sm:text-right">
                     <p id="live-clock" class="text-lg font-black maroon-text tracking-tight animate-fade"></p>
                     <p id="live-date" class="text-[10px] uppercase tracking-[3px] font-bold text-gray-400 mt-1"></p>
+                </div>
                 </div>
             </div>
 
@@ -830,6 +826,8 @@ $cumulative_ledger = $total_price + $running_service_total;
                 </div>
             </div>
         </div>
+        </div>
+    </main>
 
     <script>
         function toggleSidebar() {
