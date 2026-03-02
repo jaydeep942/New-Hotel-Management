@@ -280,14 +280,14 @@ $cleaning_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                         <a href="cleaning.php" class="nav-link active flex items-center px-7 py-4 rounded-2xl text-[15px] font-bold transition-all">
                             <span>Cleaning</span>
                         </a>
-                        <a href="history.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
-                            <span>History</span>
-                        </a>
                         <a href="feedback.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Feedback</span>
                         </a>
                         <a href="complaints.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Complaints</span>
+                        </a>
+                        <a href="history.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
+                            <span>History</span>
                         </a>
                     </div>
                 </div>
@@ -572,7 +572,7 @@ $cleaning_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                 <div class="flex items-center justify-between pt-6 border-t border-gray-100">
                                     <div class="flex items-center gap-2 text-[10px] text-gray-500 font-bold">
                                         <i class="far fa-clock text-gold"></i>
-                                        <span><?php echo date('d M, Y • H:i', strtotime($request['created_at'])); ?></span>
+                                        <span><?php echo date('d/m/Y • H:i', strtotime($request['created_at'])); ?></span>
                                     </div>
                                     <?php if ($request['status'] === 'Pending'): ?>
                                         <button onclick="cancelCurrentRequest(<?php echo $request['id']; ?>)" class="text-[10px] font-black uppercase tracking-tighter text-maroon hover:text-gold transition-colors flex items-center gap-1">

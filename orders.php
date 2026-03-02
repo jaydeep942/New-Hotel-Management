@@ -156,14 +156,14 @@ while($row = $orders_res->fetch_assoc()){
                         <a href="cleaning.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Cleaning</span>
                         </a>
-                        <a href="history.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
-                            <span>History</span>
-                        </a>
                         <a href="feedback.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Feedback</span>
                         </a>
                         <a href="complaints.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Complaints</span>
+                        </a>
+                        <a href="history.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
+                            <span>History</span>
                         </a>
                     </div>
                 </div>
@@ -314,7 +314,7 @@ while($row = $orders_res->fetch_assoc()){
                     <div class="flex justify-between items-start mb-6">
                         <div>
                             <span class="text-[10px] font-black text-gray-400 uppercase tracking-[3px]">Order #SO-<?php echo str_pad($order['id'], 3, '0', STR_PAD_LEFT); ?></span>
-                            <h4 class="text-lg font-bold maroon-text mt-1"><?php echo date('d M Y, h:i A', strtotime($order['created_at'])); ?></h4>
+                            <h4 class="text-lg font-bold maroon-text mt-1"><?php echo date('d/m/Y, h:i A', strtotime($order['created_at'])); ?></h4>
                         </div>
                         <span class="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest <?php echo $statusColor; ?>">
                             <?php echo $order['status']; ?>

@@ -17,7 +17,7 @@ while($row = $orders_res->fetch_assoc()){
     $items = json_decode($row['items'], true);
     $itemNames = array_map(function($i) { return $i['name']; }, $items);
     $row['summary'] = implode(', ', $itemNames);
-    $row['display_date'] = date('d M, h:i A', strtotime($row['created_at']));
+    $row['display_date'] = date('d/m/Y, h:i A', strtotime($row['created_at']));
     $orders[] = $row;
 }
 

@@ -227,14 +227,14 @@ $complaint_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                         <a href="cleaning.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Cleaning</span>
                         </a>
-                        <a href="history.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
-                            <span>History</span>
-                        </a>
                         <a href="feedback.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Feedback</span>
                         </a>
                         <a href="complaints.php" class="nav-link active flex items-center px-7 py-4 rounded-2xl text-[15px] font-bold transition-all">
                             <span>Complaints</span>
+                        </a>
+                        <a href="history.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
+                            <span>History</span>
                         </a>
                     </div>
                 </div>
@@ -487,7 +487,7 @@ $complaint_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                             </span>
                                             <h6 class="text-[11px] font-bold maroon-text uppercase mb-1"><?php echo $c['type']; ?></h6>
                                             <p class="text-[10px] text-gray-400 font-medium tracking-widest uppercase">
-                                                <?php echo date('d M, Y • H:i', strtotime($c['created_at'])); ?>
+                                                <?php echo date('d/m/Y • H:i', strtotime($c['created_at'])); ?>
                                             </p>
                                         </div>
                                         <div class="px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-tighter

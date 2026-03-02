@@ -70,6 +70,8 @@ $rooms_result = $conn->query($query);
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -227,6 +229,49 @@ $rooms_result = $conn->query($query);
             border-color: var(--maroon);
             box-shadow: 0 8px 10x rgba(106, 30, 45, 0.05);
         }
+        /* Custom Flatpickr Theme */
+        .flatpickr-calendar {
+            background: #fff;
+            box-shadow: 0 20px 50px rgba(106, 30, 45, 0.15);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 24px;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            padding: 10px;
+        }
+        .flatpickr-day.selected {
+            background: var(--maroon) !important;
+            border-color: var(--maroon) !important;
+        }
+        .flatpickr-day:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+        .flatpickr-months .flatpickr-month {
+            background: var(--maroon);
+            color: #fff;
+            fill: #fff;
+        }
+        .flatpickr-current-month .flatpickr-monthDropdown-months {
+            background: var(--maroon);
+        }
+        .flatpickr-calendar.arrowTop:before, .flatpickr-calendar.arrowTop:after {
+            border-bottom-color: var(--maroon);
+        }
+        .flatpickr-months .flatpickr-prev-month, .flatpickr-months .flatpickr-next-month {
+            color: #fff;
+            fill: #fff;
+        }
+        .flatpickr-calendar .flatpickr-innerContainer {
+            padding-top: 10px;
+        }
+        .flatpickr-weekday {
+            color: var(--maroon);
+            font-weight: 700;
+        }
+        .flatpickr-input-custom {
+            cursor: pointer !important;
+            background-color: #f9fafb !important;
+        }
     </style>
 </head>
 
@@ -259,14 +304,14 @@ $rooms_result = $conn->query($query);
                         <a href="cleaning.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Cleaning</span>
                         </a>
-                        <a href="history.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
-                            <span>History</span>
-                        </a>
                         <a href="feedback.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Feedback</span>
                         </a>
                         <a href="complaints.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Complaints</span>
+                        </a>
+                        <a href="history.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
+                            <span>History</span>
                         </a>
                     </div>
                 </div>
@@ -573,13 +618,13 @@ $rooms_result = $conn->query($query);
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-2">
                             <label class="text-[10px] uppercase tracking-widest font-extrabold text-gray-400 pl-4 block">Arrival Date</label>
-                            <input type="date" id="book_cin" min="<?php echo date('Y-m-d'); ?>"
-                                class="w-full p-5 rounded-[24px] bg-gray-50 border-none focus:ring-2 focus:ring-gold outline-none text-xs font-bold">
+                            <input type="text" id="book_cin" placeholder="Select Arrival" value="<?php echo $cin; ?>"
+                                class="flatpickr w-full p-5 rounded-[24px] bg-gray-50 border-none focus:ring-2 focus:ring-gold outline-none text-xs font-bold flatpickr-input-custom">
                         </div>
                         <div class="space-y-2">
                             <label class="text-[10px] uppercase tracking-widest font-extrabold text-gray-400 pl-4 block">Departure</label>
-                            <input type="date" id="book_cout" min="<?php echo date('Y-m-d'); ?>"
-                                class="w-full p-5 rounded-[24px] bg-gray-50 border-none focus:ring-2 focus:ring-gold outline-none text-xs font-bold">
+                            <input type="text" id="book_cout" placeholder="Select Departure" value="<?php echo $cout; ?>"
+                                class="flatpickr w-full p-5 rounded-[24px] bg-gray-50 border-none focus:ring-2 focus:ring-gold outline-none text-xs font-bold flatpickr-input-custom">
                         </div>
                     </div>
 
@@ -1301,6 +1346,35 @@ $rooms_result = $conn->query($query);
             setTimeout(() => toast.classList.add('hidden'), 4000);
         }
 
+        // Initialize Flatpickr
+        document.addEventListener('DOMContentLoaded', function() {
+            // Specific link for Booking Pickers
+            const bookCout = flatpickr("#book_cout", {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d/m/Y",
+                minDate: "today",
+                animate: true,
+                disableMobile: "true"
+            });
+
+            flatpickr("#book_cin", {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d/m/Y",
+                minDate: "today",
+                animate: true,
+                disableMobile: "true",
+                onChange: function(selectedDates, dateStr, instance) {
+                    bookCout.set('minDate', dateStr);
+                },
+                onReady: function(selectedDates, dateStr, instance) {
+                    if (dateStr) {
+                        bookCout.set('minDate', dateStr);
+                    }
+                }
+            });
+        });
     </script>
 </body>
 </html>

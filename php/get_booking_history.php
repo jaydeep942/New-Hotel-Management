@@ -29,9 +29,9 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
 
 $history = [];
 while($row = $history_result->fetch_assoc()){
-    $row['formatted_check_in'] = date('d M Y', strtotime($row['check_in']));
-    $row['formatted_check_out'] = date('d M Y', strtotime($row['check_out']));
-    $row['formatted_actual_checkout'] = $row['actual_checkout'] ? date('d M Y, h:i A', strtotime($row['actual_checkout'])) : null;
+    $row['formatted_check_in'] = date('d/m/Y', strtotime($row['check_in']));
+    $row['formatted_check_out'] = date('d/m/Y', strtotime($row['check_out']));
+    $row['formatted_actual_checkout'] = $row['actual_checkout'] ? date('d/m/Y, h:i A', strtotime($row['actual_checkout'])) : null;
     $row['formatted_price'] = number_format($row['total_price'], 0);
     $row['formatted_final_bill'] = $row['final_bill'] ? number_format($row['final_bill'], 0) : null;
     $history[] = $row;

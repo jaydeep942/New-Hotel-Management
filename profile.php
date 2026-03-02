@@ -26,6 +26,8 @@ $email = $user_data['email'];
     <title>Manage Profile | Grand Luxe Hotel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -178,6 +180,51 @@ $email = $user_data['email'];
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade { animation: fadeIn 0.6s ease-out forwards; }
+        .nav-link.active::after { width: 100%; transition: width 0.3s ease; }
+
+        /* Custom Flatpickr Theme */
+        .flatpickr-calendar {
+            background: #fff;
+            box-shadow: 0 20px 50px rgba(106, 30, 45, 0.15);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 24px;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            padding: 10px;
+        }
+        .flatpickr-day.selected {
+            background: var(--maroon) !important;
+            border-color: var(--maroon) !important;
+        }
+        .flatpickr-day:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+        .flatpickr-months .flatpickr-month {
+            background: var(--maroon);
+            color: #fff;
+            fill: #fff;
+        }
+        .flatpickr-current-month .flatpickr-monthDropdown-months {
+            background: var(--maroon);
+        }
+        .flatpickr-calendar.arrowTop:before, .flatpickr-calendar.arrowTop:after {
+            border-bottom-color: var(--maroon);
+        }
+        .flatpickr-months .flatpickr-prev-month, .flatpickr-months .flatpickr-next-month {
+            color: #fff;
+            fill: #fff;
+        }
+        .flatpickr-calendar .flatpickr-innerContainer {
+            padding-top: 10px;
+        }
+        .flatpickr-weekday {
+            color: var(--maroon);
+            font-weight: 700;
+        }
+        .flatpickr-input-custom {
+            cursor: pointer !important;
+            background-color: #f9fafb !important;
+        }
     </style>
 </head>
 <body class="bg-[#F8F5F0] min-h-screen">
@@ -210,14 +257,14 @@ $email = $user_data['email'];
                         <a href="cleaning.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Cleaning</span>
                         </a>
-                        <a href="history.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
-                            <span>History</span>
-                        </a>
                         <a href="feedback.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Feedback</span>
                         </a>
                         <a href="complaints.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Complaints</span>
+                        </a>
+                        <a href="history.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
+                            <span>History</span>
                         </a>
                     </div>
                 </div>
@@ -402,7 +449,7 @@ $email = $user_data['email'];
                                         </div>
                                         <span class="text-xs font-bold text-gray-400 uppercase tracking-widest text-[9px]">Since</span>
                                     </div>
-                                    <span class="text-xs font-semibold maroon-text"><?php echo date('M Y', strtotime($user_data['created_at'])); ?></span>
+                                    <span class="text-xs font-semibold maroon-text"><?php echo date('d/m/Y', strtotime($user_data['created_at'])); ?></span>
                                 </div>
                             </div>
                         </div>
@@ -449,7 +496,8 @@ $email = $user_data['email'];
                                 </div>
                                 <div class="input-group md:col-span-2">
                                     <label class="text-[10px] uppercase tracking-widest font-extrabold text-gray-400 pl-4 mb-2 block">Date of Birth</label>
-                                    <input type="date" name="dob" value="<?php echo htmlspecialchars($user_data['dob'] ?? ''); ?>" style="color-scheme: light;">
+                                    <input type="text" name="dob" value="<?php echo htmlspecialchars($user_data['dob'] ?? ''); ?>" 
+                                        class="flatpickr flatpickr-input-custom" placeholder="Select DOB">
                                 </div>
                             </div>
                             <button type="submit" class="px-8 py-4 bg-maroon text-white rounded-2xl font-bold text-sm hover:scale-105 transition-all shadow-lg shadow-maroon/20">Save Changes</button>
@@ -591,6 +639,8 @@ $email = $user_data['email'];
             });
         }
 
+        }
+
         function removeProfilePhoto() {
             if (confirm('Are you sure you want to remove your profile picture?')) {
                 fetch('php/remove_profile_photo.php', {
@@ -606,6 +656,17 @@ $email = $user_data['email'];
                 });
             }
         }
+
+        // Initialize Flatpickr
+        document.addEventListener('DOMContentLoaded', function() {
+            flatpickr(".flatpickr", {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d/m/Y",
+                animate: true,
+                disableMobile: "true"
+            });
+        });
     </script>
 </body>
 </html>

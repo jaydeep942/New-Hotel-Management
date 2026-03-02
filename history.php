@@ -270,14 +270,14 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
                         <a href="cleaning.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Cleaning</span>
                         </a>
-                        <a href="history.php" class="nav-link active flex items-center px-7 py-4 rounded-2xl text-[15px] font-bold transition-all">
-                            <span>History</span>
-                        </a>
                         <a href="feedback.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Feedback</span>
                         </a>
                         <a href="complaints.php" class="nav-link flex items-center px-7 py-4 rounded-2xl text-gray-500 hover:text-maroon text-[15px] font-bold transition-all">
                             <span>Complaints</span>
+                        </a>
+                        <a href="history.php" class="nav-link active flex items-center px-7 py-4 rounded-2xl text-[15px] font-bold transition-all">
+                            <span>History</span>
                         </a>
                     </div>
                 </div>
@@ -448,13 +448,13 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
                                     <p class="font-bold"><?php echo $row['room_type']; ?> Suite</p>
                                     <p class="text-[10px] text-gray-400 font-bold uppercase">Room <?php echo $row['room_number']; ?></p>
                                 </td>
-                                 <td><?php echo date('d M Y', strtotime($row['check_in'])); ?></td>
+                                 <td><?php echo date('d/m/Y', strtotime($row['check_in'])); ?></td>
                                  <td>
                                     <?php if($row['status'] === 'Checked-Out' && $row['actual_checkout']): ?>
-                                        <p class="font-bold text-teal-600"><?php echo date('d M Y, h:i A', strtotime($row['actual_checkout'])); ?></p>
+                                        <p class="font-bold text-teal-600"><?php echo date('d/m/Y, h:i A', strtotime($row['actual_checkout'])); ?></p>
                                         <p class="text-[9px] uppercase tracking-tighter opacity-50">Actual Departure</p>
                                     <?php else: ?>
-                                        <?php echo date('d M Y', strtotime($row['check_out'])); ?>
+                                        <?php echo date('d/m/Y', strtotime($row['check_out'])); ?>
                                     <?php endif; ?>
                                  </td>
                                  <td class="font-bold maroon-text">
