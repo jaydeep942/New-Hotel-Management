@@ -124,19 +124,19 @@ if ($check_order_date->num_rows > 0) {
 $check_rooms = $conn->query("SELECT id FROM rooms");
 if ($check_rooms->num_rows == 0) {
     $conn->query("INSERT INTO rooms (room_number, room_type, price_per_night, status) VALUES 
-        ('101', 'Standard', 150.00, 'Available'),
-        ('102', 'Standard', 150.00, 'Available'),
-        ('103', 'Standard', 150.00, 'Available'),
-        ('104', 'Standard', 150.00, 'Available'),
-        ('201', 'Deluxe', 250.00, 'Available'),
-        ('202', 'Deluxe', 250.00, 'Available'),
-        ('203', 'Deluxe', 280.00, 'Available'),
-        ('204', 'Deluxe', 280.00, 'Available'),
-        ('301', 'Executive', 500.00, 'Available'),
-        ('302', 'Executive', 550.00, 'Available'),
-        ('303', 'Executive', 550.00, 'Available'),
-        ('401', 'Presidential', 1200.00, 'Available'),
-        ('402', 'Presidential', 1500.00, 'Available')");
+        ('101', 'Standard', 700.00, 'Available'),
+        ('102', 'Standard', 900.00, 'Available'),
+        ('103', 'Standard', 1000.00, 'Available'),
+        ('104', 'Standard', 1000.00, 'Available'),
+        ('201', 'Deluxe', 1100.00, 'Available'),
+        ('202', 'Deluxe', 1200.00, 'Available'),
+        ('203', 'Deluxe', 1500.00, 'Available'),
+        ('204', 'Deluxe', 1500.00, 'Available'),
+        ('301', 'Executive', 1650.00, 'Available'),
+        ('302', 'Executive', 1700.00, 'Available'),
+        ('303', 'Executive', 1800.00, 'Available'),
+        ('401', 'Presidential', 2000.00, 'Available'),
+        ('402', 'Presidential', 2300.00, 'Available')");
 }
 
 // 8. Build-in Migration: Check if ALL necessary columns exist for users

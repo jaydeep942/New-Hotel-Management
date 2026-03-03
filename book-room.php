@@ -28,14 +28,14 @@ $check_count = $conn->query("SELECT COUNT(*) as total FROM rooms");
 $row_count = $check_count->fetch_assoc();
 if ($row_count['total'] <= 6) {
     $conn->query("INSERT IGNORE INTO rooms (room_number, room_type, price_per_night, status) VALUES 
-        ('103', 'Standard', 150.00, 'Available'),
-        ('104', 'Standard', 150.00, 'Available'),
-        ('203', 'Deluxe', 280.00, 'Available'),
-        ('204', 'Deluxe', 280.00, 'Available'),
-        ('302', 'Executive', 550.00, 'Available'),
-        ('303', 'Executive', 550.00, 'Available'),
-        ('402', 'Presidential', 1500.00, 'Available'),
-        ('501', 'Presidential', 2000.00, 'Available')");
+        ('103', 'Standard', 1000.00, 'Available'),
+        ('104', 'Standard', 1000.00, 'Available'),
+        ('203', 'Deluxe', 1500.00, 'Available'),
+        ('204', 'Deluxe', 1500.00, 'Available'),
+        ('302', 'Executive', 1700.00, 'Available'),
+        ('303', 'Executive', 1800.00, 'Available'),
+        ('402', 'Presidential', 2300.00, 'Available'),
+        ('501', 'Presidential', 2300.00, 'Available')");
 }
 
 // Processing Search Filters
