@@ -21,7 +21,7 @@ if (!$booking_id || !$new_cin || !$new_cout) {
 
 try {
     // 1. Fetch current booking to get room_id
-    $sql = "SELECT room_id FROM bookings WHERE id = ? AND user_id = ? AND status = 'Confirmed'";
+    $sql = "SELECT room_id FROM bookings WHERE id = ? AND user_id = ? AND status IN ('Confirmed', 'Checked-In')";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ii", $booking_id, $user_id);
     $stmt->execute();
@@ -37,7 +37,7 @@ try {
     $avail_sql = "SELECT id FROM bookings 
                   WHERE room_id = ? 
                   AND id != ? 
-                  AND status != 'Cancelled' 
+                  AND status IN ('Confirmed', 'Checked-In') 
                   AND (check_in < ? AND check_out > ?)";
     $avail_stmt = $conn->prepare($avail_sql);
     $avail_stmt->bind_param("iiss", $room_id, $booking_id, $new_cout, $new_cin);

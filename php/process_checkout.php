@@ -38,7 +38,7 @@ try {
     // Calculate Service Orders Total
     $orders_sql = "SELECT SUM(total_price) as service_total FROM service_orders 
                    WHERE user_id = ? AND room_number = ? 
-                   AND created_at >= ? AND status != 'Cancelled'";
+                   AND created_at >= ? AND status = 'Delivered'";
     $orders_stmt = $conn->prepare($orders_sql);
     $start_date = $booking['check_in'] . " 00:00:00";
     $orders_stmt->bind_param("iss", $user_id, $booking['room_number'], $start_date);

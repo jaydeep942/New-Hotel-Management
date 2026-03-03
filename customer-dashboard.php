@@ -106,7 +106,7 @@ if($hasBooking) {
     try {
         $orders_total_sql = "SELECT SUM(total_price) as service_total FROM service_orders 
                              WHERE user_id = ? AND room_number = ? 
-                             AND created_at >= ? AND status != 'Cancelled'";
+                             AND created_at >= ? AND status = 'Delivered'";
         $orders_total_stmt = $conn->prepare($orders_total_sql);
         $start_date = $booking['check_in'] . " 00:00:00";
         $orders_total_stmt->bind_param("iss", $user_id, $booking['room_number'], $start_date);
@@ -1013,7 +1013,7 @@ $cumulative_ledger = $total_price + $running_service_total;
                         <i class="fas fa-calendar-alt text-gold text-3xl"></i>
                     </div>
                     <h3 class="text-2xl font-black maroon-text" style="font-family: 'Playfair Display', serif;">Reschedule Stay</h3>
-                    <p class="text-gray-400 text-[10px] uppercase tracking-[2px] mt-2 font-bold">Modify your timeline for archive #LX-0000</p>
+                    <p class="text-gray-400 text-[10px] uppercase tracking-[2px] mt-2 font-bold">Modify your timeline for archive <span id="reschedule_id_display">#LX-0000</span></p>
                 </div>
 
                 <form id="editBookingForm" onsubmit="handleUpdateBooking(event)" class="space-y-6">
@@ -1046,6 +1046,7 @@ $cumulative_ledger = $total_price + $running_service_total;
 
             function openEditBookingModal(id, cin, cout) {
                 document.getElementById('edit_booking_id').value = id;
+                document.getElementById('reschedule_id_display').innerText = '#LX-' + id.toString().padStart(4, '0');
                 const modal = document.getElementById('editBookingModal');
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');

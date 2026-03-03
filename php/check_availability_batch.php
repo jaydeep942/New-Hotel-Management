@@ -24,7 +24,7 @@ try {
     // Simple availability check: Check if any of these rooms have a confirmed booking that overlaps with these dates
     // Query overlap: (start1 < end2) AND (end1 > start2)
     foreach ($room_ids as $id) {
-        $stmt = $conn->prepare("SELECT id FROM bookings WHERE room_id = ? AND status = 'Confirmed' AND (check_in < ? AND check_out > ?)");
+        $stmt = $conn->prepare("SELECT id FROM bookings WHERE room_id = ? AND status IN ('Confirmed', 'Checked-In') AND (check_in < ? AND check_out > ?)");
         $stmt->bind_param("iss", $id, $cout, $cin);
         $stmt->execute();
         $result = $stmt->get_result();

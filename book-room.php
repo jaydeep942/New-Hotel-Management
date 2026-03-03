@@ -53,7 +53,7 @@ if ($type != 'All Room Types') {
 if (!empty($cin) && !empty($cout)) {
     $query .= " AND id NOT IN (
         SELECT room_id FROM bookings 
-        WHERE status != 'Cancelled' 
+        WHERE status IN ('Confirmed', 'Checked-In') 
         AND (check_in < '$cout' AND check_out > '$cin')
     )";
 }
