@@ -1059,68 +1059,7 @@ $rooms_result = $conn->query($query);
 
         let roomCart = [];
 
-        function toggleRoomSelection(room) {
-            const index = roomCart.findIndex(r => r.id === room.id);
-            const btn = document.getElementById('room-btn-' + room.id);
-            
-            if (index === -1) {
-                // Add to cart
-                roomCart.push(room);
-                btn.innerHTML = '<i class="fas fa-check text-sm"></i><span>Added</span>';
-                btn.classList.replace('bg-maroon', 'bg-gold');
-            } else {
-                // Remove from cart
-                roomCart.splice(index, 1);
-                btn.innerHTML = '<i class="fas fa-plus text-sm"></i><span>Add Stay</span>';
-                btn.classList.replace('bg-gold', 'bg-maroon');
-            }
-            updateCartUI();
-        }
 
-        function updateCartUI() {
-            const counter = document.getElementById('cartCounter');
-            const list = document.getElementById('cartItemsList');
-            const totalEl = document.getElementById('cartTotalPrice');
-            const countEl = document.getElementById('cartItemsCount');
-            const panel = document.getElementById('cartPanel');
-
-            counter.innerText = roomCart.length;
-            countEl.innerText = `${roomCart.length} ${roomCart.length === 1 ? 'Suite' : 'Suites'} Chosen`;
-
-            if (roomCart.length > 0) {
-                panel.classList.remove('hidden');
-                setTimeout(() => {
-                    panel.classList.remove('translate-y-full', 'opacity-0');
-                }, 10);
-            } else {
-                panel.classList.add('translate-y-full', 'opacity-0');
-                setTimeout(() => panel.classList.add('hidden'), 500);
-            }
-
-            let total = 0;
-            list.innerHTML = roomCart.map(room => {
-                total += parseFloat(room.price);
-                return `
-                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group">
-                        <div class="flex items-center space-x-4">
-                            <img src="${room.img}" class="w-12 h-12 rounded-xl object-cover shadow-sm">
-                            <div>
-                                <p class="font-bold text-xs maroon-text">${room.name}</p>
-                                <p class="text-[9px] uppercase tracking-widest text-gold font-bold">${room.type}</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <span class="font-bold text-xs text-maroon">₹${parseFloat(room.price).toLocaleString()}</span>
-                            <button onclick="toggleRoomSelection(${JSON.stringify(room).replace(/"/g, '&quot;')})" class="text-gray-300 hover:text-red-500 transition-colors">
-                                <i class="fas fa-trash-alt text-[10px]"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            totalEl.innerText = '₹' + total.toLocaleString();
-        }
 
         function toggleCart() {
             const panel = document.getElementById('cartPanel');
@@ -1386,7 +1325,7 @@ $rooms_result = $conn->query($query);
             const toast = document.getElementById('successToast');
             document.getElementById('toastTitle').innerText = title;
             document.getElementById('toastDesc').innerText = desc;
-git             toast.classList.remove('hidden');
+            toast.classList.remove('hidden');
             setTimeout(() => toast.classList.add('hidden'), 4000);
         }
 
