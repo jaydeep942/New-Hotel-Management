@@ -242,17 +242,17 @@ session_start();
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                 <?php
                 $rooms = [
-                    ['id' => 'ac', 'name' => 'Premium AC Suite', 'price' => '4500', 'img' => 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&q=80&w=800', 'features' => ['WiFi', 'TV', 'Chef Service', 'Luxury View', 'AC']],
-                    ['id' => 'non-ac', 'name' => 'Classic Non-AC', 'price' => '2500', 'img' => 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&q=80&w=800', 'features' => ['WiFi', 'TV', 'Chef Service', 'Private Balcony', 'Desk']],
-                    ['id' => 'single', 'name' => 'Serene Single', 'price' => '1800', 'img' => 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&q=80&w=800', 'features' => ['WiFi', 'TV', 'Chef Service', 'Compact Luxury', 'Modern Bath']],
-                    ['id' => 'double', 'name' => 'Deluxe Double', 'price' => '3200', 'img' => 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&q=80&w=800', 'features' => ['WiFi', 'TV', 'Chef Service', 'Spacious AC', 'Coffee Maker']],
-                    ['id' => 'family', 'name' => 'Grand Family', 'price' => '6500', 'img' => 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&q=80&w=800', 'features' => ['WiFi', 'TV', 'Chef Service', '2 King Beds', 'Kitchenette']],
-                    ['id' => 'penthouse', 'name' => 'Royal Penthouse', 'price' => '9500', 'img' => 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=800', 'features' => ['WiFi', 'TV', 'Chef Service', 'Private Pool', 'Panoramic View']]
+                    ['id' => 'ac', 'name' => 'Premium AC Suite', 'price' => '1500', 'img' => 'assets/rooms/premium-ac.png', 'features' => ['High-Speed Fiber WiFi', 'Smart 4K Ultra TV', '24/7 Chef Service', 'Panoramic View', 'Climate Control']],
+                    ['id' => 'non-ac', 'name' => 'Classic Non-AC', 'price' => '900', 'img' => 'assets/rooms/classic-non-ac.png', 'features' => ['High-Speed Fiber WiFi', 'Smart HD TV', 'Morning Buffet', 'Private Balcony', 'Executive Desk']],
+                    ['id' => 'single', 'name' => 'Serene Single', 'price' => '700', 'img' => 'assets/rooms/serene-single.png', 'features' => ['High-Speed Fiber WiFi', 'Smart HD TV', 'Daily Housekeeping', 'Compact Luxury', 'Rain Shower']],
+                    ['id' => 'double', 'name' => 'Deluxe Double', 'price' => '1200', 'img' => 'assets/rooms/deluxe-double.png', 'features' => ['High-Speed Fiber WiFi', '4K Smart TV', 'Butler Service', 'Spacious Area', 'Premium Bedding']],
+                    ['id' => 'family', 'name' => 'Grand Family', 'price' => '2500', 'img' => 'assets/rooms/grand-family.png', 'features' => ['High-Speed Fiber WiFi', 'Multiple 4K TVs', 'Interconnected Rooms', '2 King Beds', 'Full Kitchenette']],
+                    ['id' => 'penthouse', 'name' => 'Royal Penthouse', 'price' => '4500', 'img' => 'assets/rooms/royal-penthouse.png', 'features' => ['Personalized Security', 'Private Rooftop Pool', 'Peak Panoramic View', 'Grand Living Area', '24/7 Butler Service']]
                 ];
 
                 foreach($rooms as $index => $room):
                     $isLoggedIn = isset($_SESSION['user_id']);
-                    $bookingLink = $isLoggedIn ? "booking.php?room=" . $room['id'] : "register.html";
+                    $bookingLink = $isLoggedIn ? "book-room.php?room=" . $room['id'] : "register.html";
                 ?>
                 <div class="group bg-cream rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100" data-aos="fade-up" data-aos-delay="<?php echo ($index % 3) * 200; ?>">
                     <!-- Image -->
@@ -307,7 +307,7 @@ session_start();
                     <p class="text-cream/90 leading-relaxed mb-6 font-light">
                         Experience a culinary journey crafted by world-class chefs at our signature restaurant.
                     </p>
-                    <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=400" 
+                    <img src="assets/services/gourmet-dining.png" 
                          alt="Restaurant" class="w-full h-48 object-cover rounded-2xl opacity-50 group-hover:opacity-100 transition-opacity">
                 </div>
 

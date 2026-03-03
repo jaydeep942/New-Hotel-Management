@@ -304,7 +304,7 @@ session_start();
                     <p class="text-cream/90 leading-relaxed mb-6 font-light">
                         Experience a culinary journey crafted by world-class chefs at our signature restaurant.
                     </p>
-                    <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=400" 
+                    <img src="../assets/services/gourmet-dining.png" 
                          alt="Restaurant" class="w-full h-48 object-cover rounded-2xl opacity-50 group-hover:opacity-100 transition-opacity">
                 </div>
 

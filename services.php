@@ -518,7 +518,7 @@ $canUseServices = $booking_status ? true : false;
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
                 <!-- Type 1: In-Suite Dining -->
-                <div onclick="openService('dining')" class="service-card h-[500px] rounded-[40px] bg-[url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=82&w=800')] bg-cover bg-center flex flex-col justify-end p-10 group">
+                <div onclick="openService('dining')" class="service-card h-[500px] rounded-[40px] bg-[url('assets/services/gourmet-dining.png')] bg-cover bg-center flex flex-col justify-end p-10 group">
                     <div class="relative z-10">
                         <div class="w-16 h-16 bg-white/20 backdrop-blur-xl rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                             <i class="fas fa-utensils text-white text-2xl"></i>
