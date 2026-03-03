@@ -91,14 +91,14 @@ session_start();
 
     <!-- STICKY NAVBAR -->
     <nav class="fixed top-0 w-full z-50 glass-nav transition-all duration-300">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="container mx-auto px-6 py-4 flex items-center">
             <!-- Logo -->
             <a href="#" class="flex items-center gap-2">
                 <span class="text-2xl font-playfair font-bold text-maroon tracking-tighter">Grand<span class="text-gold">Luxe</span></span>
             </a>
 
             <!-- Desktop Menu -->
-            <div class="hidden md:flex items-center gap-8">
+            <div class="hidden md:flex items-center gap-10 ml-auto">
                 <a href="#home" class="nav-link text-sm font-semibold uppercase tracking-wider text-maroon">Home</a>
                 <a href="#about" class="nav-link text-sm font-semibold uppercase tracking-wider text-maroon">About Us</a>
                 <a href="#rooms" class="nav-link text-sm font-semibold uppercase tracking-wider text-maroon">Rooms</a>
@@ -108,8 +108,8 @@ session_start();
                 <a href="#contact" class="nav-link text-sm font-semibold uppercase tracking-wider text-maroon">Contact</a>
             </div>
 
-            <!-- Auth Buttons -->
-            <div class="hidden md:flex items-center gap-4">
+            <!-- Divider & Auth Buttons -->
+            <div class="hidden md:flex items-center gap-8 ml-16 pl-8 border-l border-gold/20">
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <a href="customer-dashboard.php" class="bg-maroon text-white px-6 py-2.5 rounded-full text-sm font-bold hover:bg-opacity-90 transition-all shadow-lg flex items-center gap-2">
                         <i class="fas fa-user-circle"></i> Dashboard
@@ -242,55 +242,41 @@ session_start();
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                 <?php
                 $rooms = [
-                    ['type' => 'Standard', 'name' => 'Urban Standard Suite', 'price' => '1000', 'img' => 'https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg?auto=compress&cs=tinysrgb&w=800', 'features' => ['High-Speed Fiber WiFi', '45 m² King Bed', 'City View', 'Climate Control']],
-                    ['type' => 'Deluxe', 'name' => 'Royal Deluxe Suite', 'price' => '1500', 'img' => 'https://images.pexels.com/photos/262048/pexels-photo-262048.jpeg?auto=compress&cs=tinysrgb&w=800', 'features' => ['Fiber WiFi & 4K TV', '65 m² King Bed', 'Panoramic View', 'Butler Service']],
-                    ['type' => 'Executive', 'name' => 'Elite Executive Suite', 'price' => '1800', 'img' => 'https://images.pexels.com/photos/271647/pexels-photo-271647.jpeg?auto=compress&cs=tinysrgb&w=800', 'features' => ['Fiber WiFi & 4K TV', '85 m² King Bed', 'Skyline View', 'Executive Desk']],
-                    ['type' => 'Presidential', 'name' => 'Imperial Presidential Suite', 'price' => '2300', 'img' => 'https://images.pexels.com/photos/323311/pexels-photo-323311.jpeg?auto=compress&cs=tinysrgb&w=800', 'features' => ['Private Balcony', '120 m² King Bed', '24/7 Chef Service', 'Panoramic View']],
-                    ['type' => 'Family', 'name' => 'Grand Family Suite', 'price' => '3500', 'img' => 'https://images.pexels.com/photos/237371/pexels-photo-237371.jpeg?auto=compress&cs=tinysrgb&w=800', 'features' => ['2 King Beds', '150 m² Space', 'Full Kitchenette', 'Interconnected']],
-                    ['type' => 'Penthouse', 'name' => 'Royal Penthouse', 'price' => '5500', 'img' => 'https://images.pexels.com/photos/2506990/pexels-photo-2506990.jpeg?auto=compress&cs=tinysrgb&w=800', 'features' => ['Private Rooftop Pool', '180 m² Space', '360° Panoramic View', '24/7 Butler Service']]
+                    ['id' => 'ac', 'name' => 'Premium AC Suite', 'price' => '1500', 'img' => 'assets/rooms/premium-ac.png', 'features' => ['High-Speed Fiber WiFi', 'Smart 4K Ultra TV', '24/7 Chef Service', 'Panoramic View', 'Climate Control']],
+                    ['id' => 'non-ac', 'name' => 'Classic Non-AC', 'price' => '900', 'img' => 'assets/rooms/classic-non-ac.png', 'features' => ['High-Speed Fiber WiFi', 'Smart HD TV', 'Morning Buffet', 'Private Balcony', 'Executive Desk']],
+                    ['id' => 'single', 'name' => 'Serene Single', 'price' => '700', 'img' => 'assets/rooms/serene-single.png', 'features' => ['High-Speed Fiber WiFi', 'Smart HD TV', 'Daily Housekeeping', 'Compact Luxury', 'Rain Shower']],
+                    ['id' => 'double', 'name' => 'Deluxe Double', 'price' => '1200', 'img' => 'assets/rooms/deluxe-double.png', 'features' => ['High-Speed Fiber WiFi', '4K Smart TV', 'Butler Service', 'Spacious Area', 'Premium Bedding']],
+                    ['id' => 'family', 'name' => 'Grand Family', 'price' => '2500', 'img' => 'assets/rooms/grand-family.png', 'features' => ['High-Speed Fiber WiFi', 'Multiple 4K TVs', 'Interconnected Rooms', '2 King Beds', 'Full Kitchenette']],
+                    ['id' => 'penthouse', 'name' => 'Royal Penthouse', 'price' => '4500', 'img' => 'assets/rooms/royal-penthouse.png', 'features' => ['Personalized Security', 'Private Rooftop Pool', 'Peak Panoramic View', 'Grand Living Area', '24/7 Butler Service']]
                 ];
 
-                foreach($rooms as $index => $room): 
+                foreach($rooms as $index => $room):
                     $isLoggedIn = isset($_SESSION['user_id']);
-                    $bookingLink = $isLoggedIn ? "book-room.php?room_type=" . urlencode($room['type']) : "register.html";
-                    
-                    // Match the size metadata from book-room.php
-                    $sizes = ['Standard' => '45', 'Deluxe' => '65', 'Executive' => '85', 'Presidential' => '120', 'Family' => '150', 'Penthouse' => '180'];
-                    $size = $sizes[$room['type']] ?? '45';
+                    $bookingLink = $isLoggedIn ? "book-room.php?room=" . $room['id'] : "register.html";
                 ?>
-                <div class="group bg-white rounded-[32px] overflow-hidden premium-shadow hover:shadow-2xl transition-all duration-500 border border-gray-50 flex flex-col hover:-translate-y-2" data-aos="fade-up" data-aos-delay="<?php echo ($index % 3) * 200; ?>">
+                <div class="group bg-cream rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100" data-aos="fade-up" data-aos-delay="<?php echo ($index % 3) * 200; ?>">
                     <!-- Image -->
-                    <div class="h-64 relative overflow-hidden">
+                    <div class="relative h-72 overflow-hidden">
                         <img src="<?php echo $room['img']; ?>" alt="<?php echo $room['name']; ?>" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                        <div class="absolute top-4 right-4 bg-white/95 backdrop-blur-sm p-2 px-4 rounded-full font-bold maroon-text text-[10px] uppercase tracking-widest shadow-sm">
-                            <?php echo $room['type']; ?>
+                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl font-bold text-maroon">
+                            ₹<?php echo $room['price']; ?><span class="text-[10px] text-gray-500 font-normal"> / Night</span>
                         </div>
                     </div>
                     
                     <!-- Content -->
-                    <div class="p-8 flex-1 flex flex-col">
-                        <div class="mb-4">
-                            <h3 class="text-xl font-bold maroon-text"><?php echo $room['name']; ?></h3>
-                            <p class="text-[10px] uppercase tracking-[3px] font-bold text-gold mt-1">Luxury Residency</p>
-                        </div>
-                        
-                        <p class="text-gray-400 text-sm mb-6 flex items-center">
-                            <i class="fas fa-expand-arrows-alt mr-2 text-gold"></i> 
-                            <?php echo $size; ?> m² • King Bed • <?php echo ($room['type'] == 'Penthouse' ? '360° View' : 'Panoramic View'); ?>
-                        </p>
-
-                        <div class="flex items-center justify-between mt-auto pt-6 border-t border-gray-50">
-                            <div>
-                                <p class="text-[10px] uppercase font-bold text-gray-300 tracking-widest mb-1">Starting From</p>
-                                <span class="text-2xl font-bold maroon-text">₹<?php echo number_format($room['price'], 0); ?></span>
-                                <span class="text-xs text-gray-400 font-medium">/Night</span>
-                            </div>
-                            <a href="<?php echo $bookingLink; ?>" 
-                               class="bg-maroon text-white px-6 py-3 rounded-2xl font-bold hover:bg-gold hover:shadow-xl transition-all duration-500 transform active:scale-95 flex items-center space-x-2">
-                               <span>Book Now</span>
-                               <i class="fas fa-chevron-right text-[10px]"></i>
-                            </a>
-                        </div>
+                    <div class="p-8">
+                        <h3 class="text-2xl font-playfair font-bold text-maroon mb-4"><?php echo $room['name']; ?></h3>
+                        <ul class="space-y-3 mb-8">
+                            <?php foreach($room['features'] as $f): ?>
+                                <li class="text-sm text-gray-600 flex items-center gap-3">
+                                    <i class="fas fa-check text-teal text-xs"></i> <?php echo $f; ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                        <a href="<?php echo $bookingLink; ?>" 
+                           class="block w-full text-center py-3 rounded-2xl border-2 border-gold text-gold font-bold uppercase tracking-widest hover:bg-gold hover:text-white transition-all duration-300">
+                           Book Now
+                        </a>
                     </div>
                 </div>
                 <?php endforeach; ?>
