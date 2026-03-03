@@ -57,7 +57,7 @@ try {
     $new_total = $room_price * ($nights > 0 ? $nights : 1);
 
     // 4. Update the booking
-    $update_sql = "UPDATE bookings SET check_in = ?, check_out = ?, total_price = ? WHERE id = ?";
+    $update_sql = "UPDATE bookings SET check_in = ?, check_out = ?, total_amount = ? WHERE id = ?";
     $update_stmt = $conn->prepare($update_sql);
     $update_stmt->bind_param("ssdi", $new_cin, $new_cout, $new_total, $booking_id);
     

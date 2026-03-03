@@ -38,7 +38,7 @@ try {
     // Calculate Service Orders Total
     $orders_sql = "SELECT SUM(total_price) as service_total FROM service_orders 
                    WHERE user_id = ? AND room_number = ? 
-                   AND created_at >= ? AND status = 'Delivered'";
+                   AND ordered_at >= ? AND status = 'Delivered'";
     $orders_stmt = $conn->prepare($orders_sql);
     $start_date = $booking['check_in'] . " 00:00:00";
     $orders_stmt->bind_param("iss", $user_id, $booking['room_number'], $start_date);
@@ -46,21 +46,21 @@ try {
     $orders_res = $orders_stmt->get_result()->fetch_assoc();
     $service_total = $orders_res['service_total'] ?? 0;
 
-    $final_bill = $booking['total_price'] + $service_total;
+    $final_bill = $booking['total_amount'] + $service_total;
 
     // 2. Update booking status and final bill
-    $update_booking = $conn->prepare("UPDATE bookings SET status = 'Checked-Out', actual_checkout = NOW(), final_bill = ?, razorpay_payment_id = ? WHERE id = ? AND user_id = ?");
+    $update_booking = $conn->prepare("UPDATE bookings SET status = 'Checked-Out', payment_status = 'Paid', actual_checkout = NOW(), final_bill = ?, razorpay_payment_id = ? WHERE id = ? AND user_id = ?");
     $update_booking->bind_param("dsii", $final_bill, $payment_id, $booking_id, $user_id);
     
     if (!$update_booking->execute()) {
         throw new Exception("Unable to finalize checkout settlement.");
     }
 
-    // 3. Make room available
+    // 3. Make room available for cleaning protocol
     $room_id = $booking['room_id'];
-    $update_room = $conn->query("UPDATE rooms SET status = 'Available' WHERE id = $room_id");
+    $update_room = $conn->query("UPDATE rooms SET status = 'Needs Cleaning' WHERE id = $room_id");
     if (!$update_room) {
-        throw new Exception("Unable to update room availability.");
+        throw new Exception("Unable to update room cleaning status.");
     }
 
     $conn->commit();

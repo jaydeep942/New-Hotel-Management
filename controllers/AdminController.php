@@ -105,16 +105,46 @@ class AdminController {
     }
 
     // Booking Management
-    public function getAllBookings() {
-        return $this->db->fetchAll("SELECT b.*, r.room_number, r.room_type, u.email as customer_email 
+    public function getAllBookings($userId = null, $search = '') {
+        $query = "SELECT b.*, r.room_number, r.room_type, u.email as customer_email 
+                  FROM bookings b 
+                  LEFT JOIN rooms r ON b.room_id = r.id 
+                  LEFT JOIN users u ON b.user_id = u.id 
+                  WHERE 1=1";
+        $params = [];
+        
+        if ($userId) {
+            $query .= " AND b.user_id = ?";
+            $params[] = $userId;
+        }
+        
+        if ($search) {
+            $query .= " AND (b.guest_name LIKE ? OR r.room_number LIKE ? OR u.email LIKE ?)";
+            $searchTerm = "%$search%";
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+        }
+        
+        $query .= " ORDER BY b.created_at DESC";
+        return $this->db->fetchAll($query, $params);
+    }
+
+    public function getBookingById($id) {
+        return $this->db->fetchOne("SELECT b.*, r.room_number, r.room_type, r.price_per_night, u.email as customer_email, u.phone as customer_phone
                                    FROM bookings b 
                                    LEFT JOIN rooms r ON b.room_id = r.id 
                                    LEFT JOIN users u ON b.user_id = u.id 
-                                   ORDER BY b.created_at DESC");
+                                   WHERE b.id = ?", [$id]);
     }
 
     public function updateBookingStatus($id, $status) {
-        $query = "UPDATE bookings SET status=? WHERE id=?";
+        $paymentUpdate = "";
+        if ($status === 'Checked-Out') {
+            $paymentUpdate = ", payment_status='Paid', actual_checkout=NOW()";
+        }
+        
+        $query = "UPDATE bookings SET status=? $paymentUpdate WHERE id=?";
         $stmt = $this->db->conn->prepare($query);
         $stmt->bind_param("si", $status, $id);
         
@@ -130,6 +160,19 @@ class AdminController {
             }
         }
         
+        return $stmt->execute();
+    }
+
+    public function deleteBooking($id) {
+        // First get room_id to reset status if it was active
+        $booking = $this->db->fetchOne("SELECT room_id, status FROM bookings WHERE id = ?", [$id]);
+        if ($booking && $booking['room_id'] && ($booking['status'] == 'Booked' || $booking['status'] == 'Checked-In')) {
+            $this->updateRoomStatus($booking['room_id'], 'Available');
+        }
+        
+        $query = "DELETE FROM bookings WHERE id=?";
+        $stmt = $this->db->conn->prepare($query);
+        $stmt->bind_param("i", $id);
         return $stmt->execute();
     }
 
@@ -162,11 +205,23 @@ class AdminController {
     }
 
     // Customer Management
-    public function getAllUsers($filter = '') {
+    public function getAllUsers($filter = '', $search = '') {
+        $query = "SELECT * FROM users WHERE 1=1";
+        $params = [];
+        
         if ($filter === 'today') {
-            return $this->db->fetchAll("SELECT * FROM users WHERE DATE(created_at) = CURDATE() ORDER BY created_at DESC");
+            $query .= " AND DATE(created_at) = CURDATE()";
         }
-        return $this->db->fetchAll("SELECT * FROM users ORDER BY created_at DESC");
+        
+        if ($search) {
+            $query .= " AND (name LIKE ? OR email LIKE ?)";
+            $searchTerm = "%$search%";
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+        }
+        
+        $query .= " ORDER BY created_at DESC";
+        return $this->db->fetchAll($query, $params);
     }
 
     public function getUserHistory($userId) {

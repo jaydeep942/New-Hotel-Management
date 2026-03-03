@@ -137,7 +137,7 @@ if ($check_ca->num_rows > 0) {
 $fields_to_check = [
     'guest_email' => "VARCHAR(100) NULL AFTER guest_name",
     'guest_phone' => "VARCHAR(20) NULL AFTER guest_email",
-    'id_proof_type' => "VARCHAR(20) NULL AFTER total_price",
+    'id_proof_type' => "VARCHAR(20) NULL AFTER total_amount",
     'id_proof_number' => "VARCHAR(50) NULL AFTER id_proof_type",
     'permanent_address' => "TEXT NULL AFTER id_proof_number",
     'special_requests' => "TEXT NULL AFTER permanent_address"
@@ -178,7 +178,7 @@ if ($check_order_date->num_rows > 0) {
 // 7. Seed Rooms if empty (for demo)
 $check_rooms = $conn->query("SELECT id FROM rooms");
 if ($check_rooms->num_rows == 0) {
-    $conn->query("INSERT INTO rooms (room_number, room_type, price_per_night, status) VALUES 
+    $conn->query("INSERT INTO rooms (room_number, room_type, price_per_night, status) VALUES
         ('101', 'Standard', 700.00, 'Available'),
         ('102', 'Standard', 900.00, 'Available'),
         ('103', 'Standard', 1000.00, 'Available'),

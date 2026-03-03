@@ -12,7 +12,8 @@ if (isset($_GET['id']) && isset($_GET['status'])) {
 }
 
 $filter = $_GET['filter'] ?? '';
-$users = $adminCtrl->getAllUsers($filter);
+$search = $_GET['search'] ?? '';
+$users = $adminCtrl->getAllUsers($filter, $search);
 
 include '../includes/admin_header.php';
 include '../includes/admin_sidebar.php';
@@ -24,10 +25,10 @@ include '../includes/admin_sidebar.php';
         <p class="text-sm text-gray-400">Comprehensive database of all verified Grand Luxe members.</p>
     </div>
     
-    <div class="relative">
+    <form action="" method="GET" class="relative">
         <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-        <input type="text" placeholder="Search Identity / Email..." class="bg-white border border-gray-100 pl-10 pr-6 py-3 rounded-2xl text-xs outline-none focus:border-primary/30 transition-all font-medium">
-    </div>
+        <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search Identity / Email..." class="bg-white border border-gray-100 pl-10 pr-6 py-3 rounded-2xl text-xs outline-none focus:border-primary/30 transition-all font-medium">
+    </form>
 </div>
 
 <div class="card-soft overflow-hidden">
@@ -79,7 +80,9 @@ include '../includes/admin_sidebar.php';
                             <?php else: ?>
                                 <a href="?id=<?php echo $u['id']; ?>&status=Active" class="p-2 bg-emerald-50 text-emerald-500 rounded-xl hover:bg-emerald-500 hover:text-white transition-all text-xs" title="Activate"><i class="fas fa-user-check"></i></a>
                             <?php endif; ?>
-                            <button class="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 hover:text-primary rounded-lg transition-all"><i class="fas fa-history text-xs"></i></button>
+                            <a href="bookings.php?user_id=<?php echo $u['id']; ?>" class="p-2 <?php echo $u['status'] == 'Active' ? 'bg-indigo-50 text-indigo-500 hover:bg-indigo-100' : 'bg-gray-50 text-gray-400'; ?> rounded-xl transition-all text-xs" title="History Protocols">
+                                <i class="fas fa-history"></i>
+                            </a>
                         </div>
                     </td>
                 </tr>

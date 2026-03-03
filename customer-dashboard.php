@@ -40,7 +40,7 @@ $currentBookingID = "N/A";
 $suiteNumber = "N/A";
 $check_in = "-- -- --";
 $check_out = "-- -- --";
-$total_price = 0;
+$total_amount = 0;
 $progressPercent = 0;
 $currentDay = 1;
 $totalNights = 1;
@@ -52,7 +52,7 @@ if ($booking) {
     $suiteNumber = $booking['room_number'];
     $check_in = date('d/m/Y', strtotime($booking['check_in']));
     $check_out = date('d/m/Y', strtotime($booking['check_out']));
-    $total_price = $booking['total_price'];
+    $total_amount = $booking['total_amount'];
     
     // Check if booking is active (today is within stay) or upcoming
     $today = new DateTime('today');
@@ -105,7 +105,7 @@ if($hasBooking) {
         $running_service_total = 0;
     }
 }
-$cumulative_ledger = $total_price + $running_service_total;
+$cumulative_ledger = $total_amount + $running_service_total;
 
 ?>
 <!DOCTYPE html>
@@ -1265,7 +1265,7 @@ $cumulative_ledger = $total_price + $running_service_total;
                 if (data.success) {
                     document.getElementById('checkoutSuite').innerText = `${data.booking.room_type} (Room ${data.booking.room_number})`;
                     document.getElementById('checkoutNights').innerText = `${data.nights} Nights Stay`;
-                    document.getElementById('checkoutBasePrice').innerText = `₹${parseFloat(data.booking.total_price).toLocaleString()}`;
+                    document.getElementById('checkoutBasePrice').innerText = `₹${parseFloat(data.booking.total_amount).toLocaleString()}`;
                     
                     const ordersContainer = document.getElementById('checkoutOrdersSection');
                     const ordersList = document.getElementById('checkoutOrdersList');
@@ -1280,7 +1280,7 @@ $cumulative_ledger = $total_price + $running_service_total;
                                 <div class="flex justify-between items-center text-xs p-3 bg-gray-50 rounded-xl">
                                     <div class="max-w-[150px]">
                                         <p class="font-bold maroon-text truncate">${names}</p>
-                                        <p class="text-[9px] text-gray-400 mt-1">${new Date(order.created_at).toLocaleDateString('en-IN')}</p>
+                                        <p class="text-[9px] text-gray-400 mt-1">${new Date(order.ordered_at).toLocaleDateString('en-IN')}</p>
                                     </div>
                                     <span class="font-bold maroon-text">₹${parseFloat(order.total_price).toLocaleString()}</span>
                                 </div>
@@ -1411,7 +1411,6 @@ $cumulative_ledger = $total_price + $running_service_total;
                         rescheduleCoutInstance.set('minDate', dateStr);
                     }
                 }
-            });
         });
         });
         

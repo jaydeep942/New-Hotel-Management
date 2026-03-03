@@ -11,7 +11,16 @@ if (isset($_GET['id']) && isset($_GET['status'])) {
     exit();
 }
 
-$bookings = $adminCtrl->getAllBookings();
+// Handle Deletion
+if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
+    $adminCtrl->deleteBooking($_GET['id']);
+    header("Location: bookings.php?msg=Protocol+Archived");
+    exit();
+}
+
+$user_id = $_GET['user_id'] ?? null;
+$search = $_GET['search'] ?? '';
+$bookings = $adminCtrl->getAllBookings($user_id, $search);
 
 include '../includes/admin_header.php';
 include '../includes/admin_sidebar.php';
@@ -23,12 +32,12 @@ include '../includes/admin_sidebar.php';
         <p class="text-sm text-gray-400">Track and manage all stay protocols from entry to exit.</p>
     </div>
     
-    <div class="flex items-center space-x-4">
+    <form action="" method="GET" class="flex items-center space-x-4">
         <div class="relative">
             <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-            <input type="text" placeholder="Search Guest / ID..." class="bg-white border border-gray-100 pl-10 pr-6 py-3 rounded-2xl text-xs outline-none focus:border-primary/30 transition-all font-medium">
+            <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search Guest / ID..." class="bg-white border border-gray-100 pl-10 pr-6 py-3 rounded-2xl text-xs outline-none focus:border-primary/30 transition-all font-medium">
         </div>
-    </div>
+    </form>
 </div>
 
 <!-- Bookings Table -->
@@ -98,7 +107,29 @@ include '../includes/admin_sidebar.php';
                                 <a href="?id=<?php echo $b['id']; ?>&status=Checked-Out" class="px-4 py-2 bg-emerald-500/10 text-emerald-500 text-[9px] font-black uppercase rounded-xl hover:bg-emerald-500 hover:text-white transition-all">Check Out</a>
                             <?php endif; ?>
                             
-                            <button class="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 hover:text-primary rounded-lg transition-all"><i class="fas fa-ellipsis-h text-xs"></i></button>
+                            <div class="relative group/more">
+                                <button class="w-8 h-8 flex items-center justify-center bg-gray-50 text-gray-400 hover:text-maroon rounded-lg transition-all">
+                                    <i class="fas fa-ellipsis-h text-xs"></i>
+                                </button>
+                                <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 opacity-0 invisible group-hover/more:opacity-100 group-hover/more:visible translate-y-2 group-hover/more:translate-y-0 transition-all z-20">
+                                    <h6 class="px-6 py-2 text-[8px] font-black uppercase tracking-widest text-gray-300">Residency Actions</h6>
+                                    <?php if($b['status'] != 'Cancelled' && $b['status'] != 'Checked-Out'): ?>
+                                        <a href="?id=<?php echo $b['id']; ?>&status=Cancelled" class="flex items-center space-x-3 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50 transition-all">
+                                            <i class="fas fa-ban w-4"></i>
+                                            <span>Cancel Stay</span>
+                                        </a>
+                                    <?php endif; ?>
+                                    <a href="print-receipt.php?id=<?php echo $b['id']; ?>" target="_blank" class="flex items-center space-x-3 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 transition-all">
+                                        <i class="fas fa-file-invoice-dollar w-4"></i>
+                                        <span>Print Receipt</span>
+                                    </a>
+                                    <div class="h-px bg-gray-50 my-1 mx-4"></div>
+                                    <a href="?action=delete&id=<?php echo $b['id']; ?>" onclick="return confirm('Archive this protocol permanently?')" class="flex items-center space-x-3 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-rose-500 transition-all">
+                                        <i class="fas fa-trash-alt w-4"></i>
+                                        <span>Archive Log</span>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </td>
                 </tr>

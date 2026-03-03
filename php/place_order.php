@@ -20,7 +20,7 @@ $room_stmt->execute();
 $room_res = $room_stmt->get_result()->fetch_assoc();
 
 if (!$room_res) {
-    echo json_encode(['success' => false, 'message' => 'You are not curruntly stay in hotel']);
+    echo json_encode(['success' => false, 'message' => 'You are not currently staying in the hotel']);
     exit();
 }
 

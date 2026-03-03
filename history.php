@@ -451,7 +451,7 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
                                  </td>
                                  <td class="font-bold maroon-text">
                                     ₹<?php 
-                                        $display_price = ($row['status'] === 'Checked-Out' && $row['final_bill']) ? $row['final_bill'] : $row['total_price'];
+                                        $display_price = ($row['status'] === 'Checked-Out' && $row['final_bill']) ? $row['final_bill'] : $row['total_amount'];
                                         echo number_format($display_price, 0); 
                                     ?>
                                  </td>
@@ -1099,7 +1099,7 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
                 booking.formatted_actual_checkout : (booking.formatted_check_out || booking.check_out);
             
             const isSettled = booking.status === 'Checked-Out' && booking.final_bill;
-            const finalPrice = isSettled ? booking.final_bill : booking.total_price;
+            const finalPrice = isSettled ? booking.final_bill : booking.total_amount;
             document.getElementById('modalTotalPrice').innerText = '₹' + parseFloat(finalPrice).toLocaleString();
             
             const reqCont = document.getElementById('modalRequestsContainer');
@@ -1140,8 +1140,8 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
             document.getElementById('printStatus').innerText = 'Status: ' + booking.status;
             
             const isSettled = booking.status === 'Checked-Out' && booking.final_bill;
-            const finalTotal = isSettled ? booking.final_bill : booking.total_price;
-            const basePrice = parseFloat(booking.total_price);
+            const finalTotal = isSettled ? booking.final_bill : booking.total_amount;
+            const basePrice = parseFloat(booking.total_amount);
             const servicePrice = isSettled ? (parseFloat(booking.final_bill) - basePrice) : 0;
 
             document.getElementById('printBasePrice').innerText = '₹' + basePrice.toLocaleString();
