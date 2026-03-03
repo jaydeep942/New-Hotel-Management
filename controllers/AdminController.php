@@ -1,4 +1,7 @@
 <?php
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 class AdminController {
     protected $db;
 
@@ -56,6 +59,48 @@ class AdminController {
         $stats['pending_services'] = $this->db->fetchOne("SELECT COUNT(*) as count FROM service_orders WHERE status = 'Pending'")['count'];
         
         return $stats;
+    }
+
+    public function getAnalyticsData() {
+        $analytics = [
+            'daily' => [],
+            'monthly' => [],
+            'yearly' => []
+        ];
+
+        // 1. Daily Analytics (Last 7 Days)
+        for ($i = 6; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-$i days"));
+            $dayName = date('D', strtotime("-$i days"));
+            $res = $this->db->fetchOne("SELECT SUM(total_amount) as total FROM bookings WHERE payment_status = 'Paid' AND DATE(created_at) = ?", [$date]);
+            $analytics['daily'][] = [
+                'label' => strtoupper($dayName),
+                'revenue' => (float)($res['total'] ?? 0)
+            ];
+        }
+
+        // 2. Monthly Analytics (Last 6 Months)
+        for ($i = 5; $i >= 0; $i--) {
+            $month = date('Y-m', strtotime("-$i month"));
+            $monthName = date('M', strtotime("-$i month"));
+            $res = $this->db->fetchOne("SELECT SUM(total_amount) as total FROM bookings WHERE payment_status = 'Paid' AND DATE_FORMAT(created_at, '%Y-%m') = ?", [$month]);
+            $analytics['monthly'][] = [
+                'label' => strtoupper($monthName),
+                'revenue' => (float)($res['total'] ?? 0)
+            ];
+        }
+
+        // 3. Yearly Analytics (Last 5 Years)
+        for ($i = 4; $i >= 0; $i--) {
+            $year = date('Y', strtotime("-$i years"));
+            $res = $this->db->fetchOne("SELECT SUM(total_amount) as total FROM bookings WHERE payment_status = 'Paid' AND YEAR(created_at) = ?", [$year]);
+            $analytics['yearly'][] = [
+                'label' => $year,
+                'revenue' => (float)($res['total'] ?? 0)
+            ];
+        }
+
+        return $analytics;
     }
 
     public function getRecentBookings($limit = 5) {
@@ -176,6 +221,95 @@ class AdminController {
         return $stmt->execute();
     }
 
+    public function getAvailableRooms() {
+        return $this->db->fetchAll("SELECT * FROM rooms WHERE status = 'Available' ORDER BY room_number ASC");
+    }
+
+    public function manualBooking($data) {
+        // 1. Check if user already exists based on email
+        $user = $this->db->fetchOne("SELECT id FROM users WHERE email = ?", [$data['guest_email']]);
+        $user_id = null;
+        $is_new_user = false;
+        $generated_password = '';
+
+        if ($user) {
+            $user_id = $user['id'];
+            
+            // 1b. Update existing user details to match latest manual entry
+            $u_update = "UPDATE users SET name = ?, phone = ? WHERE id = ?";
+            $u_stmt = $this->db->conn->prepare($u_update);
+            $u_stmt->bind_param("ssi", $data['guest_name'], $data['guest_phone'], $user_id);
+            $u_stmt->execute();
+            
+            // Send Booking Confirmation for existing user
+            $subject = "Residency Confirmation - " . $data['guest_name'];
+            $message = "Your luxury residency at Grand Luxe has been manually initialized by our concierge.<br><br>
+                        <strong>Suite:</strong> Suite " . $data['room_id'] . "<br>
+                        <strong>Arrival:</strong> " . $data['check_in'] . "<br>
+                        <strong>Departure:</strong> " . $data['check_out'] . "<br>
+                        <strong>Total Investment:</strong> ₹" . $data['total_amount'] . "<br><br>
+                        You can access your private dashboard using your existing credentials to manage this residency.";
+            
+            $this->sendThemedEmail($data['guest_email'], $subject, $message, 'Confirmation');
+        } else {
+            // 2. Create new user account
+            $is_new_user = true;
+            $generated_password = bin2hex(random_bytes(4)); // Generate 8-character random password
+            $hashed_password = password_hash($generated_password, PASSWORD_DEFAULT);
+            
+            $u_query = "INSERT INTO users (name, email, phone, password, status) VALUES (?, ?, ?, ?, 'Active')";
+            $u_stmt = $this->db->conn->prepare($u_query);
+            $u_stmt->bind_param("ssss", $data['guest_name'], $data['guest_email'], $data['guest_phone'], $hashed_password);
+            
+            if ($u_stmt->execute()) {
+                $user_id = $this->db->conn->insert_id;
+                
+                // 3. Send Credentials via Themed Email
+                $subject = "Welcome to Grand Luxe - Your Residency Credentials";
+                $message = "Your luxury account has been initialized. You can now access your private dashboard using the following credentials:<br><br>
+                            <strong>User ID (Email):</strong> " . $data['guest_email'] . "<br>
+                            <strong>Access Password:</strong> " . $generated_password . "<br><br>
+                            <strong>Residency Details:</strong><br>
+                            <strong>Suite:</strong> Suite " . $data['room_id'] . "<br>
+                            <strong>Dates:</strong> " . $data['check_in'] . " to " . $data['check_out'] . "<br><br>
+                            Please change your password after your first login for protocol security.";
+                
+                $this->sendThemedEmail($data['guest_email'], $subject, $message, 'Activation');
+            } else {
+                return false; // User creation failed
+            }
+        }
+
+        // 4. Insert Booking linked to user_id
+        $query = "INSERT INTO bookings (user_id, guest_name, guest_email, guest_phone, room_id, check_in, check_out, total_amount, status, payment_status, id_proof_type, id_proof_number, permanent_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $this->db->conn->prepare($query);
+        
+        $status = $data['status'] ?? 'Confirmed';
+        $payment_status = $data['payment_status'] ?? 'Pending';
+        
+        $stmt->bind_param("isssissdsssss", 
+            $user_id,
+            $data['guest_name'], 
+            $data['guest_email'], 
+            $data['guest_phone'], 
+            $data['room_id'], 
+            $data['check_in'], 
+            $data['check_out'], 
+            $data['total_amount'],
+            $status,
+            $payment_status,
+            $data['id_proof_type'],
+            $data['id_proof_number'],
+            $data['address']
+        );
+        
+        if ($stmt->execute()) {
+            $this->updateRoomStatus($data['room_id'], 'Booked');
+            return true;
+        }
+        return false;
+    }
+
     // Service Management
     public function getAllServices() {
         return $this->db->fetchAll("SELECT * FROM services ORDER BY category, service_name");
@@ -235,6 +369,40 @@ class AdminController {
         return $stmt->execute();
     }
 
+    public function updateUser($userId, $data) {
+        $query = "UPDATE users SET name=?, email=?, phone=?, status=? WHERE id=?";
+        $stmt = $this->db->conn->prepare($query);
+        $stmt->bind_param("ssssi", $data['name'], $data['email'], $data['phone'], $data['status'], $userId);
+        return $stmt->execute();
+    }
+
+    public function resetUserPassword($userId) {
+        $user = $this->db->fetchOne("SELECT email, name FROM users WHERE id = ?", [$userId]);
+        if (!$user) return false;
+
+        $generated_password = bin2hex(random_bytes(4));
+        $hashed_password = password_hash($generated_password, PASSWORD_DEFAULT);
+        
+        $query = "UPDATE users SET password=? WHERE id=?";
+        $stmt = $this->db->conn->prepare($query);
+        $stmt->bind_param("si", $hashed_password, $userId);
+        
+        if ($stmt->execute()) {
+            $subject = "Security Update - Your New Access Code";
+            $message = "Respected Guest, <br><br>As per your request or administrative protocol, your access credentials have been reset. <br><br>
+                        <strong>New Password:</strong> " . $generated_password . "<br><br>
+                        Please use this to login and update your password immediately.";
+            
+            $this->sendThemedEmail($user['email'], $subject, $message, 'Security');
+            return $generated_password;
+        }
+        return false;
+    }
+
+    public function getUserById($id) {
+        return $this->db->fetchOne("SELECT * FROM users WHERE id = ?", [$id]);
+    }
+
     // Housekeeping Management
     public function getHousekeepingGrid() {
         return $this->db->fetchAll("SELECT r.id as room_id, r.room_number, r.status as room_status, h.status as clean_status, h.last_updated 
@@ -279,27 +447,76 @@ class AdminController {
         return $stmt->execute();
     }
 
-    // Email Template Engine (Simulated)
+    // Email Template Engine - Using PHPMailer for Real Delivery
     public function sendThemedEmail($to, $subject, $message, $type = 'confirmation') {
         $settings = $this->getSettings();
         $hotelName = $settings['hotel_name'];
         
-        $template = "
-        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 20px; overflow: hidden;'>
-            <div style='background: linear-gradient(to right, #8b5cf6, #f43f5e); padding: 40px; text-align: center; color: white;'>
-                <h1 style='margin: 0; font-size: 28px; letter-spacing: 2px;'>$hotelName</h1>
-                <p style='text-transform: uppercase; font-size: 10px; opacity: 0.8; letter-spacing: 4px; font-weight: bold;'>$type Protocol</p>
-            </div>
-            <div style='padding: 40px; color: #333;'>
-                <h2 style='color: #8b5cf6;'>$subject</h2>
-                <p style='line-height: 1.6;'>$message</p>
-                <div style='margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #999;'>
-                    <p>&copy; 2026 $hotelName. All rights reserved.</p>
-                </div>
-            </div>
-        </div>";
+        $phpmailer_path = __DIR__ . '/../php/PHPMailer/src/';
         
-        return true; 
+        if (file_exists($phpmailer_path . 'PHPMailer.php')) {
+            require_once $phpmailer_path . 'Exception.php';
+            require_once $phpmailer_path . 'PHPMailer.php';
+            require_once $phpmailer_path . 'SMTP.php';
+
+            $mail = new PHPMailer(true);
+
+            try {
+                // Server Settings
+                $mail->isSMTP();
+                $mail->Host       = 'smtp.gmail.com';
+                $mail->SMTPAuth   = true;
+                $mail->Username   = 'grandluxe.luxury@gmail.com';
+                $mail->Password   = 'hzpe obze lbbi anuu'; // Verified App Password
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port       = 587;
+                
+                $mail->SMTPOptions = array(
+                    'ssl' => array(
+                        'verify_peer' => false,
+                        'verify_peer_name' => false,
+                        'allow_self_signed' => true
+                    )
+                );
+
+                // Recipients
+                $mail->setFrom('jaydipramoliya942@gmail.com', $hotelName);
+                $mail->addAddress($to);
+
+                // Content
+                $mail->isHTML(true);
+                $mail->Subject = "$hotelName - $subject";
+
+                $template = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);'>
+                    <div style='background: linear-gradient(to right, #8b5cf6, #f43f5e); padding: 40px; text-align: center; color: white;'>
+                        <h1 style='margin: 0; font-size: 28px; letter-spacing: 2px; text-transform: uppercase;'>$hotelName</h1>
+                        <p style='text-transform: uppercase; font-size: 10px; opacity: 0.8; letter-spacing: 4px; font-weight: bold; margin-top: 10px;'>$type Protocol Activated</p>
+                    </div>
+                    <div style='padding: 40px; color: #333; background: #fff;'>
+                        <h2 style='color: #8b5cf6; font-size: 20px; margin-bottom: 20px;'>$subject</h2>
+                        <div style='line-height: 1.8; font-size: 15px; color: #444;'>
+                            $message
+                        </div>
+                        <div style='margin-top: 40px; padding: 25px; background: #f9fafb; border-radius: 15px; border: 1px dashed #e5e7eb;'>
+                            <p style='margin: 0; font-size: 13px; color: #6b7280;'>
+                                <strong>System Note:</strong> This is an automated security protocol. Please do not reply to this email. For assistance, contact our 24/7 concierge.
+                            </p>
+                        </div>
+                        <div style='margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #9ca3af; text-align: center;'>
+                            <p>&copy; 2026 $hotelName. The Pinnacle of Luxury. All rights reserved.</p>
+                        </div>
+                    </div>
+                </div>";
+                
+                $mail->Body = $template;
+                return $mail->send();
+            } catch (Exception $e) {
+                error_log("Email sending failed: " . $mail->ErrorInfo);
+                return false;
+            }
+        }
+        return false; 
     }
 }
 ?>

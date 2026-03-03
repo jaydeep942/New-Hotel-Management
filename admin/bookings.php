@@ -32,12 +32,17 @@ include '../includes/admin_sidebar.php';
         <p class="text-sm text-gray-400">Track and manage all stay protocols from entry to exit.</p>
     </div>
     
-    <form action="" method="GET" class="flex items-center space-x-4">
-        <div class="relative">
-            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
-            <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search Guest / ID..." class="bg-white border border-gray-100 pl-10 pr-6 py-3 rounded-2xl text-xs outline-none focus:border-primary/30 transition-all font-medium">
-        </div>
-    </form>
+    <div class="flex items-center space-x-4">
+        <form action="" method="GET" class="flex items-center space-x-4">
+            <div class="relative">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search Guest / ID..." class="bg-white border border-gray-100 pl-10 pr-6 py-3 rounded-2xl text-xs outline-none focus:border-primary/30 transition-all font-medium">
+            </div>
+        </form>
+        <a href="add-booking.php" class="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-2xl font-bold uppercase tracking-widest text-[9px] shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+            <i class="fas fa-plus mr-2"></i> Manual Entry
+        </a>
+    </div>
 </div>
 
 <!-- Bookings Table -->

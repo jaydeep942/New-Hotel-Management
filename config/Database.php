@@ -64,15 +64,35 @@ if (!class_exists('Database')) {
                 user_id INT,
                 room_id INT,
                 guest_name VARCHAR(100) NOT NULL,
+                guest_email VARCHAR(100) NULL,
+                guest_phone VARCHAR(20) NULL,
                 check_in DATE NOT NULL,
                 check_out DATE NOT NULL,
                 total_amount DECIMAL(10,2) NOT NULL,
-                status ENUM('Booked', 'Checked-In', 'Checked-Out', 'Cancelled') DEFAULT 'Booked',
+                id_proof_type VARCHAR(20) NULL,
+                id_proof_number VARCHAR(50) NULL,
+                permanent_address TEXT NULL,
+                status ENUM('Booked', 'Confirmed', 'Checked-In', 'Checked-Out', 'Cancelled') DEFAULT 'Booked',
                 payment_status ENUM('Pending', 'Paid', 'Refunded') DEFAULT 'Pending',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
                 FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL
             )");
+
+            // Migration for existing bookings table
+            $booking_fields = [
+                'guest_email' => "VARCHAR(100) NULL AFTER guest_name",
+                'guest_phone' => "VARCHAR(20) NULL AFTER guest_email",
+                'id_proof_type' => "VARCHAR(20) NULL AFTER total_amount",
+                'id_proof_number' => "VARCHAR(50) NULL AFTER id_proof_type",
+                'permanent_address' => "TEXT NULL AFTER id_proof_number"
+            ];
+            foreach ($booking_fields as $col => $def) {
+                $check = $this->conn->query("SHOW COLUMNS FROM `bookings` LIKE '$col'");
+                if ($check && $check->num_rows == 0) {
+                    $this->conn->query("ALTER TABLE bookings ADD COLUMN $col $def");
+                }
+            }
 
             // Services Table
             $this->conn->query("CREATE TABLE IF NOT EXISTS services (

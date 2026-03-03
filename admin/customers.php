@@ -80,6 +80,9 @@ include '../includes/admin_sidebar.php';
                             <?php else: ?>
                                 <a href="?id=<?php echo $u['id']; ?>&status=Active" class="p-2 bg-emerald-50 text-emerald-500 rounded-xl hover:bg-emerald-500 hover:text-white transition-all text-xs" title="Activate"><i class="fas fa-user-check"></i></a>
                             <?php endif; ?>
+                            <a href="edit-customer.php?id=<?php echo $u['id']; ?>" class="p-2 bg-orange-50 text-orange-500 rounded-xl hover:bg-orange-500 hover:text-white transition-all text-xs" title="Edit Profile">
+                                <i class="fas fa-edit"></i>
+                            </a>
                             <a href="bookings.php?user_id=<?php echo $u['id']; ?>" class="p-2 <?php echo $u['status'] == 'Active' ? 'bg-indigo-50 text-indigo-500 hover:bg-indigo-100' : 'bg-gray-50 text-gray-400'; ?> rounded-xl transition-all text-xs" title="History Protocols">
                                 <i class="fas fa-history"></i>
                             </a>

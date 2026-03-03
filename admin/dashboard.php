@@ -7,6 +7,7 @@ $adminCtrl->checkAuth();
 $stats = $adminCtrl->getDashboardStats();
 $recentBookings = $adminCtrl->getRecentBookings();
 $recentOrders = $adminCtrl->getRecentOrders();
+$analytics = $adminCtrl->getAnalyticsData();
 
 include '../includes/admin_header.php';
 include '../includes/admin_sidebar.php';
@@ -90,37 +91,14 @@ include '../includes/admin_sidebar.php';
                 <h3 class="text-lg font-bold text-gray-800">Performance Analytics</h3>
                 <p class="text-xs text-gray-400">Monthly revenue and occupancy trends.</p>
             </div>
-            <div class="flex space-x-2">
-                <button class="px-4 py-2 bg-gray-50 text-[10px] font-black uppercase tracking-widest text-gray-400 rounded-xl hover:bg-white hover:text-primary transition-all">Month</button>
-                <button class="px-4 py-2 bg-primary/10 text-[10px] font-black uppercase tracking-widest text-primary rounded-xl">Year</button>
+            <div class="flex p-1 bg-gray-50 rounded-2xl" id="analyticsToggle">
+                <button onclick="updateChart('daily')" data-period="daily" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 rounded-xl hover:text-primary transition-all">Day</button>
+                <button onclick="updateChart('monthly')" data-period="monthly" class="px-4 py-2 bg-white shadow-sm text-[10px] font-black uppercase tracking-widest text-primary rounded-xl transition-all">Month</button>
+                <button onclick="updateChart('yearly')" data-period="yearly" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 rounded-xl hover:text-primary transition-all">Year</button>
             </div>
         </div>
-        <div class="h-80 w-full flex items-end justify-between px-4 pb-8 border-b border-gray-100">
-            <!-- Dummy Chart Bars -->
-            <div class="w-12 bg-gray-100 rounded-t-xl relative group">
-                <div class="absolute bottom-0 w-full bg-gradient-to-t from-primary to-secondary rounded-t-xl transition-all duration-1000 h-[60%] group-hover:opacity-80"></div>
-                <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-gray-400">JAN</span>
-            </div>
-            <div class="w-12 bg-gray-100 rounded-t-xl relative group">
-                <div class="absolute bottom-0 w-full bg-gradient-to-t from-primary to-secondary rounded-t-xl transition-all duration-1000 h-[45%] group-hover:opacity-80"></div>
-                <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-gray-400">FEB</span>
-            </div>
-            <div class="w-12 bg-gray-100 rounded-t-xl relative group">
-                <div class="absolute bottom-0 w-full bg-gradient-to-t from-primary to-secondary rounded-t-xl transition-all duration-1000 h-[80%] group-hover:opacity-80"></div>
-                <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-gray-400">MAR</span>
-            </div>
-            <div class="w-12 bg-gray-100 rounded-t-xl relative group">
-                <div class="absolute bottom-0 w-full bg-gradient-to-t from-primary to-secondary rounded-t-xl transition-all duration-1000 h-[95%] group-hover:opacity-80"></div>
-                <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-gray-400">APR</span>
-            </div>
-            <div class="w-12 bg-gray-100 rounded-t-xl relative group">
-                <div class="absolute bottom-0 w-full bg-gradient-to-t from-primary to-secondary rounded-t-xl transition-all duration-1000 h-[70%] group-hover:opacity-80"></div>
-                <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-gray-400">MAY</span>
-            </div>
-            <div class="w-12 bg-gray-100 rounded-t-xl relative group">
-                <div class="absolute bottom-0 w-full bg-gradient-to-t from-primary to-secondary rounded-t-xl transition-all duration-1000 h-[85%] group-hover:opacity-80"></div>
-                <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-gray-400">JUN</span>
-            </div>
+        <div class="h-80 w-full relative">
+            <canvas id="performanceChart"></canvas>
         </div>
     </div>
 
@@ -140,7 +118,7 @@ include '../includes/admin_sidebar.php';
                 </div>
                 <i class="fas fa-chevron-right text-gray-300 group-hover:text-primary transition-colors text-xs"></i>
             </a>
-            <a href="bookings.php" class="w-full flex items-center justify-between p-5 bg-gray-50 rounded-[28px] hover:bg-white hover:shadow-xl hover:shadow-secondary/5 hover:-translate-y-1 transition-all group">
+            <a href="add-booking.php" class="w-full flex items-center justify-between p-5 bg-gray-50 rounded-[28px] hover:bg-white hover:shadow-xl hover:shadow-secondary/5 hover:-translate-y-1 transition-all group">
                 <div class="flex items-center space-x-4">
                     <div class="w-12 h-12 bg-secondary/10 rounded-2xl flex items-center justify-center text-secondary">
                         <i class="fas fa-calendar-plus"></i>
@@ -266,6 +244,107 @@ include '../includes/admin_sidebar.php';
             };
             updateCount();
         });
+
+        // Initialize Performance Chart
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        const allAnalytics = <?php echo json_encode($analytics); ?>;
+        let currentChart;
+
+        window.updateChart = function(period) {
+            const dataSet = allAnalytics[period];
+            const labels = dataSet.map(item => item.label);
+            const values = dataSet.map(item => item.revenue);
+
+            // Update UI Buttons
+            document.querySelectorAll('#analyticsToggle button').forEach(btn => {
+                if (btn.getAttribute('data-period') === period) {
+                    btn.classList.add('bg-white', 'shadow-sm', 'text-primary');
+                    btn.classList.remove('text-gray-400');
+                } else {
+                    btn.classList.remove('bg-white', 'shadow-sm', 'text-primary');
+                    btn.classList.add('text-gray-400');
+                }
+            });
+
+            if (currentChart) {
+                currentChart.data.labels = labels;
+                currentChart.data.datasets[0].data = values;
+                currentChart.update();
+            } else {
+                currentChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Revenue (₹)',
+                            data: values,
+                            backgroundColor: function(context) {
+                                const chart = context.chart;
+                                const {ctx, chartArea} = chart;
+                                if (!chartArea) return null;
+                                const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                                gradient.addColorStop(0, '#8b5cf6');
+                                gradient.addColorStop(1, '#f43f5e');
+                                return gradient;
+                            },
+                            borderRadius: 15,
+                            borderSkipped: false,
+                            barThickness: period === 'daily' ? 30 : 45,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                titleColor: '#1f2937',
+                                bodyColor: '#1f2937',
+                                cornerRadius: 15,
+                                displayColors: false,
+                                padding: 15,
+                                borderColor: '#f3f4f6',
+                                borderWidth: 1,
+                                callbacks: {
+                                    label: function(context) {
+                                        return '₹' + context.raw.toLocaleString();
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { display: true, drawBorder: false, color: '#f3f4f6' },
+                                ticks: {
+                                    color: '#9ca3af',
+                                    font: { family: 'Outfit', size: 10, weight: 'bold' },
+                                    callback: function(value) {
+                                        if (value >= 1000) return '₹' + (value/1000) + 'k';
+                                        return '₹' + value;
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: {
+                                    color: '#9ca3af',
+                                    font: { family: 'Outfit', size: 10, weight: 'bold' }
+                                }
+                            }
+                        },
+                        animation: {
+                            duration: 1500,
+                            easing: 'easeOutQuart'
+                        }
+                    }
+                });
+            }
+        };
+
+        // Default Load: Monthly
+        updateChart('monthly');
     });
 </script>
 
