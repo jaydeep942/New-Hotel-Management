@@ -530,7 +530,10 @@ $rooms_result = $conn->query($query);
                             </div>
                             <p class="text-gray-400 text-sm mb-6 flex items-center">
                                 <i class="fas fa-expand-arrows-alt mr-2 text-gold"></i> 
-                                <?php echo ($room['room_type'] == 'Presidential' ? '120' : ($room['room_type'] == 'Executive' ? '85' : '45')); ?> m² • King Bed • City View
+                                <?php 
+                                $sizes = ['Standard' => '45', 'Deluxe' => '65', 'Executive' => '85', 'Presidential' => '120', 'Family' => '150', 'Penthouse' => '180'];
+                                echo $sizes[$room['room_type']] ?? '45'; 
+                                ?> m² • King Bed • <?php echo ($room['room_type'] == 'Penthouse' ? '360° View' : 'Panoramic View'); ?>
                             </p>
                             <div class="flex items-center justify-between mt-auto pt-6 border-t border-gray-50">
                                 <div>
