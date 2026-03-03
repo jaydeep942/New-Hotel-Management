@@ -532,15 +532,15 @@ $cumulative_ledger = $total_price + $running_service_total;
         <div class="max-w-[1600px] mx-auto p-4 md:p-8">
             <!-- Dashboard Home Content -->
             <div class="animate-slide">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
-                <div>
-                    <h2 class="text-2xl md:text-3xl font-bold maroon-text" style="font-family: 'Playfair Display', serif;">Welcome Back, <?php echo htmlspecialchars($_SESSION['name']); ?></h2>
-                    <p class="text-gray-500 mt-1 text-sm md:text-base">Here is a summary of your private suite status.</p>
-                </div>
-                <div class="text-left sm:text-right">
-                    <p id="live-clock" class="text-lg font-black maroon-text tracking-tight animate-fade"></p>
-                    <p id="live-date" class="text-[10px] uppercase tracking-[3px] font-bold text-gray-400 mt-1"></p>
-                </div>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
+                    <div>
+                        <h2 class="text-2xl md:text-3xl font-bold maroon-text" style="font-family: 'Playfair Display', serif;">Welcome Back, <?php echo htmlspecialchars($_SESSION['name']); ?></h2>
+                        <p class="text-gray-500 mt-1 text-sm md:text-base">Here is a summary of your private suite status.</p>
+                    </div>
+                    <div class="text-left sm:text-right">
+                        <p id="live-clock" class="text-lg font-black maroon-text tracking-tight animate-fade"></p>
+                        <p id="live-date" class="text-[10px] uppercase tracking-[3px] font-bold text-gray-400 mt-1"></p>
+                    </div>
                 </div>
             </div>
 
@@ -640,111 +640,45 @@ $cumulative_ledger = $total_price + $running_service_total;
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-12 mb-12">
-                <!-- Status & Progress -->
-                <div class="lg:col-span-2 bg-white rounded-[40px] p-10 premium-shadow">
-                    <div class="flex justify-between items-center mb-8">
-                        <div>
-                            <h4 class="text-2xl font-black maroon-text leading-tight" style="font-family: 'Playfair Display', serif;">
-                                <?php echo ($isLive) ? 'Residency Progress' : 'Suite Preparation'; ?>
-                            </h4>
-                            <p class="text-[10px] font-black uppercase tracking-[2px] text-gold mt-1">
-                                <?php echo ($isLive) ? 'Live Status Tracking' : 'Excellence in progress'; ?>
-                            </p>
+            <!-- Luxury Experience Hub (AI Intelligence Layer) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 mb-8 animate-fade-in">
+                <!-- Stay Wealth -->
+                <div class="bg-white p-8 rounded-[40px] premium-shadow border border-maroon/5 relative overflow-hidden group hover:scale-[1.02] transition-all duration-700 cursor-pointer">
+                    <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-maroon/[0.02] rounded-full group-hover:scale-150 transition-transform duration-1000"></div>
+                    <div class="flex justify-between items-start mb-8">
+                        <div class="w-14 h-14 rounded-2xl bg-maroon/5 flex items-center justify-center text-maroon shadow-sm group-hover:bg-maroon group-hover:text-white transition-all">
+                            <i class="fas fa-receipt text-xl"></i>
                         </div>
-                        <?php if($hasBooking && $isLive): ?>
                         <div class="text-right">
-                            <span class="px-4 py-1.5 bg-maroon text-white rounded-full text-[9px] font-black uppercase tracking-widest">Day <?php echo $currentDay; ?> of <?php echo $totalNights; ?></span>
-                        </div>
-                        <?php else: ?>
-                        <div class="flex items-center space-x-2">
-                            <span class="w-2 h-2 bg-gold rounded-full animate-ping"></span>
-                            <span class="text-[10px] font-black uppercase tracking-widest text-maroon">V.I.P Selection</span>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                    
-                    <?php if($isLive): ?>
-                    <div class="relative w-full bg-gray-100 h-3 rounded-full overflow-hidden mb-10 p-[2px]">
-                        <div class="bg-gradient-to-r from-maroon via-gold to-teal h-full rounded-full transition-all duration-[2000ms] relative" style="width: <?php echo $progressPercent; ?>%">
-                            <div class="absolute inset-x-0 top-0 h-1/2 bg-white/20"></div>
+                            <span class="px-3 py-1 bg-maroon/5 text-maroon rounded-full text-[8px] font-black uppercase tracking-widest">Wealth Ledger</span>
                         </div>
                     </div>
-                    <?php else: ?>
-                    <div class="grid grid-cols-2 gap-4 mb-10">
-                        <div class="p-4 rounded-2xl bg-cream border border-gold/10 flex items-center space-x-4">
-                            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-gold shadow-sm">
-                                <i class="fas fa-sparkles"></i>
-                            </div>
-                            <div>
-                                <p class="text-[8px] font-black uppercase text-gray-400">Sanitization</p>
-                                <p class="text-[10px] font-bold maroon-text">Certified & Secured</p>
-                            </div>
-                        </div>
-                        <div class="p-4 rounded-2xl bg-cream border border-gold/10 flex items-center space-x-4">
-                            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-teal shadow-sm">
-                                <i class="fas fa-gift"></i>
-                            </div>
-                            <div>
-                                <p class="text-[8px] font-black uppercase text-gray-400">Welcome Gift</p>
-                                <p class="text-[10px] font-bold maroon-text">Suite Ready</p>
-                            </div>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Residency Ledger -->
-                        <div class="group p-6 rounded-[32px] bg-maroon/5 border border-maroon/10 hover:bg-maroon hover:border-maroon transition-all duration-500 cursor-pointer">
-                            <div class="flex justify-between items-start mb-4">
-                                <div class="w-10 h-10 rounded-2xl bg-white flex items-center justify-center text-maroon shadow-sm group-hover:scale-110 transition-transform">
-                                    <i class="fas fa-wallet"></i>
-                                </div>
-                                <span class="text-[8px] font-black uppercase tracking-widest text-maroon/50 group-hover:text-white/50">Running Total</span>
-                            </div>
-                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest group-hover:text-white/70">Residency Ledger</p>
-                            <h5 class="text-xl font-black maroon-text mt-1 group-hover:text-white transition-colors">₹<?php echo number_format($cumulative_ledger, 0); ?></h5>
-                            <div class="mt-3 overflow-hidden h-1 bg-maroon/10 rounded-full">
-                                <div class="bg-maroon h-full group-hover:bg-gold w-3/4 transition-all"></div>
-                            </div>
-                        </div>
-
-                        <!-- Concierge Desk -->
-                        <div class="group p-6 rounded-[32px] bg-gold/5 border border-gold/10 hover:bg-gold hover:border-gold transition-all duration-500 cursor-pointer" onclick="window.location.href='services.php'">
-                            <div class="flex justify-between items-start mb-4">
-                                <div class="w-10 h-10 rounded-2xl bg-white flex items-center justify-center text-gold shadow-sm group-hover:scale-110 transition-transform">
-                                    <i class="fas fa-headset"></i>
-                                </div>
-                                <div class="flex items-center space-x-1">
-                                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                                    <span class="text-[8px] font-black uppercase tracking-widest text-gold group-hover:text-white">Live</span>
-                                </div>
-                            </div>
-                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest group-hover:text-white/70">Concierge Desk</p>
-                            <h5 class="text-xl font-black gold-text mt-1 group-hover:text-white transition-colors">On-Call Ready</h5>
-                            <p class="text-[9px] text-gold/60 group-hover:text-white/80 mt-1">Direct suite assistance active</p>
-                        </div>
-
-                        <!-- Smart Climate -->
-                        <div class="group p-6 rounded-[32px] bg-teal/5 border border-teal/10 hover:bg-teal hover:border-teal transition-all duration-500 relative overflow-hidden">
-                            <div class="flex justify-between items-start mb-4">
-                                <div class="w-10 h-10 rounded-2xl bg-white flex items-center justify-center text-teal shadow-sm group-hover:scale-110 transition-transform">
-                                    <i class="fas fa-wind"></i>
-                                </div>
-                                <span class="text-[8px] font-black uppercase tracking-widest text-teal group-hover:text-white">Automated</span>
-                            </div>
-                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest group-hover:text-white/70">Suite Climate</p>
-                            <div class="flex items-baseline space-x-1 mt-1">
-                                <h5 class="text-2xl font-black text-teal group-hover:text-white transition-colors">22</h5>
-                                <span class="text-xs font-bold text-teal/50 group-hover:text-white/50">&deg;C</span>
-                            </div>
-                            <p class="text-[9px] text-teal/60 group-hover:text-white/80 mt-1 italic">Optimized for rest</p>
-                        </div>
+                    <p class="text-[9px] uppercase font-black text-gray-400 tracking-[3px] mb-2 group-hover:text-maroon/40 transition-colors">Cumulative Investment</p>
+                    <div class="flex items-baseline space-x-1.5">
+                        <span class="text-sm font-bold maroon-text">₹</span>
+                        <h4 class="text-3xl font-black maroon-text tracking-tighter"><?php echo number_format($cumulative_ledger, 0); ?></h4>
                     </div>
                 </div>
 
-                <!-- Recent Service Orders -->
-                <div class="bg-white rounded-[40px] p-10 premium-shadow overflow-hidden relative">
+                <!-- Elite Concierge Desk -->
+                <div class="bg-white p-8 rounded-[40px] premium-shadow border border-gold/5 relative overflow-hidden group hover:scale-[1.02] transition-all duration-700 cursor-pointer" onclick="window.location.href='services.php'">
+                    <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-gold/[0.02] rounded-full group-hover:scale-150 transition-transform duration-1000"></div>
+                    <div class="flex justify-between items-start mb-8">
+                        <div class="w-14 h-14 rounded-2xl bg-gold/5 flex items-center justify-center text-gold shadow-sm group-hover:bg-gold group-hover:text-white transition-all">
+                            <i class="fas fa-concierge-bell text-xl"></i>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[8px] font-black uppercase tracking-widest text-gold group-hover:text-maroon transition-colors">Private Line</span>
+                        </div>
+                    </div>
+                    <p class="text-[9px] uppercase font-black text-gray-400 tracking-[3px] mb-2">Service Liaison</p>
+                    <h4 class="text-2xl font-black maroon-text tracking-tight">Concierge Elite</h4>
+                </div>
+            </div>
+
+            <!-- Recent Service Orders (Expanded Full-Width Experience) -->
+            <div class="grid grid-cols-1 gap-8 mb-12">
+                <div class="bg-white rounded-[40px] p-10 premium-shadow overflow-hidden relative min-h-[400px]">
                     <div class="flex justify-between items-center mb-8">
                         <div>
                             <h4 class="text-xl font-bold maroon-text">Recent Orders</h4>
