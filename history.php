@@ -778,7 +778,7 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
             <!-- Final Settlement Footer -->
             <div style="background: #6A1E2D; padding: 25px; display: flex; justify-content: space-between; align-items: center; color: #fff;">
                 <div>
-                    <h2 style="font-family: 'Playfair Display', serif; font-size: 16px; margin: 0; font-style: italic; color: #D4AF37;">Final Audit Settlement</h2>
+                    <h2 style="font-family: 'Playfair Display', serif; font-size: 16px; margin: 0; font-style: italic; color: #D4AF37;">Total Amount</h2>
                     <p style="margin: 2px 0 0 0; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6;">Document Verified</p>
                 </div>
                 <div style="text-align: right;">

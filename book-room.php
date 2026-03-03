@@ -722,13 +722,56 @@ $rooms_result = $conn->query($query);
         </div>
     </div>
 
-    <!-- Success Toast -->
-    <div id="successToast" class="fixed bottom-10 right-10 z-[200] hidden">
-        <div class="bg-teal p-6 rounded-[24px] text-white flex items-center space-x-4 premium-shadow animate-up">
-            <div class="bg-white/20 p-2 rounded-full"><i class="fas fa-check"></i></div>
-            <div>
-                <p id="toastTitle" class="font-bold">Reservation Successful!</p>
-                <p id="toastDesc" class="text-[10px] uppercase tracking-widest opacity-80">Welcome to Grand Luxe</p>
+    <!-- Success Confirmation Modal -->
+    <div id="successModal" class="modal hidden fixed inset-0 z-[150] flex items-center justify-center p-6">
+        <div class="absolute inset-0 bg-maroon/60 backdrop-blur-xl"></div>
+        <div class="bg-white rounded-[50px] w-full max-w-lg relative z-[151] overflow-hidden premium-shadow animate-up">
+            <!-- Pattern Header -->
+            <div class="h-32 gradient-maroon relative flex items-center justify-center">
+                <div class="absolute inset-0 opacity-10" style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png');"></div>
+                <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-2xl relative z-10">
+                    <i class="fas fa-check text-teal text-3xl"></i>
+                </div>
+            </div>
+
+            <div class="p-10 text-center">
+                <h3 class="text-3xl font-bold maroon-text mb-2">Residency Secured</h3>
+                <p class="text-gray-400 text-sm mb-8">Your luxury collection has been officially archived.</p>
+
+                <!-- Receipt Detail -->
+                <div class="bg-gray-50 rounded-[32px] p-8 mb-8 border border-gray-100 relative">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-white text-[8px] font-black px-4 py-1 rounded-full uppercase tracking-widest">Official Receipt</div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center border-bottom border-gray-100 pb-4">
+                            <span class="text-[10px] uppercase font-bold text-gray-400 tracking-widest text-left">Suites Selection</span>
+                            <span id="successRooms" class="font-bold text-xs maroon-text text-right truncate ml-4">--</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div class="text-left">
+                                <span class="text-[8px] uppercase font-bold text-gray-300 tracking-widest block">Arrival</span>
+                                <span id="successCin" class="font-bold text-xs maroon-text">--</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[8px] uppercase font-bold text-gray-300 tracking-widest block">Departure</span>
+                                <span id="successCout" class="font-bold text-xs maroon-text">--</span>
+                            </div>
+                        </div>
+                        <div class="pt-4 border-t border-dashed border-gold/30 flex justify-between items-center">
+                            <span class="text-xs font-bold maroon-text uppercase tracking-tighter">Total Investment</span>
+                            <span id="successTotal" class="text-2xl font-black maroon-text">₹0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col space-y-3">
+                    <a href="customer-dashboard.php" class="w-full py-5 gradient-maroon text-white rounded-2xl font-bold btn-glow transition shadow-xl text-center">
+                        Access Your Dashboard
+                    </a>
+                    <button onclick="window.location.reload()" class="text-[10px] uppercase font-bold text-gray-400 tracking-widest hover:text-gold transition">
+                        Reserve Another Stay
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1320,8 +1363,19 @@ $rooms_result = $conn->query($query);
             .then(data => {
                 if (data.success) {
                     hideBookingModal();
-                    showToast('Residency Secured!', 'Your luxurious stays have been archived.');
-                    setTimeout(() => window.location.href = 'customer-dashboard.php', 2000);
+                    
+                    // Show Success Modal instead of Toast
+                    document.getElementById('successRooms').innerText = roomCart.map(r => r.name).join(', ');
+                    document.getElementById('successCin').innerText = cin;
+                    document.getElementById('successCout').innerText = cout;
+                    
+                    const d1 = new Date(cin);
+                    const d2 = new Date(cout);
+                    const nights = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) || 1;
+                    const subtotal = roomCart.reduce((sum, r) => sum + parseFloat(r.price), 0);
+                    document.getElementById('successTotal').innerText = '₹' + (subtotal * nights).toLocaleString();
+                    
+                    document.getElementById('successModal').classList.remove('hidden');
                 } else {
                     showPremiumMessage('Archive Failed', data.message, 'error');
                     text.innerText = "Confirm Booking";

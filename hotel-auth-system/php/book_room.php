@@ -123,7 +123,7 @@ try {
                                             <td style='padding: 40px;'>
                                                 <div style='text-align: center; margin-bottom: 40px;'>
                                                     <h2 style='color: #6A1E2D; font-size: 22px; font-weight: bold; margin: 0 0 10px 0;'>Your Residency is Secured</h2>
-                                                    <p style='color: #718096; font-size: 14px; margin: 0; line-height: 1.5;'>Respected $guest_name, your luxury stay at Grand Luxe has been officially archived in our vaults. We are preparing for your arrival with the utmost care.</p>
+                                                    <p style='color: #718096; font-size: 14px; margin: 0; line-height: 1.5;'>Respected $guest_name, your luxury stay in our <strong>$room_type Suite</strong> has been officially archived. We are preparing for your arrival with the utmost care.</p>
                                                 </div>
 
                                                 <!-- Booking Card -->
@@ -162,7 +162,7 @@ try {
                                                                         <table width='100%' border='0' cellspacing='0' cellpadding='0'>
                                                                             <tr>
                                                                                 <td><span style='color: #6A1E2D; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;'>Total Residency Price</span></td>
-                                                                                <td align='right'><span style='color: #D4AF37; font-size: 26px; font-weight: bold;'>$$total_price</span></td>
+                                                                                <td align='right'><span style='color: #D4AF37; font-size: 26px; font-weight: bold;'>₹" . number_format($total_price, 0) . "</span></td>
                                                                             </tr>
                                                                         </table>
                                                                     </td>
@@ -174,8 +174,8 @@ try {
 
                                                 <!-- Action CTA -->
                                                 <div style='text-align: center; padding-bottom: 20px;'>
-                                                    <p style='color: #718096; font-size: 13px; line-height: 1.6; margin-bottom: 25px;'>Our concierge team is at your complete disposal 24/7 for any special arrangements.</p>
-                                                    <a href='#' style='display: inline-block; background: #6A1E2D; color: #ffffff; padding: 16px 35px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 14px;'>Manage Residency</a>
+                                                    <p style='color: #718096; font-size: 13px; line-height: 1.6; margin-bottom: 25px;'>Our concierge team is at your complete disposal 24/7 for any special requirements.</p>
+                                                    <a href='#' style='display: inline-block; background: #6A1E2D; color: #ffffff; padding: 16px 35px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 14px; box-shadow: 0 10px 20px rgba(106, 30, 45, 0.2);'>Manage Residency</a>
                                                 </div>
                                             </td>
                                         </tr>
@@ -183,8 +183,8 @@ try {
                                         <!-- Footer Section -->
                                         <tr>
                                             <td style='background-color: #fcfcfc; padding: 30px; text-align: center; border-top: 1px solid #f5f5f5;'>
-                                                <p style='color: #A0AEC0; font-size: 10px; margin: 0; text-transform: uppercase; letter-spacing: 1px;'>123 Luxury Avenue • Grand Luxe Metropolis • +1 (234) 567-890</p>
-                                                <p style='color: #A0AEC0; font-size: 10px; margin-top: 5px;'>© 2026 Grand Luxe Hotel Group. All rights reserved.</p>
+                                                <p style='color: #A0AEC0; font-size: 10px; margin: 0; text-transform: uppercase; letter-spacing: 1px;'>123 Royalty Avenue • Grand Luxe Metropolis • +1 (234) 567-890</p>
+                                                <p style='color: #A0AEC0; font-size: 10px; margin-top: 5px;'>© 2026 Grand Luxe Hotel Group. Excellence Defined.</p>
                                             </td>
                                         </tr>
                                     </table>
