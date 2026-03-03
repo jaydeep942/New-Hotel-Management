@@ -1,25 +1,13 @@
 <?php
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
-$conn = require_once __DIR__ . '/config/db.php';
-$user_id = $_SESSION['user_id'];
+require_once __DIR__ . '/php/check_guest_auth.php';
 
-// Fetch full user details
-$user_sql = "SELECT * FROM users WHERE id = ?";
-$user_stmt = $conn->prepare($user_sql);
-$user_stmt->bind_param("i", $user_id);
-$user_stmt->execute();
-$user_data = $user_stmt->get_result()->fetch_assoc();
-
+// User data and $conn are now available from check_guest_auth.php
 $_SESSION['name'] = $user_data['name'];
 $_SESSION['email'] = $user_data['email'];
 $profile_photo = $user_data['profile_photo'];
 
 // Fetch all service orders
-$orders_sql = "SELECT * FROM service_orders WHERE user_id = ? ORDER BY created_at DESC";
+$orders_sql = "SELECT * FROM service_orders WHERE user_id = ? ORDER BY ordered_at DESC";
 $orders_stmt = $conn->prepare($orders_sql);
 $orders_stmt->bind_param("i", $user_id);
 $orders_stmt->execute();
@@ -314,7 +302,7 @@ while($row = $orders_res->fetch_assoc()){
                     <div class="flex justify-between items-start mb-6">
                         <div>
                             <span class="text-[10px] font-black text-gray-400 uppercase tracking-[3px]">Order #SO-<?php echo str_pad($order['id'], 3, '0', STR_PAD_LEFT); ?></span>
-                            <h4 class="text-lg font-bold maroon-text mt-1"><?php echo date('d/m/Y, h:i A', strtotime($order['created_at'])); ?></h4>
+                            <h4 class="text-lg font-bold maroon-text mt-1"><?php echo date('d/m/Y, h:i A', strtotime($order['ordered_at'])); ?></h4>
                         </div>
                         <span class="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest <?php echo $statusColor; ?>">
                             <?php echo $order['status']; ?>

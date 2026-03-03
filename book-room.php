@@ -1,20 +1,7 @@
 <?php
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
-$conn = require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/php/check_guest_auth.php';
 
-// Ensure phone number and other data are in session (for users already logged in)
-// Fetch full user details
-$user_id = $_SESSION['user_id'];
-$user_sql = "SELECT * FROM users WHERE id = ?";
-$user_stmt = $conn->prepare($user_sql);
-$user_stmt->bind_param("i", $user_id);
-$user_stmt->execute();
-$user_data = $user_stmt->get_result()->fetch_assoc();
-
+// User data and $conn are now available from check_guest_auth.php
 $_SESSION['name'] = $user_data['name'];
 $_SESSION['email'] = $user_data['email'];
 $profile_photo = $user_data['profile_photo'];
@@ -1399,7 +1386,7 @@ $rooms_result = $conn->query($query);
             const toast = document.getElementById('successToast');
             document.getElementById('toastTitle').innerText = title;
             document.getElementById('toastDesc').innerText = desc;
-            toast.classList.remove('hidden');
+git             toast.classList.remove('hidden');
             setTimeout(() => toast.classList.add('hidden'), 4000);
         }
 

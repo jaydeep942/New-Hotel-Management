@@ -1,19 +1,7 @@
 <?php
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
-$conn = require_once __DIR__ . '/config/db.php';
-$user_id = $_SESSION['user_id'];
+require_once __DIR__ . '/php/check_guest_auth.php';
 
-// Fetch full user details
-$user_sql = "SELECT * FROM users WHERE id = ?";
-$user_stmt = $conn->prepare($user_sql);
-$user_stmt->bind_param("i", $user_id);
-$user_stmt->execute();
-$user_data = $user_stmt->get_result()->fetch_assoc();
-
+// User data and $conn are now available from check_guest_auth.php
 $_SESSION['name'] = $user_data['name'];
 $_SESSION['email'] = $user_data['email'];
 $profile_photo = $user_data['profile_photo'];

@@ -1,19 +1,7 @@
 <?php
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
-$conn = require_once __DIR__ . '/config/db.php';
-$user_id = $_SESSION['user_id'];
+require_once __DIR__ . '/php/check_guest_auth.php';
 
-// Fetch full user details
-$user_sql = "SELECT * FROM users WHERE id = ?";
-$user_stmt = $conn->prepare($user_sql);
-$user_stmt->bind_param("i", $user_id);
-$user_stmt->execute();
-$user_data = $user_stmt->get_result()->fetch_assoc();
-
+// User data and $conn are now available from check_guest_auth.php
 $_SESSION['name'] = $user_data['name'];
 $_SESSION['email'] = $user_data['email'];
 $profile_photo = $user_data['profile_photo'];
@@ -91,7 +79,7 @@ if ($booking) {
 }
 
 // Fetch recent service orders
-$orders_sql = "SELECT * FROM service_orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 5";
+$orders_sql = "SELECT * FROM service_orders WHERE user_id = ? ORDER BY ordered_at DESC LIMIT 5";
 $orders_stmt = $conn->prepare($orders_sql);
 $orders_stmt->bind_param("i", $user_id);
 $orders_stmt->execute();
@@ -106,7 +94,7 @@ if($hasBooking) {
     try {
         $orders_total_sql = "SELECT SUM(total_price) as service_total FROM service_orders 
                              WHERE user_id = ? AND room_number = ? 
-                             AND created_at >= ? AND status = 'Delivered'";
+                             AND ordered_at >= ? AND status = 'Delivered'";
         $orders_total_stmt = $conn->prepare($orders_total_sql);
         $start_date = $booking['check_in'] . " 00:00:00";
         $orders_total_stmt->bind_param("iss", $user_id, $booking['room_number'], $start_date);
@@ -716,7 +704,7 @@ $cumulative_ledger = $total_price + $running_service_total;
                                         </div>
                                         <div class="max-w-[140px]">
                                             <p class="text-xs font-black maroon-text truncate"><?php echo $summary; ?></p>
-                                            <p class="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-tighter"><?php echo date('d/m/Y, h:i A', strtotime($order['created_at'])); ?></p>
+                                            <p class="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-tighter"><?php echo date('d/m/Y, h:i A', strtotime($order['ordered_at'])); ?></p>
                                         </div>
                                     </div>
                                     <div class="text-right">
@@ -1425,6 +1413,22 @@ $cumulative_ledger = $total_price + $running_service_total;
                 }
             });
         });
+        });
+        
+        // Background Account Status Monitor
+        function monitorAccountStatus() {
+            fetch('php/check_status.php')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'Deactivated' || data.status === 'Logged Out') {
+                        window.location.href = 'login.php?error=' + encodeURIComponent('Your account has been deactivated. Access denied.');
+                    }
+                })
+                .catch(err => console.error("Status Sync Error:", err));
+        }
+        
+        // Check every 15 seconds for administrative deactivations
+        setInterval(monitorAccountStatus, 15000);
     </script>
 </body>
 </html>
