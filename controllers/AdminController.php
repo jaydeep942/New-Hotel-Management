@@ -316,12 +316,21 @@ class AdminController {
     }
 
     public function getAllServiceOrders() {
-        return $this->db->fetchAll("SELECT o.*, s.service_name, s.category, b.guest_name, r.room_number 
-                                   FROM service_orders o 
-                                   JOIN services s ON o.service_id = s.id 
-                                   JOIN bookings b ON o.booking_id = b.id
-                                   JOIN rooms r ON b.room_id = r.id
-                                   ORDER BY o.ordered_at DESC");
+        // Fetch Service Orders joined with rich metadata
+        $sql = "SELECT 'Order' as type, o.id, 
+                       COALESCE(NULLIF(o.item_name, '0'), NULLIF(o.item_name, ''), s.service_name, 'Custom Order') as service_name, 
+                       COALESCE(s.category, 'Culinary') as category,
+                       COALESCE(b.guest_name, u.name, 'Premium Resident') as guest_name, 
+                       COALESCE(r.room_number, o.room_number, 'N/A') as room_number,
+                       o.quantity, o.total_price, o.status, o.items, o.ordered_at
+                FROM service_orders o 
+                LEFT JOIN services s ON o.service_id = s.id 
+                LEFT JOIN bookings b ON o.booking_id = b.id
+                LEFT JOIN users u ON o.user_id = u.id
+                LEFT JOIN rooms r ON b.room_id = r.id
+                ORDER BY ordered_at DESC";
+                
+        return $this->db->fetchAll($sql);
     }
 
     public function updateServiceOrderStatus($id, $status) {
@@ -405,18 +414,38 @@ class AdminController {
 
     // Housekeeping Management
     public function getHousekeepingGrid() {
-        return $this->db->fetchAll("SELECT r.id as room_id, r.room_number, r.status as room_status, h.status as clean_status, h.last_updated 
+        // This grid shows rooms that need attention (dirty after checkout) 
+        // OR rooms that have active guest requests
+        return $this->db->fetchAll("SELECT r.id as room_id, r.room_number, r.status as room_status, 
+                                          h.status as clean_status, h.last_updated,
+                                          (SELECT service_type FROM housekeeping_requests WHERE room_number = r.room_number AND status = 'Pending' LIMIT 1) as guest_request
                                    FROM rooms r 
                                    LEFT JOIN housekeeping h ON r.id = h.room_id 
-                                   WHERE r.status = 'Needs Cleaning' OR r.status = 'Maintenance'
+                                   WHERE r.status = 'Needs Cleaning' OR r.status = 'Maintenance' 
+                                      OR r.room_number IN (SELECT room_number FROM housekeeping_requests WHERE status = 'Pending')
                                    ORDER BY r.room_number ASC");
+    }
+
+    public function getPendingHousekeepingRequests() {
+        return $this->db->fetchAll("SELECT h.*, u.name as guest_name 
+                                   FROM housekeeping_requests h 
+                                   JOIN users u ON h.user_id = u.id 
+                                   WHERE h.status = 'Pending' OR h.status = 'In Progress'
+                                   ORDER BY h.created_at DESC");
+    }
+
+    public function updateHousekeepingStatus($id, $status) {
+        $query = "UPDATE housekeeping_requests SET status = ? WHERE id = ?";
+        $stmt = $this->db->conn->prepare($query);
+        $stmt->bind_param("si", $status, $id);
+        return $stmt->execute();
     }
 
     public function updateCleaningProtocol($roomId, $status) {
         // Update Housekeeping Table
         $check = $this->db->fetchOne("SELECT id FROM housekeeping WHERE room_id = ?", [$roomId]);
         if($check) {
-            $this->db->conn->query("UPDATE housekeeping SET status = '$status' WHERE room_id = $roomId");
+            $this->db->conn->query("UPDATE housekeeping SET status = '$status', last_updated = NOW() WHERE room_id = $roomId");
         } else {
             $this->db->conn->query("INSERT INTO housekeeping (room_id, status) VALUES ($roomId, '$status')");
         }
@@ -424,6 +453,12 @@ class AdminController {
         // Synchronize with Room Status
         if($status === 'Cleaned') {
             $this->updateRoomStatus($roomId, 'Available');
+            
+            // Also mark any guest requests for this room as Completed if we just cleaned it
+            $room = $this->db->fetchOne("SELECT room_number FROM rooms WHERE id = ?", [$roomId]);
+            if ($room) {
+                $this->db->conn->query("UPDATE housekeeping_requests SET status = 'Completed' WHERE room_number = '{$room['room_number']}' AND status != 'Cancelled'");
+            }
         } elseif($status === 'Cleaning') {
             $this->updateRoomStatus($roomId, 'Maintenance');
         }

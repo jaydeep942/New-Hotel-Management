@@ -78,8 +78,14 @@ if ($booking) {
     $progressPercent = ($isLive) ? ($currentDay / $totalNights) * 100 : 0;
 }
 
-// Fetch recent service orders
-$orders_sql = "SELECT * FROM service_orders WHERE user_id = ? ORDER BY ordered_at DESC LIMIT 5";
+// Fetch recent service orders with rich join for icons and catalog names
+$orders_sql = "SELECT o.*, 
+               COALESCE(NULLIF(o.item_name, '0'), NULLIF(o.item_name, ''), s.service_name, 'Service Request') as display_name,
+               COALESCE(s.category, 'Culinary') as category
+               FROM service_orders o 
+               LEFT JOIN services s ON o.service_id = s.id 
+               WHERE o.user_id = ? 
+               ORDER BY o.ordered_at DESC LIMIT 5";
 $orders_stmt = $conn->prepare($orders_sql);
 $orders_stmt->bind_param("i", $user_id);
 $orders_stmt->execute();
@@ -692,28 +698,55 @@ $cumulative_ledger = $total_amount + $running_service_total;
                                 if($order['status'] == 'Preparing') $statusColor = 'bg-teal/10 text-teal';
                                 if($order['status'] == 'Delivered') $statusColor = 'bg-green-50 text-green-600';
                                 if($order['status'] == 'Cancelled') $statusColor = 'bg-red-50 text-red-600';
-                                
-                                $items = json_decode($order['items'], true);
-                                $itemNames = array_map(function($i) { return $i['name']; }, $items);
-                                $summary = implode(', ', $itemNames);
-                            ?>
-                                <div class="group flex justify-between items-start border-b border-gray-50 pb-6 last:border-0 last:pb-0 animate-fade-in hover:bg-gray-50/50 p-2 rounded-2xl transition-colors">
-                                    <div class="flex items-start space-x-4">
-                                        <div class="w-10 h-10 rounded-xl bg-maroon/5 flex items-center justify-center text-maroon group-hover:scale-110 transition-transform">
-                                            <i class="fas <?php echo (stripos($summary, 'Coffee') !== false || stripos($summary, 'Soda') !== false) ? 'fa-coffee' : 'fa-utensils'; ?> text-xs"></i>
+
+                                    $summary = "Service Request";
+                                    // Robust check: if item_name is set and is NOT strictly just the character '0' or empty
+                                    $summary = $order['display_name'];
+                                    
+                                    // Prioritize full item list from JSON if available
+                                    if (!empty($order['items'])) {
+                                        $decodedItems = json_decode($order['items'], true);
+                                        if (is_array($decodedItems)) {
+                                            $itemStrings = array_map(function($i) { 
+                                                return $i['name'] . ($i['qty'] > 1 ? " (x".$i['qty'].")" : ""); 
+                                            }, $decodedItems);
+                                            $summary = implode(', ', $itemStrings);
+                                        }
+                                    } else if ($order['quantity'] > 1) {
+                                        $summary .= " (x" . $order['quantity'] . ")";
+                                    }
+
+                                    $iconClass = match($order['category']) {
+                                        'Food', 'Culinary' => 'fa-utensils',
+                                        'Cleaning', 'Housekeeping' => 'fa-broom',
+                                        'Facility' => 'fa-soap',
+                                        'Refreshments' => 'fa-glass-water',
+                                        default => 'fa-concierge-bell'
+                                    };
+                                    
+                                    // Contextual icon overrides
+                                    if (stripos($summary, 'Coffee') !== false || stripos($summary, 'Tea') !== false) $iconClass = 'fa-mug-hot';
+                                    if (stripos($summary, 'Laundry') !== false) $iconClass = 'fa-shirt';
+                                ?>
+                                <a href="orders.php#order-<?php echo $order['id']; ?>" class="group block border-b border-gray-50 pb-6 last:border-0 last:pb-0 animate-fade-in">
+                                    <div class="flex justify-between items-start hover:bg-gray-50/50 p-3 rounded-2xl transition-all cursor-pointer">
+                                        <div class="flex items-start space-x-4">
+                                            <div class="w-10 h-10 rounded-xl bg-maroon/5 flex items-center justify-center text-maroon group-hover:scale-110 transition-transform shadow-sm border border-maroon/5">
+                                                <i class="fas <?php echo $iconClass; ?> text-xs"></i>
+                                            </div>
+                                            <div class="max-w-[140px]">
+                                                <p class="text-xs font-black maroon-text truncate"><?php echo $summary; ?></p>
+                                                <p class="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-tighter"><?php echo date('d/m/Y, h:i A', strtotime($order['ordered_at'])); ?></p>
+                                            </div>
                                         </div>
-                                        <div class="max-w-[140px]">
-                                            <p class="text-xs font-black maroon-text truncate"><?php echo $summary; ?></p>
-                                            <p class="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-tighter"><?php echo date('d/m/Y, h:i A', strtotime($order['ordered_at'])); ?></p>
+                                        <div class="text-right">
+                                            <p class="text-[11px] font-black maroon-text mb-2 tracking-tight">₹<?php echo number_format($order['total_price'], 0); ?></p>
+                                            <span class="px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest <?php echo $statusColor; ?> shadow-sm">
+                                                <?php echo $order['status']; ?>
+                                            </span>
                                         </div>
                                     </div>
-                                    <div class="text-right">
-                                        <p class="text-[11px] font-black maroon-text mb-2 tracking-tight">₹<?php echo number_format($order['total_price'], 0); ?></p>
-                                        <span class="px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest <?php echo $statusColor; ?> shadow-sm">
-                                            <?php echo $order['status']; ?>
-                                        </span>
-                                    </div>
-                                </div>
+                                </a>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </div>
@@ -1274,8 +1307,19 @@ $cumulative_ledger = $total_amount + $running_service_total;
                     if (data.orders && data.orders.length > 0) {
                         ordersContainer.classList.remove('hidden');
                         data.orders.forEach(order => {
-                            const items = JSON.parse(order.items);
-                            const names = items.map(i => i.name).join(', ');
+                            let names = "Service Request";
+                            if (order.item_name) {
+                                names = order.item_name;
+                                if (order.quantity > 1) names += ` (x${order.quantity})`;
+                            } else if (order.items) {
+                                try {
+                                    const items = JSON.parse(order.items);
+                                    if (Array.isArray(items)) {
+                                        names = items.map(i => i.name).join(', ');
+                                    }
+                                } catch (e) { console.error("JSON Parse Error", e); }
+                            }
+
                             ordersList.innerHTML += `
                                 <div class="flex justify-between items-center text-xs p-3 bg-gray-50 rounded-xl">
                                     <div class="max-w-[150px]">

@@ -291,14 +291,30 @@ while($row = $orders_res->fetch_assoc()){
                 </div>
             <?php else: ?>
                 <?php foreach($orders as $order): 
-                    $items = json_decode($order['items'], true);
                     $statusColor = 'bg-gray-100 text-gray-500';
                     if($order['status'] == 'Pending') $statusColor = 'bg-gold/10 text-gold';
                     if($order['status'] == 'Preparing') $statusColor = 'bg-teal/10 text-teal';
                     if($order['status'] == 'Delivered') $statusColor = 'bg-green-50 text-green-600';
                     if($order['status'] == 'Cancelled') $statusColor = 'bg-red-50 text-red-600';
+
+                    $items = [];
+                    // Prioritize full JSON breakdown if available
+                    if (!empty($order['items'])) {
+                        $decoded = json_decode($order['items'], true);
+                        if (is_array($decoded)) $items = $decoded;
+                    } 
+                    
+                    // Fallback to item_name if JSON is missing or invalid
+                    if (empty($items)) {
+                        $primaryName = (isset($order['item_name']) && $order['item_name'] !== '' && $order['item_name'] !== '0' && $order['item_name'] !== 0) ? $order['item_name'] : "Guest Request";
+                        $items[] = [
+                            'name' => $primaryName,
+                            'qty' => $order['quantity'],
+                            'price' => $order['total_price'] / ($order['quantity'] ?: 1)
+                        ];
+                    }
                 ?>
-                <div class="bg-white rounded-[40px] p-8 premium-shadow order-card border border-gray-50 flex flex-col">
+                <div id="order-<?php echo $order['id']; ?>" class="bg-white rounded-[40px] p-8 premium-shadow order-card border border-gray-50 flex flex-col">
                     <div class="flex justify-between items-start mb-6">
                         <div>
                             <span class="text-[10px] font-black text-gray-400 uppercase tracking-[3px]">Order #SO-<?php echo str_pad($order['id'], 3, '0', STR_PAD_LEFT); ?></span>
@@ -309,16 +325,22 @@ while($row = $orders_res->fetch_assoc()){
                         </span>
                     </div>
 
-                    <div class="flex-1 space-y-4 mb-8 max-h-[280px] overflow-y-auto pr-2 custom-scrollbar">
-                        <?php foreach($items as $item): ?>
-                        <div class="flex justify-between items-center bg-gray-50/50 p-4 rounded-2xl border border-gray-100/50">
-                            <div>
-                                <p class="font-bold text-sm maroon-text"><?php echo $item['name']; ?></p>
-                                <p class="text-[10px] text-gray-400">Quantity: <?php echo $item['qty']; ?></p>
-                            </div>
-                            <p class="font-bold text-sm gold-text">₹<?php echo number_format($item['price'] * $item['qty'], 2); ?></p>
+                    <div class="flex-1 mb-8">
+                        <div class="h-64 overflow-y-auto pr-2 custom-scrollbar space-y-4">
+                            <?php if(empty($items)): ?>
+                                <div class="py-10 text-center text-gray-400 italic text-[10px]">Order details archived</div>
+                            <?php else: ?>
+                                <?php foreach($items as $item): ?>
+                                <div class="flex justify-between items-center bg-gray-50/50 p-4 rounded-2xl border border-gray-100/50">
+                                    <div>
+                                        <p class="font-bold text-sm maroon-text"><?php echo $item['name']; ?></p>
+                                        <p class="text-[10px] text-gray-400">Quantity: <?php echo $item['qty']; ?></p>
+                                    </div>
+                                    <p class="font-bold text-sm gold-text">₹<?php echo number_format($item['price'] * $item['qty'], 2); ?></p>
+                                </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
-                        <?php endforeach; ?>
                     </div>
 
                     <div class="pt-6 border-t border-gray-100 flex justify-between items-center">

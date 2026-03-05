@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// Handle Order Updates
+// Handle Service Order Updates
 if (isset($_GET['order_id']) && isset($_GET['status'])) {
     $adminCtrl->updateServiceOrderStatus($_GET['order_id'], $_GET['status']);
     header("Location: services.php?msg=Order+Status+Updated");
@@ -36,8 +36,8 @@ include '../includes/admin_sidebar.php';
     <!-- Active Orders Matrix -->
     <div class="xl:col-span-2 space-y-10">
         <div>
-            <h3 class="text-2xl font-bold text-gray-800">Operational Requests</h3>
-            <p class="text-sm text-gray-400">Real-time tracking of guest orders and housekeeping requirements.</p>
+            <h3 class="text-2xl font-bold text-gray-800">Concierge Orders</h3>
+            <p class="text-sm text-gray-400">Real-time tracking of culinary and facility service orders.</p>
         </div>
 
         <div class="card-soft overflow-hidden">
@@ -45,21 +45,40 @@ include '../includes/admin_sidebar.php';
                 <table class="w-full text-left">
                     <thead>
                         <tr class="bg-gray-50/50 text-[10px] font-black uppercase tracking-widest text-gray-400">
-                            <th class="px-8 py-5">Intel Source</th>
-                            <th class="px-8 py-5">Request Content</th>
-                            <th class="px-8 py-5">Protocol Status</th>
-                            <th class="px-8 py-5 text-right">Ops</th>
+                            <th class="px-8 py-5">Guest Source</th>
+                            <th class="px-8 py-5">Order Content</th>
+                            <th class="px-8 py-5">Current Status</th>
+                            <th class="px-8 py-5 text-right">Fulfillment</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">
                         <?php foreach($orders as $o): ?>
-                        <tr class="hover:bg-gray-50/30 transition-all">
+                        <tr class="hover:bg-indigo-50/30 transition-colors">
                             <td class="px-8 py-6">
-                                <div class="text-sm font-bold text-gray-800">Suite <?php echo $o['room_number']; ?></div>
-                                <div class="text-[10px] text-gray-400 font-medium uppercase tracking-widest"><?php echo $o['guest_name']; ?></div>
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center font-black text-xs">
+                                        <?php echo substr($o['guest_name'], 0, 1); ?>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-bold text-gray-800">Room <?php echo $o['room_number']; ?></div>
+                                        <div class="text-[10px] text-gray-400 font-medium uppercase tracking-widest"><?php echo $o['guest_name']; ?></div>
+                                    </div>
+                                </div>
                             </td>
                             <td class="px-8 py-6">
-                                <div class="text-xs font-black text-gray-700 uppercase"><?php echo $o['service_name']; ?></div>
+                                <?php 
+                                    $displayName = $o['service_name'];
+                                    if (!empty($o['items'])) {
+                                        $items = json_decode($o['items'], true);
+                                        if (is_array($items)) {
+                                            $itemNames = array_map(function($i) { 
+                                                return $i['name'] . ($i['qty'] > 1 ? " (x".$i['qty'].")" : ""); 
+                                            }, $items);
+                                            $displayName = implode(', ', $itemNames);
+                                        }
+                                    }
+                                ?>
+                                <div class="text-xs font-black text-gray-700 uppercase"><?php echo $displayName; ?></div>
                                 <div class="text-[9px] text-gray-400 font-bold"><?php echo $o['category']; ?> • x<?php echo $o['quantity']; ?></div>
                             </td>
                             <td class="px-8 py-6">
@@ -68,12 +87,11 @@ include '../includes/admin_sidebar.php';
                                         'Pending' => 'text-amber-500 bg-amber-500/10',
                                         'Preparing' => 'text-indigo-500 bg-indigo-500/10',
                                         'Delivered' => 'text-emerald-500 bg-emerald-500/10',
-                                        'Cancelled' => 'text-rose-500 bg-rose-500/10',
-                                        default => 'text-gray-400 bg-gray-400/10'
+                                        default => 'text-gray-400 bg-gray-100'
                                     };
                                 ?>
-                                <span class="px-4 py-1.5 rounded-2xl text-[9px] font-black uppercase tracking-widest <?php echo $statusClass; ?>">
-                                    <?php echo $o['status']; ?>
+                                <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest <?php echo $statusClass; ?>">
+                                    <?php echo $orderStatus = $o['status']; ?>
                                 </span>
                             </td>
                             <td class="px-8 py-6 text-right">

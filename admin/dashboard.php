@@ -283,8 +283,8 @@ include '../includes/admin_sidebar.php';
                                 const {ctx, chartArea} = chart;
                                 if (!chartArea) return null;
                                 const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                                gradient.addColorStop(0, '#8b5cf6');
-                                gradient.addColorStop(1, '#f43f5e');
+                                gradient.addColorStop(0, '#059669');
+                                gradient.addColorStop(1, '#10b981');
                                 return gradient;
                             },
                             borderRadius: 15,

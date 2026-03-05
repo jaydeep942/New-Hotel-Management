@@ -112,8 +112,11 @@ $conn->query($table_service_orders);
 // Migrate service_orders table columns if they exist in old format
 $so_migrations = [
     'booking_id' => "INT NULL AFTER id",
-    'service_id' => "INT NULL AFTER booking_id",
-    'quantity' => "INT DEFAULT 1 AFTER service_id",
+    'user_id' => "INT NULL AFTER booking_id",
+    'room_number' => "VARCHAR(10) NULL AFTER user_id",
+    'service_id' => "INT NULL AFTER room_number",
+    'item_name' => "VARCHAR(255) NULL AFTER service_id",
+    'quantity' => "INT DEFAULT 1 AFTER item_name",
     'ordered_at' => "TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER status"
 ];
 
