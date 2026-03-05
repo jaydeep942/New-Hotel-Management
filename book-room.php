@@ -219,41 +219,67 @@ $rooms_result = $conn->query($query);
         /* Custom Flatpickr Theme */
         .flatpickr-calendar {
             background: #fff;
-            box-shadow: 0 20px 50px rgba(106, 30, 45, 0.15);
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            border-radius: 24px;
+            box-shadow: 0 40px 100px rgba(106, 30, 45, 0.2);
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            border-radius: 32px;
             font-family: 'Outfit', sans-serif;
-            overflow: hidden;
-            padding: 10px;
+            overflow: hidden !important;
+            width: 320px !important;
+            padding: 0; /* Remove padding from outer container */
+        }
+        .flatpickr-months {
+            background: var(--maroon);
+            padding: 15px 10px;
+            color: #fff;
+        }
+        .flatpickr-months .flatpickr-month {
+            height: 40px;
+            color: #fff;
+            fill: #fff;
+        }
+        .flatpickr-current-month {
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: inherit;
+        }
+        .flatpickr-current-month .flatpickr-monthDropdown-months {
+            background: transparent !important;
+            appearance: none;
+            font-weight: 800;
+            color: #fff;
+        }
+        .cur-year {
+            font-weight: 800 !important;
+            color: rgba(255,255,255,0.8) !important;
+        }
+        .flatpickr-innerContainer {
+            padding: 15px;
+        }
+        .flatpickr-weekday {
+            color: var(--maroon);
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+        .flatpickr-day {
+            border-radius: 12px;
+            font-weight: 500;
+            height: 40px;
+            line-height: 40px;
         }
         .flatpickr-day.selected {
             background: var(--maroon) !important;
             border-color: var(--maroon) !important;
+            box-shadow: 0 10px 20px rgba(106, 30, 45, 0.3);
         }
         .flatpickr-day:hover {
-            background: rgba(212, 175, 55, 0.1);
-        }
-        .flatpickr-months .flatpickr-month {
-            background: var(--maroon);
-            color: #fff;
-            fill: #fff;
-        }
-        .flatpickr-current-month .flatpickr-monthDropdown-months {
-            background: var(--maroon);
+            background: rgba(106, 30, 45, 0.05);
         }
         .flatpickr-calendar.arrowTop:before, .flatpickr-calendar.arrowTop:after {
             border-bottom-color: var(--maroon);
-        }
-        .flatpickr-months .flatpickr-prev-month, .flatpickr-months .flatpickr-next-month {
-            color: #fff;
-            fill: #fff;
-        }
-        .flatpickr-calendar .flatpickr-innerContainer {
-            padding-top: 10px;
-        }
-        .flatpickr-weekday {
-            color: var(--maroon);
-            font-weight: 700;
         }
         .flatpickr-input-custom {
             cursor: pointer !important;

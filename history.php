@@ -451,7 +451,9 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
                                  </td>
                                  <td class="font-bold maroon-text">
                                     ₹<?php 
-                                        $display_price = ($row['status'] === 'Checked-Out' && $row['final_bill']) ? $row['final_bill'] : $row['total_amount'];
+                                        // Robust price selection: Use final_bill only if it exists and is greater than 0, otherwise fallback to total_amount
+                                        $final_bill = isset($row['final_bill']) ? floatval($row['final_bill']) : 0;
+                                        $display_price = ($row['status'] === 'Checked-Out' && $final_bill > 0) ? $final_bill : $row['total_amount'];
                                         echo number_format($display_price, 0); 
                                     ?>
                                  </td>
