@@ -67,19 +67,26 @@ include '../includes/admin_sidebar.php';
                             </td>
                             <td class="px-8 py-6">
                                 <?php 
-                                    $displayName = $o['service_name'];
                                     if (!empty($o['items'])) {
                                         $items = json_decode($o['items'], true);
                                         if (is_array($items)) {
-                                            $itemNames = array_map(function($i) { 
-                                                return $i['name'] . ($i['qty'] > 1 ? " (x".$i['qty'].")" : ""); 
-                                            }, $items);
-                                            $displayName = implode(', ', $itemNames);
+                                            foreach($items as $i) {
+                                                echo '<div class="flex justify-between items-center mb-1 last:mb-0 gap-4">';
+                                                echo '<span class="text-xs font-black text-gray-700 uppercase">' . htmlspecialchars($i['name']) . '</span>';
+                                                echo '<span class="text-[10px] bg-indigo-50 text-indigo-500 px-2 py-0.5 rounded-lg font-bold">x' . ($i['qty'] ?? 1) . '</span>';
+                                                echo '</div>';
+                                            }
+                                        } else {
+                                            echo '<div class="text-xs font-black text-gray-700 uppercase">' . htmlspecialchars($o['service_name']) . '</div>';
+                                        }
+                                    } else {
+                                        echo '<div class="text-xs font-black text-gray-700 uppercase">' . htmlspecialchars($o['service_name']) . '</div>';
+                                        if ($o['quantity'] > 1) {
+                                            echo '<div class="text-[10px] text-gray-400 font-bold mt-1">Multi-item Order • x' . $o['quantity'] . '</div>';
                                         }
                                     }
                                 ?>
-                                <div class="text-xs font-black text-gray-700 uppercase"><?php echo $displayName; ?></div>
-                                <div class="text-[9px] text-gray-400 font-bold"><?php echo $o['category']; ?> • x<?php echo $o['quantity']; ?></div>
+                                <div class="text-[9px] text-gray-400 font-bold mt-2 pt-2 border-t border-gray-50 uppercase tracking-widest"><?php echo $o['category']; ?></div>
                             </td>
                             <td class="px-8 py-6">
                                 <?php 

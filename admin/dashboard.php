@@ -206,8 +206,20 @@ include '../includes/admin_sidebar.php';
                     </div>
                     <div>
                         <h5 class="text-xs font-bold text-gray-800"><?php echo $o['service_name']; ?></h5>
-                        <p class="text-[10px] text-gray-400 mt-1">Suite <?php echo $o['room_number']; ?> • <?php echo $o['guest_name']; ?></p>
-                        <span class="inline-block mt-2 text-[8px] font-black uppercase tracking-widest text-indigo-500">Pending</span>
+                        <p class="text-[10px] text-gray-400 mt-1">Suite <?php echo $o['room_number']; ?> • <?php echo $o['guest_name']; ?> 
+                           <?php if($o['quantity'] > 1) echo "• " . $o['quantity'] . " items"; ?>
+                        </p>
+                        <?php 
+                            $statusClass = match($o['status']) {
+                                'Pending' => 'text-amber-500',
+                                'Preparing' => 'text-indigo-500',
+                                'Delivered' => 'text-emerald-500',
+                                default => 'text-gray-400'
+                            };
+                        ?>
+                        <span class="inline-block mt-2 text-[8px] font-black uppercase tracking-widest <?php echo $statusClass; ?>">
+                            <?php echo $o['status']; ?>
+                        </span>
                     </div>
                 </div>
                 <?php endforeach; ?>

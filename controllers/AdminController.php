@@ -108,12 +108,15 @@ class AdminController {
     }
 
     public function getRecentOrders($limit = 5) {
-        return $this->db->fetchAll("SELECT o.*, s.service_name, b.guest_name, r.room_number 
-                                   FROM service_orders o 
-                                   JOIN services s ON o.service_id = s.id 
-                                   JOIN bookings b ON o.booking_id = b.id
-                                   JOIN rooms r ON b.room_id = r.id
-                                   ORDER BY o.ordered_at DESC LIMIT $limit");
+        $sql = "SELECT o.*, 
+                       COALESCE(NULLIF(o.item_name, '0'), NULLIF(o.item_name, ''), s.service_name, 'Concierge Request') as service_name,
+                       b.guest_name, r.room_number 
+                FROM service_orders o 
+                LEFT JOIN services s ON o.service_id = s.id 
+                JOIN bookings b ON o.booking_id = b.id
+                JOIN rooms r ON b.room_id = r.id
+                ORDER BY o.ordered_at DESC LIMIT $limit";
+        return $this->db->fetchAll($sql);
     }
 
     // Room Management
@@ -318,7 +321,7 @@ class AdminController {
     public function getAllServiceOrders() {
         // Fetch Service Orders joined with rich metadata
         $sql = "SELECT 'Order' as type, o.id, 
-                       COALESCE(NULLIF(o.item_name, '0'), NULLIF(o.item_name, ''), s.service_name, 'Custom Order') as service_name, 
+                       COALESCE(NULLIF(o.item_name, '0'), NULLIF(o.item_name, ''), s.service_name, 'Concierge Request') as service_name, 
                        COALESCE(s.category, 'Culinary') as category,
                        COALESCE(b.guest_name, u.name, 'Premium Resident') as guest_name, 
                        COALESCE(r.room_number, o.room_number, 'N/A') as room_number,
