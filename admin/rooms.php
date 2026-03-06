@@ -148,6 +148,12 @@ include '../includes/admin_sidebar.php';
                        class="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl text-gray-800 outline-none focus:border-primary/50 transition-all">
             </div>
 
+            <div class="space-y-2">
+                <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Narrative Intel (Description)</label>
+                <textarea name="description" rows="2" placeholder="Describe the luxury parameters..." 
+                          class="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl text-gray-800 outline-none focus:border-primary/50 transition-all"></textarea>
+            </div>
+
             <button type="submit" class="w-full bg-gradient-to-r from-primary to-secondary text-white p-5 rounded-2xl font-bold uppercase tracking-[4px] text-xs shadow-xl shadow-primary/20 mt-4">
                 Deploy Suite
             </button>
@@ -196,6 +202,11 @@ include '../includes/admin_sidebar.php';
                 </div>
             </div>
             <div class="space-y-2">
+                <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Visual Reset (Image URL)</label>
+                <input type="url" name="image" id="edit_room_image" placeholder="https://..." class="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl text-gray-800 outline-none focus:border-primary/50 transition-all">
+            </div>
+
+            <div class="space-y-2">
                 <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Description Intel</label>
                 <textarea name="description" id="edit_room_desc" rows="2" class="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl text-gray-800 outline-none focus:border-primary/50 transition-all"></textarea>
             </div>
@@ -211,6 +222,7 @@ include '../includes/admin_sidebar.php';
         document.getElementById('edit_room_type').value = room.room_type;
         document.getElementById('edit_room_price').value = room.price_per_night;
         document.getElementById('edit_room_status').value = room.status;
+        document.getElementById('edit_room_image').value = room.image || '';
         document.getElementById('edit_room_desc').value = room.description || '';
         openModal('editRoomModal');
     }

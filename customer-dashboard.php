@@ -519,7 +519,29 @@ $cumulative_ledger = $total_amount + $running_service_total;
                     setTimeout(() => menu.classList.add('hidden'), 300);
                 }
             }
+            
+            // Fetch available rooms for the dashboard portfolio
+            $available_rooms_query = "SELECT * FROM rooms WHERE status = 'Available' LIMIT 8";
+            $available_rooms_res = $conn->query($available_rooms_query);
+            $portfolio_rooms = [];
+            if ($available_rooms_res) {
+                while($r = $available_rooms_res->fetch_assoc()) {
+                    $portfolio_rooms[] = $r;
+                }
+            }
         </script>
+
+        <?php
+        // Fetch available rooms for the dashboard portfolio
+        $available_rooms_query = "SELECT * FROM rooms WHERE status = 'Available' LIMIT 8";
+        $available_rooms_res = $conn->query($available_rooms_query);
+        $portfolio_rooms = [];
+        if ($available_rooms_res) {
+            while($r = $available_rooms_res->fetch_assoc()) {
+                $portfolio_rooms[] = $r;
+            }
+        }
+        ?>
 
         <div class="max-w-[1600px] mx-auto p-4 md:p-8">
             <!-- Dashboard Home Content -->
@@ -628,6 +650,60 @@ $cumulative_ledger = $total_amount + $running_service_total;
                     </p>
                     <?php else: ?>
                     <p class="mt-4 text-maroon font-black text-[10px] uppercase tracking-widest opacity-40 italic">Plan your getaway</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Suite Portfolio (Dynamic Room Row) -->
+            <div class="mb-12 animate-fade-in px-4">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h4 class="text-xl font-bold maroon-text">Suite Portfolio</h4>
+                        <p class="text-[9px] uppercase tracking-[3px] font-black text-gold mt-1">Available for immediate residency</p>
+                    </div>
+                    <a href="book-room.php" class="text-[9px] font-black text-maroon hover:text-gold uppercase tracking-[2px] transition-colors">See Full Grid →</a>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <?php if(!empty($portfolio_rooms)): ?>
+                        <?php foreach($portfolio_rooms as $room): 
+                            $imagePool = [
+                                'Standard' => [
+                                    "https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg?auto=compress&cs=tinysrgb&w=800",
+                                    "https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=800"
+                                ],
+                                'Deluxe' => [
+                                    "https://images.pexels.com/photos/262048/pexels-photo-262048.jpeg?auto=compress&cs=tinysrgb&w=800",
+                                    "https://images.pexels.com/photos/271619/pexels-photo-271619.jpeg?auto=compress&cs=tinysrgb&w=800"
+                                ]
+                            ];
+                            $type = $room['room_type'];
+                            $pool = $imagePool[$type] ?? $imagePool['Standard'];
+                            $img = $pool[(int)$room['room_number'] % count($pool)];
+                            $roomName = $type . " Suite " . $room['room_number'];
+                        ?>
+                        <div class="bg-white rounded-[32px] overflow-hidden premium-shadow group border border-gray-50 flex flex-col hover:-translate-y-2 transition-all duration-500">
+                            <div class="h-40 relative overflow-hidden">
+                                <img src="<?php echo $img; ?>" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                                <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[8px] font-black maroon-text uppercase tracking-widest">
+                                    <?php echo $type; ?>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <h5 class="text-sm font-bold maroon-text"><?php echo $roomName; ?></h5>
+                                <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-50">
+                                    <span class="text-xs font-black maroon-text">₹<?php echo number_format($room['price_per_night'], 0); ?></span>
+                                    <a href="book-room.php" class="p-2 bg-maroon/5 text-maroon hover:bg-maroon hover:text-white rounded-xl transition-all">
+                                        <i class="fas fa-arrow-right text-[10px]"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="col-span-full py-10 bg-gray-50 rounded-[32px] text-center border-2 border-dashed border-gray-100">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">All suites currently synchronized.</p>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -1339,6 +1415,8 @@ $cumulative_ledger = $total_amount + $running_service_total;
                     const settlementBtn = document.getElementById('confirmCheckoutBtn');
                     const settlementIcon = settlementBtn.querySelector('i');
                     const settlementText = settlementBtn.querySelector('span');
+
+
 
                     if (data.due_now > 0) {
                         settlementText.innerText = "Settle Balance & Departure";

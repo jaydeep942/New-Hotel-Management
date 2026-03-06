@@ -47,6 +47,16 @@
             <span class="sidebar-text font-bold text-sm uppercase tracking-wider">Cleaning</span>
         </a>
 
+        <a href="complaints.php" class="sidebar-link flex items-center space-x-4 px-5 py-4 rounded-2xl text-gray-500 hover:text-primary transition-all group">
+            <i class="fas fa-exclamation-circle text-lg group-hover:scale-110 transition-transform"></i>
+            <span class="sidebar-text font-bold text-sm uppercase tracking-wider">Complaints</span>
+        </a>
+
+        <a href="feedback.php" class="sidebar-link flex items-center space-x-4 px-5 py-4 rounded-2xl text-gray-500 hover:text-primary transition-all group">
+            <i class="fas fa-star text-lg group-hover:scale-110 transition-transform"></i>
+            <span class="sidebar-text font-bold text-sm uppercase tracking-wider">Feedback</span>
+        </a>
+
         <div class="pt-4 pb-2 px-5 text-[10px] uppercase tracking-[3px] font-black text-gray-400 sidebar-text">System</div>
         
         <a href="settings.php" class="sidebar-link flex items-center space-x-4 px-5 py-4 rounded-2xl text-gray-500 hover:text-primary transition-all group">

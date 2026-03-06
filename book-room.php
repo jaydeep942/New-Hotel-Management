@@ -475,11 +475,27 @@ $rooms_result = $conn->query($query);
                 </div>
             </div>
 
-            <!-- Room Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                <?php if($rooms_result->num_rows > 0): ?>
-                    <?php while($room = $rooms_result->fetch_assoc()): ?>
-                    <div class="bg-white rounded-[32px] overflow-hidden premium-shadow group border border-gray-50 flex flex-col hover:border-gold/30 transition-all duration-500 hover:-translate-y-2">
+            <!-- Room Categories (Grouped View) -->
+            <?php 
+            // Group rooms by type for the "Room Row" experience
+            $groupedRooms = [];
+            while($room = $rooms_result->fetch_assoc()) {
+                $groupedRooms[$room['room_type']][] = $room;
+            }
+            
+            if(!empty($groupedRooms)):
+                foreach($groupedRooms as $roomType => $rooms):
+            ?>
+                <div class="mb-16">
+                    <div class="flex items-center space-x-4 mb-8">
+                        <div class="h-px bg-gold/20 flex-1"></div>
+                        <h3 class="text-xl font-black maroon-text uppercase tracking-[5px]"><?php echo $roomType; ?> Suites</h3>
+                        <div class="h-px bg-gold/20 flex-1"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                        <?php foreach($rooms as $room): ?>
+                        <div class="bg-white rounded-[32px] overflow-hidden premium-shadow group border border-gray-50 flex flex-col hover:border-gold/30 transition-all duration-500 hover:-translate-y-2">
                         <div class="h-64 relative overflow-hidden">
                             <?php 
                             // Highly Diverse & Clean Image Pool (Expanded for deep variety)
@@ -569,8 +585,11 @@ $rooms_result = $conn->query($query);
                             </div>
                         </div>
                     </div>
-                    <?php endwhile; ?>
-                <?php else: ?>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            <?php else: ?>
                     <div class="col-span-full py-20 text-center">
                         <div class="w-24 h-24 bg-maroon/5 rounded-full flex items-center justify-center mx-auto mb-6">
                             <i class="fas fa-search text-maroon text-3xl opacity-20"></i>

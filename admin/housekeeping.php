@@ -112,13 +112,7 @@ include '../includes/admin_sidebar.php';
         <?php foreach($tasks as $t): ?>
         <div class="card-soft p-8 relative overflow-hidden group">
             <!-- Background Indicator -->
-            <div class="absolute -right-4 -top-4 w-24 h-24 <?php echo $t['guest_request'] ? 'bg-amber-500/5' : 'bg-rose-500/5'; ?> rounded-full group-hover:scale-125 transition-transform duration-700"></div>
-            
-            <?php if($t['guest_request']): ?>
-                <div class="absolute top-4 right-4 animate-pulse">
-                    <span class="bg-amber-500 text-white text-[8px] font-black px-2 py-1 rounded-full uppercase">Active Request</span>
-                </div>
-            <?php endif; ?>
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-rose-500/5 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
 
             <div class="flex justify-between items-start mb-6">
                 <div class="w-16 h-16 rounded-[24px] bg-white border border-gray-100 shadow-sm flex items-center justify-center text-primary font-black text-xl">
@@ -135,7 +129,7 @@ include '../includes/admin_sidebar.php';
             <div class="mb-6">
                 <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest opacity-50 mb-2">Protocol Engine</h4>
                 <p class="text-sm font-bold text-gray-800">
-                    <?php echo $t['guest_request'] ? htmlspecialchars($t['guest_request']) : 'Standard Post-Stay Sanitization'; ?>
+                    Standard Post-Stay Sanitization
                 </p>
             </div>
             

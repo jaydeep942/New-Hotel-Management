@@ -58,6 +58,10 @@ $booking_paid = $booking['total_amount']; // Already paid during booking
 $grand_total_stay = $booking_paid + $pending_services_total;
 $due_now = $pending_services_total; // Only charge for the extra services
 
+// 4. Feedback check removed as per updated protocol
+$feedback_exists = true; 
+
+
 echo json_encode([
     'success' => true,
     'booking' => $booking,
@@ -66,5 +70,6 @@ echo json_encode([
     'booking_paid' => $booking_paid,
     'pending_services' => $pending_services_total,
     'grand_total_stay' => $grand_total_stay,
-    'due_now' => $due_now
+    'due_now' => $due_now,
+    'feedback_submitted' => $feedback_exists
 ]);

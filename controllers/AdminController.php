@@ -61,6 +61,10 @@ class AdminController {
         return $stats;
     }
 
+    public function getAdminData($id) {
+        return $this->db->fetchOne("SELECT name, email, role FROM admins WHERE id = ?", [$id]);
+    }
+
     public function getAnalyticsData() {
         $analytics = [
             'daily' => [],
@@ -132,9 +136,9 @@ class AdminController {
     }
 
     public function updateRoom($id, $data) {
-        $query = "UPDATE rooms SET room_number=?, room_type=?, price_per_night=?, status=?, description=? WHERE id=?";
+        $query = "UPDATE rooms SET room_number=?, room_type=?, price_per_night=?, status=?, image=?, description=? WHERE id=?";
         $stmt = $this->db->conn->prepare($query);
-        $stmt->bind_param("ssdssi", $data['room_number'], $data['room_type'], $data['price'], $data['status'], $data['description'], $id);
+        $stmt->bind_param("ssdsssi", $data['room_number'], $data['room_type'], $data['price'], $data['status'], $data['image'], $data['description'], $id);
         return $stmt->execute();
     }
 
@@ -418,14 +422,12 @@ class AdminController {
     // Housekeeping Management
     public function getHousekeepingGrid() {
         // This grid shows rooms that need attention (dirty after checkout) 
-        // OR rooms that have active guest requests
+        // OR rooms under maintenance. Guest requests are handled separately.
         return $this->db->fetchAll("SELECT r.id as room_id, r.room_number, r.status as room_status, 
-                                          h.status as clean_status, h.last_updated,
-                                          (SELECT service_type FROM housekeeping_requests WHERE room_number = r.room_number AND status = 'Pending' LIMIT 1) as guest_request
+                                          h.status as clean_status, h.last_updated
                                    FROM rooms r 
                                    LEFT JOIN housekeeping h ON r.id = h.room_id 
                                    WHERE r.status = 'Needs Cleaning' OR r.status = 'Maintenance' 
-                                      OR r.room_number IN (SELECT room_number FROM housekeeping_requests WHERE status = 'Pending')
                                    ORDER BY r.room_number ASC");
     }
 
@@ -479,10 +481,36 @@ class AdminController {
     }
 
     public function updateSettings($data) {
-        $query = "UPDATE settings SET hotel_name=?, contact_email=?, contact_phone=?, currency=?, address=? WHERE id=1";
+        $query = "UPDATE settings SET hotel_name=?, contact_email=?, contact_phone=?, currency=?, address=?, logo=? WHERE id=1";
         $stmt = $this->db->conn->prepare($query);
-        $stmt->bind_param("sssss", $data['hotel_name'], $data['contact_email'], $data['contact_phone'], $data['currency'], $data['address']);
+        $stmt->bind_param("ssssss", 
+            $data['hotel_name'], 
+            $data['contact_email'], 
+            $data['contact_phone'], 
+            $data['currency'], 
+            $data['address'],
+            $data['logo']
+        );
         return $stmt->execute();
+    }
+
+    public function updateAdminProfile($adminId, $data) {
+        if (!empty($data['password'])) {
+            $hashed = password_hash($data['password'], PASSWORD_DEFAULT);
+            $query = "UPDATE admins SET name=?, email=?, password=? WHERE id=?";
+            $stmt = $this->db->conn->prepare($query);
+            $stmt->bind_param("sssi", $data['name'], $data['email'], $hashed, $adminId);
+        } else {
+            $query = "UPDATE admins SET name=?, email=? WHERE id=?";
+            $stmt = $this->db->conn->prepare($query);
+            $stmt->bind_param("ssi", $data['name'], $data['email'], $adminId);
+        }
+        
+        if ($stmt->execute()) {
+            $_SESSION['name'] = $data['name'];
+            return true;
+        }
+        return false;
     }
 
     // Email Template Engine - Using PHPMailer for Real Delivery
@@ -555,6 +583,35 @@ class AdminController {
             }
         }
         return false; 
+    }
+
+    public function getAllComplaints() {
+        return $this->db->fetchAll("SELECT c.*, u.name as guest_name, u.email as guest_email 
+                                   FROM complaints c 
+                                   JOIN users u ON c.user_id = u.id 
+                                   ORDER BY c.created_at DESC");
+    }
+
+    public function updateComplaintStatus($id, $status) {
+        $query = "UPDATE complaints SET status = ? WHERE id = ?";
+        $stmt = $this->db->conn->prepare($query);
+        $stmt->bind_param("si", $status, $id);
+        return $stmt->execute();
+    }
+
+    // Feedback Management
+    public function getAllFeedback() {
+        return $this->db->fetchAll("SELECT f.*, u.name as guest_name 
+                                   FROM feedbacks f 
+                                   JOIN users u ON f.user_id = u.id 
+                                   ORDER BY f.created_at DESC");
+    }
+
+    public function deleteFeedback($id) {
+        $query = "DELETE FROM feedbacks WHERE id = ?";
+        $stmt = $this->db->conn->prepare($query);
+        $stmt->bind_param("i", $id);
+        return $stmt->execute();
     }
 }
 ?>

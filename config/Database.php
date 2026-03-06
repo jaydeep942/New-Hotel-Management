@@ -139,6 +139,18 @@ if (!class_exists('Database')) {
             foreach ($room_migrations as $col => $def) {
                 $this->conn->query("ALTER TABLE rooms MODIFY COLUMN $col $def");
             }
+
+            // Ensure rich media and narrative columns exist
+            $room_rich_fields = [
+                'image' => "VARCHAR(255) NULL AFTER status",
+                'description' => "TEXT NULL AFTER image"
+            ];
+            foreach ($room_rich_fields as $col => $def) {
+                $check = $this->conn->query("SHOW COLUMNS FROM `rooms` LIKE '$col'");
+                if ($check && $check->num_rows == 0) {
+                    $this->conn->query("ALTER TABLE rooms ADD COLUMN $col $def");
+                }
+            }
             
             // Housekeeping
             $this->conn->query("CREATE TABLE IF NOT EXISTS housekeeping (
@@ -158,8 +170,24 @@ if (!class_exists('Database')) {
                 contact_phone VARCHAR(20),
                 currency VARCHAR(10) DEFAULT '₹',
                 logo VARCHAR(255),
-                address TEXT
+                address TEXT,
+                instagram_url VARCHAR(255),
+                facebook_url VARCHAR(255),
+                enforce_feedback TINYINT DEFAULT 1
             )");
+
+            // Settings Migration
+            $settings_fields = [
+                'instagram_url' => "VARCHAR(255) NULL",
+                'facebook_url' => "VARCHAR(255) NULL",
+                'enforce_feedback' => "TINYINT DEFAULT 1"
+            ];
+            foreach ($settings_fields as $col => $def) {
+                $check = $this->conn->query("SHOW COLUMNS FROM `settings` LIKE '$col'");
+                if ($check && $check->num_rows == 0) {
+                    $this->conn->query("ALTER TABLE settings ADD COLUMN $col $def");
+                }
+            }
 
             // Users status migration
             $check_status = $this->conn->query("SHOW COLUMNS FROM `users` LIKE 'status'");

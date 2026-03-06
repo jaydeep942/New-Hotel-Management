@@ -241,18 +241,25 @@ session_start();
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                 <?php
-                $rooms = [
-                    ['id' => 'ac', 'name' => 'Premium AC Suite', 'price' => '1500', 'img' => 'assets/rooms/premium-ac.png', 'features' => ['High-Speed Fiber WiFi', 'Smart 4K Ultra TV', '24/7 Chef Service', 'Panoramic View', 'Climate Control']],
-                    ['id' => 'non-ac', 'name' => 'Classic Non-AC', 'price' => '900', 'img' => 'assets/rooms/classic-non-ac.png', 'features' => ['High-Speed Fiber WiFi', 'Smart HD TV', 'Morning Buffet', 'Private Balcony', 'Executive Desk']],
-                    ['id' => 'single', 'name' => 'Serene Single', 'price' => '700', 'img' => 'assets/rooms/serene-single.png', 'features' => ['High-Speed Fiber WiFi', 'Smart HD TV', 'Daily Housekeeping', 'Compact Luxury', 'Rain Shower']],
-                    ['id' => 'double', 'name' => 'Deluxe Double', 'price' => '1200', 'img' => 'assets/rooms/deluxe-double.png', 'features' => ['High-Speed Fiber WiFi', '4K Smart TV', 'Butler Service', 'Spacious Area', 'Premium Bedding']],
-                    ['id' => 'family', 'name' => 'Grand Family', 'price' => '2500', 'img' => 'assets/rooms/grand-family.png', 'features' => ['High-Speed Fiber WiFi', 'Multiple 4K TVs', 'Interconnected Rooms', '2 King Beds', 'Full Kitchenette']],
-                    ['id' => 'penthouse', 'name' => 'Royal Penthouse', 'price' => '4500', 'img' => 'assets/rooms/royal-penthouse.png', 'features' => ['Personalized Security', 'Private Rooftop Pool', 'Peak Panoramic View', 'Grand Living Area', '24/7 Butler Service']]
-                ];
+                require_once 'config/Database.php';
+                $db = new Database();
+                $res = $db->conn->query("SELECT * FROM rooms WHERE status = 'Available' LIMIT 6");
+                $rooms = [];
+                if ($res) {
+                    while($row = $res->fetch_assoc()) {
+                        $rooms[] = [
+                            'id' => $row['id'],
+                            'name' => $row['room_type'] . ' Suite ' . $row['room_number'],
+                            'price' => number_format($row['price_per_night'], 0),
+                            'img' => $row['image'] ?: 'https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg?auto=compress&cs=tinysrgb&w=800',
+                            'features' => ['High-Speed WiFi', 'Premium Bedding', 'Climate Control', 'Smart TV', 'Room Service']
+                        ];
+                    }
+                }
 
                 foreach($rooms as $index => $room):
                     $isLoggedIn = isset($_SESSION['user_id']);
-                    $bookingLink = $isLoggedIn ? "book-room.php?room=" . $room['id'] : "register.html";
+                    $bookingLink = $isLoggedIn ? "book-room.php" : "register.html";
                 ?>
                 <div class="group bg-cream rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100" data-aos="fade-up" data-aos-delay="<?php echo ($index % 3) * 200; ?>">
                     <!-- Image -->
