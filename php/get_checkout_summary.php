@@ -40,12 +40,10 @@ $nights = $nights > 0 ? $nights : 1;
 // 3. Fetch Pending Service Orders for this stay
 // We assume anything NOT cancelled should be settled at checkout
 $orders_sql = "SELECT * FROM service_orders 
-               WHERE user_id = ? AND room_number = ? 
-               AND ordered_at >= ? 
+               WHERE booking_id = ? 
                AND status = 'Delivered'";
 $orders_stmt = $conn->prepare($orders_sql);
-$start_date = $booking['check_in'] . " 00:00:00";
-$orders_stmt->bind_param("iss", $user_id, $booking['room_number'], $start_date);
+$orders_stmt->bind_param("i", $booking_id);
 $orders_stmt->execute();
 $orders_res = $orders_stmt->get_result();
 $orders = [];

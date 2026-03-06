@@ -99,11 +99,9 @@ $running_service_total = 0;
 if($hasBooking) {
     try {
         $orders_total_sql = "SELECT SUM(total_price) as service_total FROM service_orders 
-                             WHERE user_id = ? AND room_number = ? 
-                             AND ordered_at >= ? AND status = 'Delivered'";
+                             WHERE booking_id = ? AND status = 'Delivered'";
         $orders_total_stmt = $conn->prepare($orders_total_sql);
-        $start_date = $booking['check_in'] . " 00:00:00";
-        $orders_total_stmt->bind_param("iss", $user_id, $booking['room_number'], $start_date);
+        $orders_total_stmt->bind_param("i", $booking['id']);
         $orders_total_stmt->execute();
         $orders_total_res = $orders_total_stmt->get_result()->fetch_assoc();
         $running_service_total = $orders_total_res['service_total'] ?? 0;
