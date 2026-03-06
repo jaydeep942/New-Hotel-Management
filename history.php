@@ -238,7 +238,7 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
     <main class="min-h-screen">
         <!-- New Primary Navbar (Replaces Sidebar) -->
         <nav class="glass-nav sticky top-0 z-[60] premium-shadow border-b border-white/20">
-            <div class="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="w-full px-6 py-4 flex items-center justify-between">
                 <!-- Brand Section -->
                 <div class="flex items-center space-x-12">
                     <div class="flex flex-col">
@@ -398,7 +398,7 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
             }
         </script>
 
-        <div class="max-w-[1600px] mx-auto p-4 md:p-8">
+        <div class="w-full p-4 md:p-8">
         <div class="animate-slide">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-6">
                 <div>

@@ -99,7 +99,7 @@ $running_service_total = 0;
 if($hasBooking) {
     try {
         $orders_total_sql = "SELECT SUM(total_price) as service_total FROM service_orders 
-                             WHERE booking_id = ? AND status = 'Delivered'";
+                             WHERE booking_id = ? AND status = 'Delivered' AND is_received = 1";
         $orders_total_stmt = $conn->prepare($orders_total_sql);
         $orders_total_stmt->bind_param("i", $booking['id']);
         $orders_total_stmt->execute();
@@ -278,6 +278,12 @@ $cumulative_ledger = $total_amount + $running_service_total;
         }
         .animate-slide { animation: slideIn 0.6s ease-out forwards; }
 
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-slide-up { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px) scale(0.98); }
             to { opacity: 1; transform: translateY(0) scale(1); }
@@ -352,7 +358,7 @@ $cumulative_ledger = $total_amount + $running_service_total;
     <main class="min-h-screen">
         <!-- New Primary Navbar (Replaces Sidebar) -->
         <nav class="glass-nav sticky top-0 z-[60] premium-shadow border-b border-white/20">
-            <div class="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="w-full px-6 py-4 flex items-center justify-between">
                 <!-- Brand Section -->
                 <div class="flex items-center space-x-12">
                     <div class="flex flex-col">
@@ -519,31 +525,10 @@ $cumulative_ledger = $total_amount + $running_service_total;
                     setTimeout(() => menu.classList.add('hidden'), 300);
                 }
             }
-            
-            // Fetch available rooms for the dashboard portfolio
-            $available_rooms_query = "SELECT * FROM rooms WHERE status = 'Available' LIMIT 8";
-            $available_rooms_res = $conn->query($available_rooms_query);
-            $portfolio_rooms = [];
-            if ($available_rooms_res) {
-                while($r = $available_rooms_res->fetch_assoc()) {
-                    $portfolio_rooms[] = $r;
-                }
-            }
         </script>
 
-        <?php
-        // Fetch available rooms for the dashboard portfolio
-        $available_rooms_query = "SELECT * FROM rooms WHERE status = 'Available' LIMIT 8";
-        $available_rooms_res = $conn->query($available_rooms_query);
-        $portfolio_rooms = [];
-        if ($available_rooms_res) {
-            while($r = $available_rooms_res->fetch_assoc()) {
-                $portfolio_rooms[] = $r;
-            }
-        }
-        ?>
 
-        <div class="max-w-[1600px] mx-auto p-4 md:p-8">
+        <div class="w-full p-4 md:p-8">
             <!-- Dashboard Home Content -->
             <div class="animate-slide">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
@@ -599,9 +584,15 @@ $cumulative_ledger = $total_amount + $running_service_total;
                             <?php endif; ?>
                         </div>
                         <?php if($isLive): ?>
-                        <button onclick="initiateCheckout(<?php echo $booking['id']; ?>)" class="px-6 py-2.5 bg-gold text-maroon hover:bg-white hover:text-maroon rounded-full text-[9px] font-black tracking-[2px] uppercase shadow-lg transition-all duration-300 transform group-hover:scale-105">CHECK-OUT</button>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="initiateCheckout(<?php echo $booking['id']; ?>)" class="px-6 py-2.5 bg-gold text-maroon hover:bg-white hover:text-maroon rounded-full text-[9px] font-black tracking-[2px] uppercase shadow-lg transition-all duration-300 transform group-hover:scale-105">CHECK-OUT</button>
+                            <button onclick="openEditBookingModal(<?php echo $booking['id']; ?>, '<?php echo $booking['check_in']; ?>', '<?php echo $booking['check_out']; ?>', true)" 
+                                    class="w-10 h-10 bg-white/20 border border-white/20 text-white hover:bg-gold hover:text-maroon hover:border-gold rounded-full flex items-center justify-center shadow-lg transition-all duration-300 transform group-hover:scale-105">
+                                <i class="fas fa-calendar-alt text-xs"></i>
+                            </button>
+                        </div>
                         <?php else: ?>
-                        <button onclick="openEditBookingModal(<?php echo $booking['id']; ?>, '<?php echo $booking['check_in']; ?>', '<?php echo $booking['check_out']; ?>')" 
+                        <button onclick="openEditBookingModal(<?php echo $booking['id']; ?>, '<?php echo $booking['check_in']; ?>', '<?php echo $booking['check_out']; ?>', false)" 
                                 class="px-6 py-2.5 bg-white/20 border border-white/20 text-white hover:bg-gold hover:text-maroon hover:border-gold rounded-full text-[9px] font-black tracking-[2px] uppercase shadow-lg transition-all duration-300 transform group-hover:scale-105">
                             EDIT STAY
                         </button>
@@ -624,8 +615,8 @@ $cumulative_ledger = $total_amount + $running_service_total;
                     <p class="text-gray-400 uppercase tracking-widest text-[10px] font-bold mb-2">Check-In</p>
                     <div class="flex justify-between items-start">
                         <h3 class="text-2xl font-black maroon-text leading-tight"><?php echo $check_in; ?></h3>
-                        <?php if($hasBooking && !$isLive): ?>
-                        <button onclick="openEditBookingModal(<?php echo $booking['id']; ?>, '<?php echo $booking['check_in']; ?>', '<?php echo $booking['check_out']; ?>')" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-maroon hover:bg-gold/10 transition-colors">
+                        <?php if($hasBooking): ?>
+                        <button onclick="openEditBookingModal(<?php echo $booking['id']; ?>, '<?php echo $booking['check_in']; ?>', '<?php echo $booking['check_out']; ?>', <?php echo $isLive ? 'true' : 'false'; ?>)" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-maroon hover:bg-gold/10 transition-colors">
                             <i class="fas fa-edit text-[10px]"></i>
                         </button>
                         <?php endif; ?>
@@ -638,8 +629,8 @@ $cumulative_ledger = $total_amount + $running_service_total;
                     <p class="text-maroon/60 uppercase tracking-widest text-[10px] font-black mb-2">Check-Out</p>
                     <div class="flex justify-between items-start">
                         <h3 class="text-2xl font-black maroon-text leading-tight drop-shadow-sm"><?php echo $check_out; ?></h3>
-                        <?php if($hasBooking && !$isLive): ?>
-                        <button onclick="openEditBookingModal(<?php echo $booking['id']; ?>, '<?php echo $booking['check_in']; ?>', '<?php echo $booking['check_out']; ?>')" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-maroon hover:bg-white transition-colors">
+                        <?php if($hasBooking): ?>
+                        <button onclick="openEditBookingModal(<?php echo $booking['id']; ?>, '<?php echo $booking['check_in']; ?>', '<?php echo $booking['check_out']; ?>', <?php echo $isLive ? 'true' : 'false'; ?>)" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-maroon hover:bg-white transition-colors">
                             <i class="fas fa-edit text-[10px]"></i>
                         </button>
                         <?php endif; ?>
@@ -654,59 +645,6 @@ $cumulative_ledger = $total_amount + $running_service_total;
                 </div>
             </div>
 
-            <!-- Suite Portfolio (Dynamic Room Row) -->
-            <div class="mb-12 animate-fade-in px-4">
-                <div class="flex items-center justify-between mb-8">
-                    <div>
-                        <h4 class="text-xl font-bold maroon-text">Suite Portfolio</h4>
-                        <p class="text-[9px] uppercase tracking-[3px] font-black text-gold mt-1">Available for immediate residency</p>
-                    </div>
-                    <a href="book-room.php" class="text-[9px] font-black text-maroon hover:text-gold uppercase tracking-[2px] transition-colors">See Full Grid →</a>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <?php if(!empty($portfolio_rooms)): ?>
-                        <?php foreach($portfolio_rooms as $room): 
-                            $imagePool = [
-                                'Standard' => [
-                                    "https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg?auto=compress&cs=tinysrgb&w=800",
-                                    "https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=800"
-                                ],
-                                'Deluxe' => [
-                                    "https://images.pexels.com/photos/262048/pexels-photo-262048.jpeg?auto=compress&cs=tinysrgb&w=800",
-                                    "https://images.pexels.com/photos/271619/pexels-photo-271619.jpeg?auto=compress&cs=tinysrgb&w=800"
-                                ]
-                            ];
-                            $type = $room['room_type'];
-                            $pool = $imagePool[$type] ?? $imagePool['Standard'];
-                            $img = $pool[(int)$room['room_number'] % count($pool)];
-                            $roomName = $type . " Suite " . $room['room_number'];
-                        ?>
-                        <div class="bg-white rounded-[32px] overflow-hidden premium-shadow group border border-gray-50 flex flex-col hover:-translate-y-2 transition-all duration-500">
-                            <div class="h-40 relative overflow-hidden">
-                                <img src="<?php echo $img; ?>" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                                <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[8px] font-black maroon-text uppercase tracking-widest">
-                                    <?php echo $type; ?>
-                                </div>
-                            </div>
-                            <div class="p-5">
-                                <h5 class="text-sm font-bold maroon-text"><?php echo $roomName; ?></h5>
-                                <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-50">
-                                    <span class="text-xs font-black maroon-text">₹<?php echo number_format($room['price_per_night'], 0); ?></span>
-                                    <a href="book-room.php" class="p-2 bg-maroon/5 text-maroon hover:bg-maroon hover:text-white rounded-xl transition-all">
-                                        <i class="fas fa-arrow-right text-[10px]"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="col-span-full py-10 bg-gray-50 rounded-[32px] text-center border-2 border-dashed border-gray-100">
-                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">All suites currently synchronized.</p>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
 
             <!-- Luxury Experience Hub (AI Intelligence Layer) -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 mb-8 animate-fade-in">
@@ -1017,6 +955,54 @@ $cumulative_ledger = $total_amount + $running_service_total;
             </div>
         </div>
 
+        <!-- Service Delivery Confirmation Modal -->
+        <div id="serviceDeliveryModal" class="fixed inset-0 z-[150] hidden items-center justify-center p-6">
+            <div class="absolute inset-0 bg-maroon/20 backdrop-blur-sm"></div>
+            <div class="bg-white rounded-[40px] p-10 max-w-sm w-full relative z-[151] premium-shadow border border-maroon/5 animate-slide-up">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-teal/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-concierge-bell text-teal text-3xl animate-bounce"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold maroon-text mb-2">Service Delivered?</h3>
+                    <p class="text-gray-400 text-xs mb-8">Our concierge team has marked <span id="delivered_item_name" class="font-bold maroon-text">your request</span> as delivered. Have you received it?</p>
+                    
+                    <div class="space-y-4">
+                        <button onclick="confirmServiceReceipt()" class="w-full py-4 bg-teal text-white rounded-2xl font-bold text-sm shadow-lg shadow-teal/20 hover:scale-105 transition-all">
+                            Yes, I Received It
+                        </button>
+                        <button onclick="closeDeliveryModal()" class="w-full py-4 bg-gray-50 text-gray-400 rounded-2xl font-bold text-sm hover:text-maroon transition-all">
+                            Not Yet
+                        </button>
+                    </div>
+                </div>
+                <input type="hidden" id="pending_delivery_id">
+            </div>
+        </div>
+
+        <!-- Housekeeping Verification Modal -->
+        <div id="housekeepingVerificationModal" class="fixed inset-0 z-[160] hidden items-center justify-center p-6">
+            <div class="absolute inset-0 bg-maroon/20 backdrop-blur-sm"></div>
+            <div class="bg-white rounded-[40px] p-10 max-w-sm w-full relative z-[161] premium-shadow border border-maroon/5 animate-slide-up">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-teal/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-broom text-teal text-2xl animate-bounce"></i>
+                    </div>
+                    <h3 class="text-xl font-bold maroon-text mb-2">Room Refreshed?</h3>
+                    <p class="text-gray-400 text-[11px] mb-8">Housekeeping has marked your room as <span class="font-bold maroon-text">Refreshed</span>. Are you satisfied with the service?</p>
+                    
+                    <div class="space-y-3">
+                        <button onclick="confirmHousekeeping(1)" class="w-full py-4 bg-teal text-white rounded-2xl font-bold text-xs shadow-lg shadow-teal/20 hover:scale-105 transition-all">
+                            Yes, Excellent Job
+                        </button>
+                        <button onclick="confirmHousekeeping(2)" class="w-full py-4 bg-gray-50 text-gray-400 rounded-2xl font-bold text-xs hover:text-maroon transition-all">
+                            Not Satisfied
+                        </button>
+                    </div>
+                </div>
+                <input type="hidden" id="pending_housekeeping_id">
+            </div>
+        </div>
+
         <!-- Premium Toast -->
         <div id="premiumToast" class="fixed bottom-10 right-10 z-[200] hidden">
             <div id="toastInner" class="p-6 rounded-[28px] text-white flex items-center space-x-4 shadow-2xl transition-all duration-300 transform translate-y-10 opacity-0">
@@ -1073,7 +1059,7 @@ $cumulative_ledger = $total_amount + $running_service_total;
     <script>
             let rescheduleCinInstance, rescheduleCoutInstance;
 
-            function openEditBookingModal(id, cin, cout) {
+            function openEditBookingModal(id, cin, cout, isLive = false) {
                 document.getElementById('edit_booking_id').value = id;
                 document.getElementById('reschedule_id_display').innerText = '#LX-' + id.toString().padStart(4, '0');
                 const modal = document.getElementById('editBookingModal');
@@ -1081,9 +1067,23 @@ $cumulative_ledger = $total_amount + $running_service_total;
                 modal.classList.add('flex');
                 document.body.classList.add('modal-active');
 
-                if (rescheduleCinInstance) rescheduleCinInstance.setDate(cin);
+                if (rescheduleCinInstance) {
+                    if (isLive) {
+                        rescheduleCinInstance.set('minDate', null);
+                        rescheduleCinInstance.set('clickOpens', false);
+                        document.getElementById('new_cin').style.opacity = '0.5';
+                        document.getElementById('new_cin').style.cursor = 'not-allowed';
+                    } else {
+                        rescheduleCinInstance.set('clickOpens', true);
+                        rescheduleCinInstance.set('minDate', 'today');
+                        document.getElementById('new_cin').style.opacity = '1';
+                        document.getElementById('new_cin').style.cursor = 'pointer';
+                    }
+                    rescheduleCinInstance.setDate(cin);
+                }
+                
                 if (rescheduleCoutInstance) {
-                    rescheduleCoutInstance.set('minDate', cin);
+                    rescheduleCoutInstance.set('minDate', isLive ? 'today' : cin);
                     rescheduleCoutInstance.setDate(cout);
                 }
             }
@@ -1320,46 +1320,82 @@ $cumulative_ledger = $total_amount + $running_service_total;
         }
 
         // Real-time Order Polling
+        // Real-time Order Polling
         function pollOrders() {
+            // Poll Orders
             fetch('php/get_recent_orders.php')
                 .then(res => res.json())
                 .then(data => {
-                    if (data.success && data.orders.length > 0) {
+                    if (data.success) {
                         const container = document.getElementById('recentOrdersContainer');
-                        let html = '';
-                        data.orders.forEach(order => {
-                            let statusColor = 'bg-gray-100 text-gray-500';
-                            if(order.status === 'Pending') statusColor = 'bg-gold/10 text-gold';
-                            if(order.status === 'Preparing') statusColor = 'bg-teal/10 text-teal';
-                            if(order.status === 'Delivered') statusColor = 'bg-green-50 text-green-600';
-                            if(order.status === 'Cancelled') statusColor = 'bg-red-50 text-red-600';
+                        if (data.orders.length > 0) {
+                            let html = '';
+                            
+                            // Check for new unacknowledged deliveries
+                            const delivery = data.orders.find(o => o.status === 'Delivered' && parseInt(o.is_received) === 0 && !sessionStorage.getItem('dismissed_delivery_' + o.id));
+                            if (delivery) {
+                                showDeliveryPopup(delivery);
+                            }
 
-                            html += `
-                                <div class="flex justify-between items-start border-b border-gray-50 pb-6 last:border-0 last:pb-0 animate-fade-in">
-                                    <div class="max-w-[180px]">
-                                        <p class="text-sm font-bold maroon-text truncate">${order.summary}</p>
-                                        <p class="text-[10px] text-gray-400 mt-1">${order.display_date}</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="text-xs font-black maroon-text mb-2">₹${parseFloat(order.total_price).toFixed(2)}</p>
-                                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColor}">
-                                            ${order.status}
-                                        </span>
-                                    </div>
+                            data.orders.forEach(order => {
+                                let statusColor = 'bg-gray-100 text-gray-500';
+                                let statusText = order.status;
+                                if(order.status === 'Pending') statusColor = 'bg-gold/10 text-gold';
+                                if(order.status === 'Preparing') statusColor = 'bg-teal/10 text-teal';
+                                if(order.status === 'Delivered') {
+                                    if (parseInt(order.is_received) === 1) {
+                                        statusColor = 'bg-green-50 text-green-600';
+                                        statusText = 'Completed';
+                                    } else if (parseInt(order.is_received) === 2) {
+                                        statusColor = 'bg-rose-50 text-rose-600 border border-rose-100';
+                                        statusText = 'Not Received';
+                                    } else {
+                                        statusColor = 'bg-indigo-50 text-indigo-600';
+                                        statusText = 'Delivered';
+                                    }
+                                }
+                                if(order.status === 'Cancelled') statusColor = 'bg-red-50 text-red-600';
+
+                                html += `
+                                    <div class="flex justify-between items-start border-b border-gray-50 pb-6 last:border-0 last:pb-0 animate-fade-in">
+                                        <div class="max-w-[180px]">
+                                            <p class="text-sm font-bold maroon-text truncate">${order.summary}</p>
+                                            <p class="text-[10px] text-gray-400 mt-1">${order.display_date}</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-xs font-black maroon-text mb-2">₹${parseFloat(order.total_price).toFixed(2)}</p>
+                                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusColor}">
+                                                ${statusText}
+                                            </span>
+                                        </div>
+                                    </div>`;
+                            });
+                            container.innerHTML = html;
+                        } else {
+                            container.innerHTML = `
+                                <div class="flex flex-col items-center justify-center py-10 opacity-30">
+                                    <i class="fas fa-utensils text-5xl mb-4"></i>
+                                    <p class="text-xs font-bold uppercase tracking-widest">No recent orders</p>
                                 </div>`;
-                        });
-                        container.innerHTML = html;
-                    } else if (data.success && data.orders.length === 0) {
-                        document.getElementById('recentOrdersContainer').innerHTML = `
-                            <div class="flex flex-col items-center justify-center py-10 opacity-30">
-                                <i class="fas fa-utensils text-5xl mb-4"></i>
-                                <p class="text-xs font-bold uppercase tracking-widest">No recent orders</p>
-                            </div>`;
+                        }
+                    }
+                });
+
+            // Poll Housekeeping
+            fetch('php/get_cleaning_history.php?limit=1')
+                .then(r => r.json())
+                .then(hData => {
+                    if (hData.success && hData.history.length > 0) {
+                        const hReq = hData.history[0];
+                        if (hReq.status === 'Completed' && parseInt(hReq.is_received) === 0 && !sessionStorage.getItem('dismissed_housekeeping_' + hReq.id)) {
+                            showHousekeepingPopup(hReq);
+                        }
                     }
                 });
         }
 
-        // Poll every 10 seconds
+        // Initial poll and set interval
+        setTimeout(pollOrders, 1000); 
         setInterval(pollOrders, 10000);
         function initiateCheckout(bookingId) {
             const modal = document.getElementById('checkoutModal');
@@ -1459,6 +1495,118 @@ $cumulative_ledger = $total_amount + $running_service_total;
             const modal = document.getElementById('checkoutModal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+        }
+
+        function showDeliveryPopup(delivery) {
+            const modal = document.getElementById('serviceDeliveryModal');
+            if (modal.classList.contains('flex')) return;
+            
+            document.getElementById('delivered_item_name').innerText = delivery.summary;
+            document.getElementById('pending_delivery_id').value = delivery.id;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeDeliveryModal() {
+            const id = document.getElementById('pending_delivery_id').value;
+            sessionStorage.setItem('dismissed_delivery_' + id, 'true');
+            
+            // Report "Not Yet" to the server so admin knows
+            fetch('php/confirm_delivery.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `order_id=${id}&received=2`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    showMessage('Issue Logged', 'We apologize. Our concierge manager has been notified.', 'error');
+                }
+                pollOrders();
+            });
+
+            const modal = document.getElementById('serviceDeliveryModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function showHousekeepingPopup(req) {
+            const modal = document.getElementById('housekeepingVerificationModal');
+            if (modal.classList.contains('flex') || document.getElementById('serviceDeliveryModal').classList.contains('flex')) return;
+            
+            document.getElementById('pending_housekeeping_id').value = req.id;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeHousekeepingModal() {
+            const id = document.getElementById('pending_housekeeping_id').value;
+            sessionStorage.setItem('dismissed_housekeeping_' + id, 'true');
+            const modal = document.getElementById('housekeepingVerificationModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function confirmHousekeeping(status) {
+            const id = document.getElementById('pending_housekeeping_id').value;
+            
+            // Immediately mark as dismissed to prevent re-triggering during poll
+            sessionStorage.setItem('dismissed_housekeeping_' + id, 'true');
+
+            fetch('php/confirm_housekeeping.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `request_id=${id}&confirmed=${status}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if(status === 1) {
+                        showMessage('Verified', 'Thank you for your feedback!');
+                    } else {
+                        showMessage('Logged', 'Our manager has been notified of the issue.', 'error');
+                    }
+                    closeHousekeepingModal();
+                } else {
+                    showMessage('Sync Error', data.message, 'error');
+                }
+            });
+        }
+
+        function confirmServiceReceipt() {
+            const id = document.getElementById('pending_delivery_id').value;
+            
+            // Immediately mark as dismissed to prevent re-triggering during poll
+            sessionStorage.setItem('dismissed_delivery_' + id, 'true');
+
+            const btn = event.target;
+            btn.innerHTML = '<i class="fas fa-spinner animate-spin"></i>';
+            btn.disabled = true;
+
+            fetch('php/confirm_delivery.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `order_id=${id}&received=1`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('Receipt Confirmed', 'Thank you for choosing Grand Luxe services!');
+                    document.getElementById('serviceDeliveryModal').classList.add('hidden');
+                    document.getElementById('serviceDeliveryModal').classList.remove('flex');
+                    pollOrders();
+                } else {
+                    showMessage('Sync Error', data.message, 'error');
+                    btn.innerHTML = 'Yes, I Received It';
+                    btn.disabled = false;
+                }
+            })
+            .catch(() => {
+                showMessage('System Error', 'Unable to reach hospitality server.', 'error');
+                btn.innerHTML = 'Yes, I Received It';
+                btn.disabled = false;
+            });
         }
 
         function finalizeCheckout(bookingId, paymentId) {

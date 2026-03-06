@@ -93,12 +93,18 @@ include '../includes/admin_sidebar.php';
                                     $statusClass = match($o['status']) {
                                         'Pending' => 'text-amber-500 bg-amber-500/10',
                                         'Preparing' => 'text-indigo-500 bg-indigo-500/10',
-                                        'Delivered' => 'text-emerald-500 bg-emerald-500/10',
+                                        'Delivered' => ($o['is_received'] == 1 ? 'text-green-600 bg-green-50 border border-green-100' : ($o['is_received'] == 2 ? 'text-rose-600 bg-rose-50 border border-rose-100 animate-pulse' : 'text-emerald-500 bg-emerald-500/10')),
+                                        'Cancelled' => 'text-rose-500 bg-rose-50',
                                         default => 'text-gray-400 bg-gray-100'
                                     };
+                                    $statusText = $o['status'];
+                                    if($o['status'] === 'Delivered') {
+                                        if($o['is_received'] == 1) $statusText = "Guest Confirmed";
+                                        elseif($o['is_received'] == 2) $statusText = "Guest Disputed";
+                                    }
                                 ?>
                                 <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest <?php echo $statusClass; ?>">
-                                    <?php echo $orderStatus = $o['status']; ?>
+                                    <?php echo $statusText; ?>
                                 </span>
                             </td>
                             <td class="px-8 py-6 text-right">

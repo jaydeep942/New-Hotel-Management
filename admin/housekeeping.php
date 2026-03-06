@@ -55,8 +55,24 @@ include '../includes/admin_sidebar.php';
         <?php foreach($guestRequests as $req): ?>
         <div class="bg-white rounded-[2rem] p-8 shadow-xl shadow-primary/5 border border-primary/5 relative overflow-hidden group hover:-translate-y-1 transition-all duration-300">
             <div class="absolute top-0 right-0 p-6">
-                <span class="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[9px] font-black uppercase tracking-widest border border-amber-100">
-                    <?php echo $req['status']; ?>
+                <?php 
+                    $badgeClass = 'bg-amber-50 text-amber-600 border border-amber-100';
+                    $badgeText = $req['status'];
+                    if($req['status'] === 'Completed') {
+                        if($req['is_received'] == 1) {
+                            $badgeClass = 'bg-green-50 text-green-600 border border-green-100';
+                            $badgeText = 'Satisfied';
+                        } elseif($req['is_received'] == 2) {
+                            $badgeClass = 'bg-rose-50 text-rose-600 border border-rose-100 animate-pulse';
+                            $badgeText = 'Not Satisfied';
+                        } else {
+                            $badgeClass = 'bg-teal-50 text-teal-600 border border-teal-100';
+                            $badgeText = 'Refreshed';
+                        }
+                    }
+                ?>
+                <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest <?php echo $badgeClass; ?>">
+                    <?php echo $badgeText; ?>
                 </span>
             </div>
             
@@ -84,16 +100,19 @@ include '../includes/admin_sidebar.php';
                        class="flex-1 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest text-center hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
                         Accept Task
                     </a>
-                <?php else: ?>
+                <?php elseif($req['status'] === 'In Progress'): ?>
                     <a href="?request_id=<?php echo $req['id']; ?>&new_status=Completed" 
                        class="flex-1 py-3 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest text-center hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20">
                         Mark Done
                     </a>
                 <?php endif; ?>
-                <a href="?request_id=<?php echo $req['id']; ?>&new_status=Cancelled" 
-                   class="w-12 h-12 flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all">
-                    <i class="fas fa-times"></i>
-                </a>
+                
+                <?php if($req['status'] !== 'Completed' && $req['status'] !== 'Cancelled'): ?>
+                    <a href="?request_id=<?php echo $req['id']; ?>&new_status=Cancelled" 
+                       class="w-12 h-12 flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all">
+                        <i class="fas fa-times"></i>
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
         <?php endforeach; ?>

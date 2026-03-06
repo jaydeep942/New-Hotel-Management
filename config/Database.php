@@ -108,10 +108,15 @@ if (!class_exists('Database')) {
             $this->conn->query("CREATE TABLE IF NOT EXISTS service_orders (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 booking_id INT,
+                user_id INT,
+                room_number VARCHAR(10),
+                item_name VARCHAR(255),
+                items JSON NULL,
                 service_id INT,
                 quantity INT DEFAULT 1,
                 total_price DECIMAL(10,2) NOT NULL,
                 status ENUM('Pending', 'Preparing', 'Delivered', 'Cancelled') DEFAULT 'Pending',
+                is_received TINYINT(1) DEFAULT 0,
                 ordered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
                 FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
@@ -120,9 +125,14 @@ if (!class_exists('Database')) {
             // Migration: Column Renaming & Checks
             $so_migrations = [
                 'booking_id' => "INT NULL AFTER id",
-                'service_id' => "INT NULL AFTER booking_id",
+                'user_id' => "INT NULL AFTER booking_id",
+                'room_number' => "VARCHAR(10) AFTER user_id",
+                'item_name' => "VARCHAR(255) AFTER room_number",
+                'items' => "JSON NULL AFTER item_name",
+                'service_id' => "INT NULL AFTER items",
                 'quantity' => "INT DEFAULT 1 AFTER service_id",
-                'ordered_at' => "TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER status"
+                'is_received' => "TINYINT(1) DEFAULT 0 AFTER status",
+                'ordered_at' => "TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER is_received"
             ];
             foreach ($so_migrations as $col => $def) {
                 $check = $this->conn->query("SHOW COLUMNS FROM `service_orders` LIKE '$col'");

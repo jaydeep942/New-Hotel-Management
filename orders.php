@@ -120,7 +120,7 @@ while($row = $orders_res->fetch_assoc()){
     <main class="min-h-screen">
         <!-- New Primary Navbar (Replaces Sidebar) -->
         <nav class="glass-nav sticky top-0 z-[60] premium-shadow border-b border-white/20">
-            <div class="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="w-full px-6 py-4 flex items-center justify-between">
                 <!-- Brand Section -->
                 <div class="flex items-center space-x-12">
                     <div class="flex flex-col">
@@ -280,7 +280,7 @@ while($row = $orders_res->fetch_assoc()){
             }
         </script>
 
-        <div class="max-w-[1600px] mx-auto p-4 md:p-8">
+        <div class="w-full p-4 md:p-8">
 
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
             <?php if(empty($orders)): ?>

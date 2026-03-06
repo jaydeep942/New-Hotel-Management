@@ -247,7 +247,7 @@ $cleaning_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     <main class="min-h-screen">
         <!-- New Primary Navbar (Replaces Sidebar) -->
         <nav class="glass-nav sticky top-0 z-[60] premium-shadow border-b border-white/20">
-            <div class="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="w-full px-6 py-4 flex items-center justify-between">
                 <!-- Brand Section -->
                 <div class="flex items-center space-x-12">
                     <div class="flex flex-col">
@@ -407,9 +407,9 @@ $cleaning_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             }
         </script>
 
-        <div class="max-w-[1600px] mx-auto p-4 md:p-8">
+        <div class="w-full p-4 md:p-8">
 
-        <div class="max-w-6xl mx-auto animate-fade-in">
+        <div class="w-full animate-fade-in">
             <!-- Header Section -->
             <div class="mb-12 text-center">
                 <p class="text-[10px] uppercase tracking-[6px] font-extrabold text-gold mb-4">Elite Housekeeping</p>
@@ -472,7 +472,7 @@ $cleaning_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                         </div>
 
                         <!-- Deep Sanitization -->
-                        <div class="bg-white p-8 rounded-[40px] premium-shadow border border-gray-100 flex flex-col sm:flex-row items-center gap-8 group hover:border-maroon/20 transition-all cursor-pointer" onclick="<?php echo $canUseCleaning ? "requestCleaning('Deep Refresh')" : "showPremiumAlert('Access Restricted', 'Check-in required to request service')" ?>">
+                        <div class="bg-white p-8 rounded-[40px] premium-shadow border border-gray-100 flex flex-col sm:flex-row items-center gap-8 group hover:border-maroon/20 transition-all cursor-pointer" onclick="<?php echo $canUseCleaning ? "requestCleaning('Deep Sanitization')" : "showPremiumAlert('Access Restricted', 'Check-in required to request service')" ?>">
                             <div class="w-20 h-20 bg-gold/5 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                                 <i class="fas fa-hand-sparkles text-gold text-3xl"></i>
                             </div>
@@ -735,6 +735,30 @@ $cleaning_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             </div>
         </div>
 
+        <!-- Housekeeping Verification Modal -->
+        <div id="housekeepingVerificationModal" class="fixed inset-0 z-[150] hidden items-center justify-center p-6">
+            <div class="absolute inset-0 bg-maroon/20 backdrop-blur-sm"></div>
+            <div class="bg-white rounded-[40px] p-10 max-w-sm w-full relative z-[151] premium-shadow border border-maroon/5 animate-slide-up">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-teal/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-broom text-teal text-3xl animate-bounce"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold maroon-text mb-2">Service Completed?</h3>
+                    <p class="text-gray-400 text-xs mb-8">Your room <span class="font-bold maroon-text"><?php echo $currentSuite; ?></span> has been marked as refreshed. Are you satisfied with the service?</p>
+                    
+                    <div class="space-y-4">
+                        <button onclick="confirmHousekeepingReceipt(1)" class="w-full py-4 bg-teal text-white rounded-2xl font-bold text-sm shadow-lg shadow-teal/20 hover:scale-105 transition-all">
+                            Yes, It's Perfect
+                        </button>
+                        <button onclick="confirmHousekeepingReceipt(2)" class="w-full py-4 bg-gray-50 text-gray-400 rounded-2xl font-bold text-sm hover:text-maroon transition-all">
+                            Not Satisfied
+                        </button>
+                    </div>
+                </div>
+                <input type="hidden" id="pending_housekeeping_id">
+            </div>
+        </div>
+
         <!-- Service Success Modal -->
     <div id="successServiceModal" class="fixed inset-0 z-[130] hidden">
         <div id="successOverlay" class="absolute inset-0 bg-maroon/20 backdrop-blur-md transition-opacity duration-300 opacity-0 cursor-pointer" onclick="closeSuccessModal()"></div>
@@ -964,6 +988,7 @@ $cleaning_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                         return;
                     }
 
+                    window.housekeepingPopupTriggered = false;
                     grid.innerHTML = data.history.map(request => {
                         let statusClass = 'text-gold bg-gold/5';
                         let statusIcon = 'fa-clock-rotate-left';
@@ -971,18 +996,42 @@ $cleaning_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                             statusClass = 'text-blue-500 bg-blue-50';
                             statusIcon = 'fa-spinner fa-spin';
                         } else if (request.status === 'Completed') {
-                            statusClass = 'text-teal bg-teal/5';
-                            statusIcon = 'fa-check';
+                            if (parseInt(request.is_received) === 1) {
+                                statusClass = 'text-green-600 bg-green-50 border border-green-100';
+                                statusIcon = 'fa-check-double';
+                                statusText = 'Satisfied';
+                            } else if (parseInt(request.is_received) === 2) {
+                                statusClass = 'text-rose-600 bg-rose-50 border border-rose-100';
+                                statusIcon = 'fa-exclamation-circle';
+                                statusText = 'Not Satisfied';
+                            } else {
+                                statusClass = 'text-teal bg-teal/5';
+                                statusIcon = 'fa-check';
+                                statusText = 'Refreshed';
+                            }
                         } else if (request.status === 'Cancelled') {
                             statusClass = 'text-maroon bg-maroon/5';
                             statusIcon = 'fa-ban';
+                            statusText = 'Cancelled';
+                        }
+
+                        // Trigger Popup for unacknowledged completion - ONLY for the most recent one to avoid spam
+                        if (request.status === 'Completed' && parseInt(request.is_received) === 0 && !sessionStorage.getItem('dismissed_housekeeping_' + request.id)) {
+                            if (!window.housekeepingPopupTriggered) {
+                                showHousekeepingPopup(request);
+                                window.housekeepingPopupTriggered = true;
+                            }
                         }
 
                         const date = new Date(request.created_at);
                         const formattedDate = `${date.getDate()} ${date.toLocaleString('default', { month: 'short' })}, ${date.getFullYear()} • ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 
-                        let actionSection = `<span class="text-gray-200 transition-colors"><i class="fas fa-check-double text-[10px]"></i></span>`;
-                        if (request.status === 'Pending') {
+                        let actionSection = ``;
+                        if (parseInt(request.is_received) === 1) {
+                            actionSection = `<span class="text-green-500 transition-colors"><i class="fas fa-check-double text-[10px]"></i></span>`;
+                        } else if (parseInt(request.is_received) === 2) {
+                            actionSection = `<span class="text-rose-500 transition-colors"><i class="fas fa-redo text-[10px]"></i></span>`;
+                        } else if (request.status === 'Pending') {
                             actionSection = `
                                 <button onclick="cancelCurrentRequest(${request.id})" class="text-[10px] font-black uppercase tracking-tighter text-maroon hover:text-gold transition-colors flex items-center gap-1">
                                     <span>Cancel</span>
@@ -999,7 +1048,7 @@ $cleaning_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                         </div>
                                         <span class="flex items-center space-x-2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusClass}">
                                             <i class="fas ${statusIcon}"></i>
-                                            <span>${request.status}</span>
+                                            <span>${statusText}</span>
                                         </span>
                                     </div>
                                     <h5 class="font-bold maroon-text text-lg mb-2">${request.service_type}</h5>
@@ -1048,8 +1097,20 @@ $cleaning_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                     } else {
                         list.innerHTML = data.history.map(req => {
                             let statusClass = 'text-gold bg-gold/5';
+                            let statusText = req.status;
                             if (req.status === 'In Progress') statusClass = 'text-blue-500 bg-blue-50';
-                            else if (req.status === 'Completed') statusClass = 'text-teal bg-teal/5';
+                            else if (req.status === 'Completed') {
+                                if (parseInt(req.is_received) === 1) {
+                                    statusClass = 'text-green-600 bg-green-50 border border-green-100';
+                                    statusText = 'Satisfied';
+                                } else if (parseInt(req.is_received) === 2) {
+                                    statusClass = 'text-rose-600 bg-rose-50 border border-rose-100';
+                                    statusText = 'Incomplete';
+                                } else {
+                                    statusClass = 'text-teal bg-teal/5';
+                                    statusText = 'Completed';
+                                }
+                            }
                             else if (req.status === 'Cancelled') statusClass = 'text-maroon bg-maroon/5';
 
                             const date = new Date(req.created_at);
@@ -1081,7 +1142,7 @@ $cleaning_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                         ${cancelBtn}
                                         <div>
                                             <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${statusClass} mb-2">
-                                                ${req.status}
+                                                ${statusText}
                                             </span>
                                             <p class="text-[14px] text-gray-500 font-bold">${timeStr}</p>
                                         </div>
@@ -1234,6 +1295,53 @@ $cleaning_history = $h_stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                 modal.classList.add('hidden');
                 document.body.classList.remove('overflow-hidden');
             }, 300);
+        }
+
+        function showHousekeepingPopup(request) {
+            const modal = document.getElementById('housekeepingVerificationModal');
+            if (!modal || modal.classList.contains('flex') || document.getElementById('serviceDeliveryModal').classList.contains('flex')) return;
+            
+            // Check if already dismissed this session
+            if (sessionStorage.getItem('dismissed_housekeeping_' + request.id)) return;
+            
+            document.getElementById('pending_housekeeping_id').value = request.id;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeHousekeepingModal() {
+            const id = document.getElementById('pending_housekeeping_id').value;
+            sessionStorage.setItem('dismissed_housekeeping_' + id, 'true');
+            const modal = document.getElementById('housekeepingVerificationModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function confirmHousekeepingReceipt(status) {
+            const id = document.getElementById('pending_housekeeping_id').value;
+            
+            // Immediately mark as dismissed to prevent re-triggering
+            sessionStorage.setItem('dismissed_housekeeping_' + id, 'true');
+
+            fetch('php/confirm_housekeeping.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `request_id=${id}&confirmed=${status}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if(status === 1) {
+                        showPremiumAlert('Service Verified', 'Thank you for your feedback! We are glad you are satisfied.', 'success');
+                    } else {
+                        showPremiumAlert('Action Logged', 'We apologize for the inconvenience. Our housekeeping manager has been notified.', 'error');
+                    }
+                    closeHousekeepingModal();
+                    refreshCleaningHistory();
+                } else {
+                    showPremiumAlert('Sync Error', data.message);
+                }
+            });
         }
     </script>
 </body>

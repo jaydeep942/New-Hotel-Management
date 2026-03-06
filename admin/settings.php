@@ -40,7 +40,7 @@ include '../includes/admin_header.php';
 include '../includes/admin_sidebar.php';
 ?>
 
-<div class="max-w-4xl mx-auto space-y-10">
+<div class="w-full space-y-10">
     <div class="text-center">
         <h3 class="text-2xl font-bold text-gray-800">Master Configuration</h3>
         <p class="text-sm text-gray-400">Global parameters for the Grand Luxe ecosystem.</p>

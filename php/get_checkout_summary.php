@@ -41,7 +41,8 @@ $nights = $nights > 0 ? $nights : 1;
 // We assume anything NOT cancelled should be settled at checkout
 $orders_sql = "SELECT * FROM service_orders 
                WHERE booking_id = ? 
-               AND status = 'Delivered'";
+               AND status = 'Delivered'
+               AND is_received = 1";
 $orders_stmt = $conn->prepare($orders_sql);
 $orders_stmt->bind_param("i", $booking_id);
 $orders_stmt->execute();

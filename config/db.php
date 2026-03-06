@@ -116,8 +116,11 @@ $so_migrations = [
     'room_number' => "VARCHAR(10) NULL AFTER user_id",
     'service_id' => "INT NULL AFTER room_number",
     'item_name' => "VARCHAR(255) NULL AFTER service_id",
-    'quantity' => "INT DEFAULT 1 AFTER item_name",
-    'ordered_at' => "TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER status"
+    'items' => "JSON NULL AFTER item_name",
+    'quantity' => "INT DEFAULT 1 AFTER items",
+    'status' => "ENUM('Pending', 'Preparing', 'Delivered', 'Cancelled') DEFAULT 'Pending'",
+    'is_received' => "TINYINT(1) DEFAULT 0 AFTER status",
+    'ordered_at' => "TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER is_received"
 ];
 
 foreach ($so_migrations as $col => $def) {
@@ -262,6 +265,12 @@ $conn->query("CREATE TABLE IF NOT EXISTS settings (
     logo VARCHAR(255),
     address TEXT
 )");
+
+// 12. Housekeeping Requests Migration
+$check_hr_received = $conn->query("SHOW COLUMNS FROM `housekeeping_requests` LIKE 'is_received'");
+if ($check_hr_received && $check_hr_received->num_rows == 0) {
+    $conn->query("ALTER TABLE housekeeping_requests ADD COLUMN is_received TINYINT(1) DEFAULT 0 AFTER status");
+}
 
 // Return connection
 return $conn;

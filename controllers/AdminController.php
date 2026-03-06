@@ -329,7 +329,7 @@ class AdminController {
                        COALESCE(s.category, 'Culinary') as category,
                        COALESCE(b.guest_name, u.name, 'Premium Resident') as guest_name, 
                        COALESCE(r.room_number, o.room_number, 'N/A') as room_number,
-                       o.quantity, o.total_price, o.status, o.items, o.ordered_at
+                       o.quantity, o.total_price, o.status, o.is_received, o.items, o.ordered_at
                 FROM service_orders o 
                 LEFT JOIN services s ON o.service_id = s.id 
                 LEFT JOIN bookings b ON o.booking_id = b.id
@@ -433,10 +433,10 @@ class AdminController {
 
     public function getPendingHousekeepingRequests() {
         return $this->db->fetchAll("SELECT h.*, u.name as guest_name 
-                                   FROM housekeeping_requests h 
-                                   JOIN users u ON h.user_id = u.id 
-                                   WHERE h.status = 'Pending' OR h.status = 'In Progress'
-                                   ORDER BY h.created_at DESC");
+                               FROM housekeeping_requests h 
+                               JOIN users u ON h.user_id = u.id 
+                               WHERE h.status IN ('Pending', 'In Progress', 'Completed')
+                               ORDER BY h.created_at DESC LIMIT 10");
     }
 
     public function updateHousekeepingStatus($id, $status) {

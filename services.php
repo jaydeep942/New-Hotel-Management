@@ -335,7 +335,7 @@ $canUseServices = $booking_status ? true : false;
     <main class="min-h-screen">
         <!-- New Primary Navbar (Replaces Sidebar) -->
         <nav class="glass-nav sticky top-0 z-[60] premium-shadow border-b border-white/20">
-            <div class="max-w-[1300px] mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="w-full px-6 py-4 flex items-center justify-between">
                 <!-- Brand Section -->
                 <div class="flex items-center space-x-12">
                     <div class="flex flex-col">
@@ -495,7 +495,7 @@ $canUseServices = $booking_status ? true : false;
             }
         </script>
 
-        <div class="max-w-[1300px] mx-auto p-4 md:p-8">
+        <div class="w-full p-4 md:p-8">
 
         <!-- STEP 1: SERVICE TYPES SELECTION -->
         <div id="serviceSelection" class="animate-up">

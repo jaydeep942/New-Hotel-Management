@@ -39,27 +39,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit();
         }
     } 
-
-    // 2. Check if it's an admin
-    $sql_admin = "SELECT * FROM admins WHERE email = '$email'";
-    $res_admin = $conn->query($sql_admin);
-
-    if ($res_admin && $res_admin->num_rows == 1) {
-        $admin = $res_admin->fetch_assoc();
-        if (password_verify($password, $admin['password'])) {
-            $_SESSION['admin_id'] = $admin['id'];
-            $_SESSION['name'] = $admin['name'];
-            $_SESSION['role'] = $admin['role'];
-            header("Location: ../admin/dashboard.php");
-            exit();
-        } else {
-            header("Location: ../login.php?error=" . urlencode("Incorrect password"));
-            exit();
-        }
-    }
-
-    // 3. Not found in either
-    header("Location: ../login.php?error=" . urlencode("No account found with this email"));
+    
+    // 2. Not found or incorrect
+    header("Location: ../login.php?error=" . urlencode("Invalid email or password"));
     exit();
 } else {
     header("Location: ../login.php");

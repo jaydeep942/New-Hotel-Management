@@ -94,6 +94,7 @@ include '../includes/admin_sidebar.php';
                         <?php 
                             $statusClass = match($b['status']) {
                                 'Booked' => 'text-primary bg-primary/10',
+                                'Confirmed' => 'text-primary bg-primary/10 border border-primary/20',
                                 'Checked-In' => 'text-indigo-500 bg-indigo-500/10',
                                 'Checked-Out' => 'text-emerald-500 bg-emerald-500/10',
                                 'Cancelled' => 'text-rose-500 bg-rose-500/10',
@@ -106,10 +107,10 @@ include '../includes/admin_sidebar.php';
                     </td>
                     <td class="px-8 py-6 text-right">
                         <div class="flex justify-end space-x-2">
-                            <?php if($b['status'] == 'Booked'): ?>
-                                <a href="?id=<?php echo $b['id']; ?>&status=Checked-In" class="px-4 py-2 bg-indigo-500/10 text-indigo-500 text-[9px] font-black uppercase rounded-xl hover:bg-indigo-500 hover:text-white transition-all">Check In</a>
+                            <?php if($b['status'] == 'Booked' || $b['status'] == 'Confirmed'): ?>
+                                <a href="?id=<?php echo $b['id']; ?>&status=Checked-In" class="px-4 py-2 bg-indigo-500 text-white text-[9px] font-black uppercase rounded-xl hover:shadow-lg shadow-indigo-500/20 transition-all">Check In</a>
                             <?php elseif($b['status'] == 'Checked-In'): ?>
-                                <a href="?id=<?php echo $b['id']; ?>&status=Checked-Out" class="px-4 py-2 bg-emerald-500/10 text-emerald-500 text-[9px] font-black uppercase rounded-xl hover:bg-emerald-500 hover:text-white transition-all">Check Out</a>
+                                <a href="?id=<?php echo $b['id']; ?>&status=Checked-Out" class="px-4 py-2 bg-emerald-500 text-white text-[9px] font-black uppercase rounded-xl hover:shadow-lg shadow-emerald-500/20 transition-all">Check Out</a>
                             <?php endif; ?>
                             
                             <div class="relative group/more">
@@ -118,6 +119,25 @@ include '../includes/admin_sidebar.php';
                                 </button>
                                 <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 opacity-0 invisible group-hover/more:opacity-100 group-hover/more:visible translate-y-2 group-hover/more:translate-y-0 transition-all z-20">
                                     <h6 class="px-6 py-2 text-[8px] font-black uppercase tracking-widest text-gray-300">Residency Actions</h6>
+                                    
+                                    <?php if($b['status'] == 'Booked' || $b['status'] == 'Confirmed'): ?>
+                                        <a href="?id=<?php echo $b['id']; ?>&status=Checked-In" class="flex items-center space-x-3 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-indigo-500 hover:bg-indigo-50 transition-all">
+                                            <i class="fas fa-sign-in-alt w-4"></i>
+                                            <span>Manual Check-In</span>
+                                        </a>
+                                    <?php endif; ?>
+
+                                    <?php if($b['status'] == 'Checked-In'): ?>
+                                        <a href="?id=<?php echo $b['id']; ?>&status=Checked-Out" class="flex items-center space-x-3 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-emerald-500 hover:bg-emerald-50 transition-all">
+                                            <i class="fas fa-sign-out-alt w-4"></i>
+                                            <span>Final Check-Out</span>
+                                        </a>
+                                        <a href="?id=<?php echo $b['id']; ?>&status=Confirmed" class="flex items-center space-x-3 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-amber-500 hover:bg-amber-50 transition-all">
+                                            <i class="fas fa-undo w-4"></i>
+                                            <span>Revert to Confirmed</span>
+                                        </a>
+                                    <?php endif; ?>
+
                                     <?php if($b['status'] != 'Cancelled' && $b['status'] != 'Checked-Out'): ?>
                                         <a href="?id=<?php echo $b['id']; ?>&status=Cancelled" class="flex items-center space-x-3 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50 transition-all">
                                             <i class="fas fa-ban w-4"></i>
