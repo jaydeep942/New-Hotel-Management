@@ -465,11 +465,7 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
                                 ?>"><?php echo $row['status']; ?></span></td>
                                 <td class="pr-10 text-right">
                                     <div class="flex items-center justify-end gap-1 sm:gap-3">
-                                        <?php if ($row['status'] == 'Confirmed' && strtotime($row['check_in']) > time()): ?>
-                                            <button onclick="cancelBooking(<?php echo $row['id']; ?>)" class="p-2 text-red-400 hover:text-red-600 transition-all duration-300 hover:scale-125" title="Cancel Booking">
-                                                <i class="fas fa-times-circle"></i>
-                                            </button>
-                                        <?php endif; ?>
+                                        <!-- No primary actions for Checked-In on History page except Details/Print -->
                                          <button onclick='viewBooking(<?php echo json_encode($row); ?>)' class="p-2 text-gray-300 hover:text-gold transition-all duration-300 hover:scale-125" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </button>
@@ -1198,7 +1194,7 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
                 else if (s === 'cancelled') sClass = 'status-cancelled';
 
                 // Check if cancel button should show
-                const canCancel = (row.status === 'Confirmed' && new Date(row.check_in) > new Date());
+                const canCancel = (['Confirmed', 'Booked'].includes(row.status) && new Date(row.check_out) >= new Date().setHours(0,0,0,0));
                 const cancelBtn = canCancel ? `
                     <button onclick="cancelBooking(${row.id})" class="p-2 text-red-400 hover:text-red-600 transition-all duration-300 hover:scale-125" title="Cancel Booking">
                         <i class="fas fa-times-circle"></i>

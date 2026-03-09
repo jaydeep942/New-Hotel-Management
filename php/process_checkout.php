@@ -62,6 +62,30 @@ try {
     }
 
     $conn->commit();
+    
+    // 4. Send "Return Money" Mail if Early Checkout
+    try {
+        require_once __DIR__ . '/../controllers/AdminController.php';
+        $adminCtrl = new AdminController();
+        
+        $scheduled_out = strtotime($booking['check_out']);
+        $today = strtotime(date('Y-m-d'));
+        
+        if ($today < $scheduled_out && $booking['guest_email']) {
+            $subject = "Mid-Stay Departure & Refund Protocol - #LX-" . str_pad($booking_id, 4, '0', STR_PAD_LEFT);
+            $message = "Respected " . htmlspecialchars($booking['guest_name']) . ",<br><br>
+                        We have recorded your mid-stay departure from Grand Luxe via your private dashboard.<br><br>
+                        <strong>Scheduled Departure:</strong> " . date('d M Y', $scheduled_out) . "<br>
+                        <strong>Actual Departure:</strong> " . date('d M Y') . "<br><br>
+                        As per our protocol for early departures, a <strong>refund for the remaining nights</strong> of your residency has been initiated. This amount will reflect in your bank account within the next <strong>7 working days</strong>.<br><br>
+                        Your final residency protocol has been closed. We hope your stay was exceptional despite the change in plans.";
+            $adminCtrl->sendThemedEmail($booking['guest_email'], $subject, $message, 'Refund');
+        }
+    } catch (Exception $e) {
+        // Silently fail email if concierge server is down, don't break the checkout
+        error_log("Early checkout email failed: " . $e->getMessage());
+    }
+
     echo json_encode(['success' => true, 'message' => 'Checkout successful']);
     
 } catch (Exception $e) {

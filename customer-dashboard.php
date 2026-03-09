@@ -583,20 +583,13 @@ $cumulative_ledger = $total_amount + $running_service_total;
                             <span class="text-[9px] font-black uppercase tracking-widest text-white/60">Upcoming Stay</span>
                             <?php endif; ?>
                         </div>
-                        <?php if($isLive): ?>
                         <div class="flex items-center space-x-2">
-                            <button onclick="initiateCheckout(<?php echo $booking['id']; ?>)" class="px-6 py-2.5 bg-gold text-maroon hover:bg-white hover:text-maroon rounded-full text-[9px] font-black tracking-[2px] uppercase shadow-lg transition-all duration-300 transform group-hover:scale-105">CHECK-OUT</button>
-                            <button onclick="openEditBookingModal(<?php echo $booking['id']; ?>, '<?php echo $booking['check_in']; ?>', '<?php echo $booking['check_out']; ?>', true)" 
-                                    class="w-10 h-10 bg-white/20 border border-white/20 text-white hover:bg-gold hover:text-maroon hover:border-gold rounded-full flex items-center justify-center shadow-lg transition-all duration-300 transform group-hover:scale-105">
-                                <i class="fas fa-calendar-alt text-xs"></i>
-                            </button>
+                            <?php if($booking['status'] == 'Checked-In'): ?>
+                                <button onclick="initiateCheckout(<?php echo $booking['id']; ?>)" class="px-6 py-2.5 bg-white text-maroon hover:bg-gold hover:text-maroon rounded-full text-[9px] font-black tracking-[2px] uppercase shadow-lg transition-all duration-300 transform group-hover:scale-105 shadow-xl">CHECK-OUT</button>
+                            <?php else: ?>
+                                <!-- Upcoming bookings have no direct actions currently -->
+                            <?php endif; ?>
                         </div>
-                        <?php else: ?>
-                        <button onclick="openEditBookingModal(<?php echo $booking['id']; ?>, '<?php echo $booking['check_in']; ?>', '<?php echo $booking['check_out']; ?>', false)" 
-                                class="px-6 py-2.5 bg-white/20 border border-white/20 text-white hover:bg-gold hover:text-maroon hover:border-gold rounded-full text-[9px] font-black tracking-[2px] uppercase shadow-lg transition-all duration-300 transform group-hover:scale-105">
-                            EDIT STAY
-                        </button>
-                        <?php endif; ?>
                     </div>
                     <?php else: ?>
                     <a href="book-room.php" class="mt-8 inline-block text-[10px] font-black uppercase tracking-widest text-gold hover:text-white transition-colors">Start Your Booking →</a>
@@ -1003,6 +996,27 @@ $cumulative_ledger = $total_amount + $running_service_total;
             </div>
         </div>
 
+        <!-- Premium Cancellation Modal -->
+        <div id="cancelConfirmModal" class="fixed inset-0 z-[200] hidden items-center justify-center p-6">
+            <div class="absolute inset-0 bg-maroon/40 backdrop-blur-md" onclick="closeCancelModal()"></div>
+            <div class="bg-white rounded-[40px] p-10 max-w-sm w-full relative z-[201] premium-shadow border border-white/20 animate-slide-up text-center">
+                <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-exclamation-circle text-red-500 text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold maroon-text mb-4" style="font-family: 'Playfair Display', serif;">Cancel Residency?</h3>
+                <p class="text-gray-400 text-sm mb-8">This action will release your suite and archive this booking as cancelled. Are you absolutely certain?</p>
+                
+                <div class="flex flex-col space-y-3">
+                    <button id="confirmCancelBtn" class="w-full py-4 bg-red-500 text-white rounded-2xl font-bold shadow-xl shadow-red-200 hover:bg-red-600 transition-all transform active:scale-95">
+                        Yes, Cancel Stay
+                    </button>
+                    <button onclick="closeCancelModal()" class="w-full py-4 bg-gray-50 text-gray-400 rounded-2xl font-bold hover:bg-gray-100 transition-all tracking-widest text-[10px] uppercase">
+                        Keep Reservations
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Premium Toast -->
         <div id="premiumToast" class="fixed bottom-10 right-10 z-[200] hidden">
             <div id="toastInner" class="p-6 rounded-[28px] text-white flex items-center space-x-4 shadow-2xl transition-all duration-300 transform translate-y-10 opacity-0">
@@ -1294,29 +1308,50 @@ $cumulative_ledger = $total_amount + $running_service_total;
             }
         }
 
+        let bookingToCancel = null;
         function cancelBooking(id) {
-            if (confirm('Are you sure you want to cancel this booking?')) {
-                const formData = new FormData();
-                formData.append('booking_id', id);
+            bookingToCancel = id;
+            document.getElementById('cancelConfirmModal').classList.remove('hidden');
+            document.getElementById('cancelConfirmModal').classList.add('flex');
+            document.getElementById('confirmCancelBtn').onclick = executeCancellation;
+        }
 
-                fetch('php/cancel_booking.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        showMessage('Booking Cancelled', 'The room is now available.');
-                        setTimeout(() => location.reload(), 2000);
-                    } else {
-                        showMessage('Error', data.message, 'error');
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    showMessage('System Error', 'Unable to cancel booking', 'error');
-                });
-            }
+        function closeCancelModal() {
+            document.getElementById('cancelConfirmModal').classList.add('hidden');
+            document.getElementById('cancelConfirmModal').classList.remove('flex');
+            bookingToCancel = null;
+        }
+
+        function executeCancellation() {
+            if (!bookingToCancel) return;
+            const btn = document.getElementById('confirmCancelBtn');
+            btn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i>Processing...';
+            btn.style.pointerEvents = 'none';
+
+            const formData = new FormData();
+            formData.append('booking_id', bookingToCancel);
+
+            fetch('php/cancel_booking.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    closeCancelModal();
+                    showMessage('Stay Cancelled', 'Your residency has been released.', 'error');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showMessage('Sync Error', data.message, 'error');
+                    btn.innerHTML = 'Yes, Cancel Stay';
+                    btn.style.pointerEvents = 'auto';
+                }
+            })
+            .catch(() => {
+                showMessage('System error', 'Unable to cancel stay', 'error');
+                btn.innerHTML = 'Yes, Cancel Stay';
+                btn.style.pointerEvents = 'auto';
+            });
         }
 
         // Real-time Order Polling

@@ -108,9 +108,13 @@ include '../includes/admin_sidebar.php';
                     <td class="px-8 py-6 text-right">
                         <div class="flex justify-end space-x-2">
                             <?php if($b['status'] == 'Booked' || $b['status'] == 'Confirmed'): ?>
-                                <a href="?id=<?php echo $b['id']; ?>&status=Checked-In" class="px-4 py-2 bg-indigo-500 text-white text-[9px] font-black uppercase rounded-xl hover:shadow-lg shadow-indigo-500/20 transition-all">Check In</a>
+                                <a href="?id=<?php echo $b['id']; ?>&status=Checked-In" class="px-6 py-2 bg-indigo-500 text-white text-[9px] font-black uppercase rounded-xl hover:shadow-xl shadow-indigo-500/20 transition-all w-full text-center">
+                                    <i class="fas fa-sign-in-alt mr-1"></i> Check In
+                                </a>
                             <?php elseif($b['status'] == 'Checked-In'): ?>
-                                <a href="?id=<?php echo $b['id']; ?>&status=Checked-Out" class="px-4 py-2 bg-emerald-500 text-white text-[9px] font-black uppercase rounded-xl hover:shadow-lg shadow-emerald-500/20 transition-all">Check Out</a>
+                                <a href="?id=<?php echo $b['id']; ?>&status=Checked-Out" class="px-6 py-2 bg-emerald-500 text-white text-[9px] font-black uppercase rounded-xl hover:shadow-xl shadow-emerald-500/20 transition-all w-full text-center">
+                                    <i class="fas fa-sign-out-alt mr-1"></i> Check Out
+                                </a>
                             <?php endif; ?>
                             
                             <div class="relative group/more">
@@ -119,6 +123,13 @@ include '../includes/admin_sidebar.php';
                                 </button>
                                 <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 opacity-0 invisible group-hover/more:opacity-100 group-hover/more:visible translate-y-2 group-hover/more:translate-y-0 transition-all z-20">
                                     <h6 class="px-6 py-2 text-[8px] font-black uppercase tracking-widest text-gray-300">Residency Actions</h6>
+                                    
+                                    <?php if($b['status'] == 'Checked-In'): ?>
+                                        <button onclick="openMailModal('<?php echo $b['guest_email']; ?>', '<?php echo $b['guest_name']; ?>')" class="flex items-center space-x-3 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-amber-500 hover:bg-amber-50 transition-all w-full text-left">
+                                            <i class="fas fa-envelope w-4"></i>
+                                            <span>Send Guest Mail</span>
+                                        </button>
+                                    <?php endif; ?>
                                     
                                     <?php if($b['status'] == 'Booked' || $b['status'] == 'Confirmed'): ?>
                                         <a href="?id=<?php echo $b['id']; ?>&status=Checked-In" class="flex items-center space-x-3 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-indigo-500 hover:bg-indigo-50 transition-all">
@@ -138,7 +149,7 @@ include '../includes/admin_sidebar.php';
                                         </a>
                                     <?php endif; ?>
 
-                                    <?php if($b['status'] != 'Cancelled' && $b['status'] != 'Checked-Out'): ?>
+                                    <?php if($b['status'] == 'Checked-In'): ?>
                                         <a href="?id=<?php echo $b['id']; ?>&status=Cancelled" class="flex items-center space-x-3 px-6 py-3 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50 transition-all">
                                             <i class="fas fa-ban w-4"></i>
                                             <span>Cancel Stay</span>
@@ -168,6 +179,74 @@ include '../includes/admin_sidebar.php';
     <?php if(isset($_GET['msg'])): ?>
         showToast("<?php echo $_GET['msg']; ?>", 'success');
     <?php endif; ?>
+
+    function openMailModal(email, name) {
+        document.getElementById('modalEmail').value = email;
+        document.getElementById('modalMessage').value = '';
+        document.getElementById('mailModal').classList.remove('hidden');
+    }
+
+    function closeMailModal() {
+        document.getElementById('mailModal').classList.add('hidden');
+    }
+
+    function submitMail() {
+        const email = document.getElementById('modalEmail').value;
+        const message = document.getElementById('modalMessage').value;
+        const subject = "Message from Grand Luxe Concierge";
+
+        if (!message) {
+            showToast("Protocol message cannot be empty.", "error");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('subject', subject);
+        formData.append('message', message);
+
+        fetch('api/contact_guest.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast("Protocol transmitted successfully.", 'success');
+                closeMailModal();
+            } else {
+                showToast(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast("Failed to initiate communication protocol.", 'error');
+        });
+    }
 </script>
+
+<!-- Custom Modal for Mail -->
+<div id="mailModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-white w-[500px] rounded-3xl overflow-hidden shadow-2xl transition-all">
+        <div class="bg-gradient-to-r from-amber-500 to-orange-500 p-8 text-white">
+            <h3 class="text-xl font-bold uppercase tracking-widest">Concierge Messenger</h3>
+            <p class="text-[10px] opacity-80 uppercase tracking-tighter">Direct communication with live resident</p>
+        </div>
+        <div class="p-8">
+            <div class="mb-4">
+                <label class="text-[10px] font-black uppercase text-gray-400 mb-2 block">Recipient Email</label>
+                <input type="text" id="modalEmail" readonly class="w-full bg-gray-50 border-none px-4 py-3 rounded-xl text-xs font-bold text-gray-700 outline-none">
+            </div>
+            <div class="mb-6">
+                <label class="text-[10px] font-black uppercase text-gray-400 mb-2 block">Protocol Message</label>
+                <textarea id="modalMessage" rows="5" placeholder="Compose your message here..." class="w-full bg-gray-50 border border-gray-100 px-4 py-3 rounded-xl text-xs font-medium text-gray-700 outline-none focus:border-amber-500/30 transition-all"></textarea>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="closeMailModal()" class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:bg-gray-50 rounded-xl transition-all">Abort</button>
+                <button onclick="submitMail()" class="flex-2 px-10 py-3 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:shadow-xl shadow-amber-500/20 transition-all">Send Protocol</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php include '../includes/admin_footer.php'; ?>

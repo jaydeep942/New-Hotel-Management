@@ -12,37 +12,40 @@ if (!isset($_POST['booking_id'])) {
     exit();
 }
 
-$conn = require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../controllers/AdminController.php';
+$adminCtrl = new AdminController();
+
 $booking_id = intval($_POST['booking_id']);
 $user_id = $_SESSION['user_id'];
 
-// Verify booking belongs to user and is upcoming (can be cancelled)
-$sql = "SELECT status, check_in, room_id FROM bookings WHERE id = ? AND user_id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("ii", $booking_id, $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$booking = $result->fetch_assoc();
+// Verify booking belongs to user
+$sql = "SELECT status, check_in, check_out, room_id, guest_email, guest_name FROM bookings WHERE id = ? AND user_id = ?";
+$booking = $adminCtrl->db->fetchOne($sql, [$booking_id, $user_id]);
 
 if (!$booking) {
     echo json_encode(['success' => false, 'message' => 'Booking not found']);
     exit();
 }
 
-if ($booking['status'] !== 'Confirmed') {
-    echo json_encode(['success' => false, 'message' => 'Only confirmed bookings can be cancelled']);
+// User's specific condition: "if it not check in and mid stay"
+// We allow cancellation if status is Booked or Confirmed (not Checked-In).
+$allowed_statuses = ['Booked', 'Confirmed'];
+if (!in_array($booking['status'], $allowed_statuses)) {
+    echo json_encode(['success' => false, 'message' => 'This booking status (' . $booking['status'] . ') cannot be cancelled.']);
     exit();
 }
 
-// Check if check-in is in the future (at least today)
-if (strtotime(date('Y-m-d', strtotime($booking['check_in']))) < strtotime(date('Y-m-d'))) {
-    echo json_encode(['success' => false, 'message' => 'Cannot cancel a past booking']);
+// Check if it's past the stay period (completely over)
+$today = date('Y-m-d');
+if ($booking['check_out'] < $today) {
+    echo json_encode(['success' => false, 'message' => 'Cannot cancel a stay that has already reached its conclusion date.']);
     exit();
 }
 
 $room_id = $booking['room_id'];
 
 // Use a transaction for atomic update
+$conn = $adminCtrl->db->conn;
 $conn->begin_transaction();
 
 try {
@@ -58,10 +61,22 @@ try {
     $room_stmt->bind_param("i", $room_id);
     $room_stmt->execute();
 
+    // Send the specific email requested by the user
+    $email = $booking['guest_email'] ?: ($_SESSION['email'] ?? '');
+    if ($email) {
+        $subject = "Residency Cancellation & Refund Protocol";
+        $message = "Respected " . htmlspecialchars($booking['guest_name']) . ",<br><br>
+                    We have processed your request to cancel residency <strong>#LX-" . str_pad($booking_id, 4, '0', STR_PAD_LEFT) . "</strong>.<br><br>
+                    As per our protocol, your refund will reflect in your bank account in the <strong>7 working days</strong>.<br><br>
+                    Thank you for choosing Grand Luxe. We hope to host you again soon.";
+        
+        $adminCtrl->sendThemedEmail($email, $subject, $message, 'Refund');
+    }
+
     $conn->commit();
-    echo json_encode(['success' => true, 'message' => 'Booking cancelled and room is now available']);
+    echo json_encode(['success' => true, 'message' => 'Booking cancelled. Your refund will reflect in 7 working days.']);
 } catch (Exception $e) {
     $conn->rollback();
-    echo json_encode(['success' => false, 'message' => 'Failed to cancel booking: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Failed to cancel: ' . $e->getMessage()]);
 }
 ?>

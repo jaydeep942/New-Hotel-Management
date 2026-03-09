@@ -3,7 +3,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 class AdminController {
-    protected $db;
+    public $db;
 
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
@@ -200,15 +200,40 @@ class AdminController {
         $stmt = $this->db->conn->prepare($query);
         $stmt->bind_param("si", $status, $id);
         
-        // Logical Room Triggers
-        $booking = $this->db->fetchOne("SELECT room_id FROM bookings WHERE id = ?", [$id]);
+        // Logical Room Triggers & Notifications
+        $booking = $this->db->fetchOne("SELECT room_id, guest_name, guest_email, check_out FROM bookings WHERE id = ?", [$id]);
         if ($booking && $booking['room_id']) {
             if ($status === 'Checked-In') {
                 $this->updateRoomStatus($booking['room_id'], 'Booked');
             } elseif ($status === 'Checked-Out') {
                 $this->updateRoomStatus($booking['room_id'], 'Needs Cleaning');
+                
+                // Check for Mid-Stay Departure (Early Checkout)
+                $scheduled_out = strtotime($booking['check_out']);
+                $today = strtotime(date('Y-m-d'));
+                
+                if ($today < $scheduled_out && $booking['guest_email']) {
+                    $subject = "Mid-Stay Departure & Refund Protocol - #LX-" . str_pad($id, 4, '0', STR_PAD_LEFT);
+                    $message = "Respected " . htmlspecialchars($booking['guest_name']) . ",<br><br>
+                                We have recorded your mid-stay departure from Grand Luxe.<br><br>
+                                <strong>Scheduled Departure:</strong> " . date('d M Y', $scheduled_out) . "<br>
+                                <strong>Actual Departure:</strong> " . date('d M Y') . "<br><br>
+                                As per our protocol for early departures, a <strong>refund for the remaining nights</strong> of your residency has been initiated. This amount will reflect in your bank account within the next <strong>7 working days</strong>.<br><br>
+                                Your final residency protocol has been closed. We hope your stay was exceptional despite the change in plans.";
+                    $this->sendThemedEmail($booking['guest_email'], $subject, $message, 'Refund');
+                }
             } elseif ($status === 'Cancelled') {
                 $this->updateRoomStatus($booking['room_id'], 'Available');
+                
+                // Send Refund Email if cancelled
+                if ($booking['guest_email']) {
+                    $subject = "Residency Cancellation & Refund Protocol";
+                    $message = "Respected " . htmlspecialchars($booking['guest_name']) . ",<br><br>
+                                We wish to inform you that your residency <strong>#LX-" . str_pad($id, 4, '0', STR_PAD_LEFT) . "</strong> has been cancelled.<br><br>
+                                As per our protocol, your refund will reflect in your bank account in the <strong>7 working days</strong>.<br><br>
+                                We apologize for any inconvenience. For details, please contact our concierge.";
+                    $this->sendThemedEmail($booking['guest_email'], $subject, $message, 'Refund');
+                }
             }
         }
         
