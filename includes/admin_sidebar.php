@@ -5,9 +5,11 @@
             <i class="fas fa-crown text-xl"></i>
         </div>
         <div class="sidebar-text truncate">
-            <h1 class="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary" style="font-family: 'Playfair Display', serif;">
-                GrandLuxe
-            </h1>
+            <a href="../index.php" target="_blank" class="hover:opacity-80 transition-opacity">
+                <h1 class="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary" style="font-family: 'Playfair Display', serif;">
+                    GrandLuxe
+                </h1>
+            </a>
             <p class="text-[10px] uppercase tracking-widest font-black text-gray-400">Admin Panel</p>
         </div>
     </div>

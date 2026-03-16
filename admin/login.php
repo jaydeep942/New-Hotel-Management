@@ -67,19 +67,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <form action="" method="POST" class="space-y-6">
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Clearance Email</label>
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Clearance Email <span class="text-violet-400 normal-case tracking-normal">(Default: admin@grandluxe.com)</span></label>
                     <div class="relative group">
                         <i class="fas fa-envelope absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-violet-500 transition-colors"></i>
                         <input type="email" name="email" required placeholder="admin@grandluxe.com" 
+                               value="admin@grandluxe.com"
                                class="w-full bg-white/5 border border-white/10 p-5 pl-14 rounded-2xl text-white outline-none focus:border-violet-500 transition-all">
                     </div>
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Access Pattern</label>
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Access Pattern <span class="text-violet-400 normal-case tracking-normal">(Default: admin123)</span></label>
                     <div class="relative group">
                         <i class="fas fa-lock absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-violet-500 transition-colors"></i>
                         <input type="password" name="password" required placeholder="••••••••" 
+                               value="admin123"
                                class="w-full bg-white/5 border border-white/10 p-5 pl-14 rounded-2xl text-white outline-none focus:border-violet-500 transition-all">
                     </div>
                 </div>

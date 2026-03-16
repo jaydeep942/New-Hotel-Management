@@ -66,6 +66,8 @@ $table_bookings = "CREATE TABLE IF NOT EXISTS bookings (
     id_proof_number VARCHAR(50) NULL,
     permanent_address TEXT NULL,
     status ENUM('Confirmed', 'Checked-In', 'Checked-Out', 'Cancelled') DEFAULT 'Confirmed',
+    actual_checkout DATETIME NULL,
+    razorpay_payment_id VARCHAR(100) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL
 )";
@@ -146,7 +148,9 @@ $fields_to_check = [
     'id_proof_type' => "VARCHAR(20) NULL AFTER total_amount",
     'id_proof_number' => "VARCHAR(50) NULL AFTER id_proof_type",
     'permanent_address' => "TEXT NULL AFTER id_proof_number",
-    'special_requests' => "TEXT NULL AFTER permanent_address"
+    'special_requests' => "TEXT NULL AFTER permanent_address",
+    'actual_checkout' => "DATETIME NULL AFTER status",
+    'razorpay_payment_id' => "VARCHAR(100) NULL AFTER actual_checkout"
 ];
 
 // Migration: Column Renaming & Checks
@@ -267,10 +271,38 @@ $conn->query("CREATE TABLE IF NOT EXISTS settings (
 )");
 
 // 12. Housekeeping Requests Migration
+$conn->query("CREATE TABLE IF NOT EXISTS housekeeping_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    room_number VARCHAR(10) NOT NULL,
+    service_type VARCHAR(100) NOT NULL,
+    status ENUM('Pending', 'In Progress', 'Completed') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
 $check_hr_received = $conn->query("SHOW COLUMNS FROM `housekeeping_requests` LIKE 'is_received'");
 if ($check_hr_received && $check_hr_received->num_rows == 0) {
     $conn->query("ALTER TABLE housekeeping_requests ADD COLUMN is_received TINYINT(1) DEFAULT 0 AFTER status");
 }
+
+// 13. Menu Items Initialization
+$check_menu = $conn->query("SHOW TABLES LIKE 'menu_items'");
+if ($check_menu && $check_menu->num_rows == 0) {
+    require_once __DIR__ . '/../php/init_menu.php';
+}
+
+// 14. Complaints Initialization
+$conn->query("CREATE TABLE IF NOT EXISTS complaints (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    type VARCHAR(100) NOT NULL,
+    room_number VARCHAR(20) NOT NULL,
+    description TEXT NOT NULL,
+    status ENUM('Pending', 'Under Investigation', 'Resolved') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+)");
 
 // Return connection
 return $conn;

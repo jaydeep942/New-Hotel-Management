@@ -362,10 +362,12 @@ $cumulative_ledger = $total_amount + $running_service_total;
                 <!-- Brand Section -->
                 <div class="flex items-center space-x-12">
                     <div class="flex flex-col">
-                        <h1 class="text-2xl font-bold tracking-tighter maroon-text" style="font-family: 'Playfair Display', serif;">
-                            GRAND<span class="gold-text">LUXE</span>
-                        </h1>
-                        <p class="text-[9px] uppercase tracking-[3px] font-bold text-gray-400 mt-1">EXCELLENCE DEFINED</p>
+                        <a href="index.php" class="inline-block hover:opacity-80 transition-opacity">
+                            <h1 class="text-2xl font-bold tracking-tighter maroon-text" style="font-family: 'Playfair Display', serif;">
+                                GRAND<span class="gold-text">LUXE</span>
+                            </h1>
+                            <p class="text-[9px] uppercase tracking-[3px] font-bold text-gray-400 mt-1">EXCELLENCE DEFINED</p>
+                        </a>
                     </div>
 
                     <!-- Navigation Links (Desktop) -->

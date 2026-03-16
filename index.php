@@ -488,6 +488,7 @@ session_start();
                         <li><a href="#about" class="hover:text-gold transition-colors">The Grand Story</a></li>
                         <li><a href="#rooms" class="hover:text-gold transition-colors">Our Sanctuaries</a></li>
                         <li><a href="login.php" class="hover:text-gold transition-colors">Member Portal</a></li>
+                        <li><a href="admin/login.php" class="hover:text-gold transition-colors">Admin Gateway</a></li>
                         <li><a href="privacy-policy.html" target="_blank" class="hover:text-gold transition-colors">Privacy Policy</a></li>
                     </ul>
                 </div>
