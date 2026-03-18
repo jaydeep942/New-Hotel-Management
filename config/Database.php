@@ -73,9 +73,12 @@ if (!class_exists('Database')) {
                 id_proof_number VARCHAR(50) NULL,
                 permanent_address TEXT NULL,
                 status ENUM('Booked', 'Confirmed', 'Checked-In', 'Checked-Out', 'Cancelled') DEFAULT 'Booked',
+
                 actual_checkout DATETIME NULL,
                 final_bill DECIMAL(10,2) NULL,
                 razorpay_payment_id VARCHAR(255) NULL,
+
+
                 payment_status ENUM('Pending', 'Paid', 'Refunded') DEFAULT 'Pending',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
@@ -88,10 +91,13 @@ if (!class_exists('Database')) {
                 'guest_phone' => "VARCHAR(20) NULL AFTER guest_email",
                 'id_proof_type' => "VARCHAR(20) NULL AFTER total_amount",
                 'id_proof_number' => "VARCHAR(50) NULL AFTER id_proof_type",
+
                 'permanent_address' => "TEXT NULL AFTER id_proof_number",
                 'actual_checkout' => "DATETIME NULL AFTER status",
                 'final_bill' => "DECIMAL(10,2) NULL AFTER actual_checkout",
-                'razorpay_payment_id' => "VARCHAR(255) NULL AFTER final_bill"
+                'razorpay_payment_id' => "VARCHAR(255) NULL AFTER final_bill",
+                'permanent_address' => "TEXT NULL AFTER id_proof_number"
+
             ];
             foreach ($booking_fields as $col => $def) {
                 $check = $this->conn->query("SHOW COLUMNS FROM `bookings` LIKE '$col'");
