@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy & Privilege Terms | Grand Luxe Hotel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+
+        :root {
+            --gold: #D4AF37;
+            --glass: rgba(0, 0, 0, 0.85);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
+                url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=1920');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #d1d5db;
+            line-height: 1.8;
+        }
+
+        .gold-text {
+            color: var(--gold);
+            font-family: 'Playfair Display', serif;
+        }
+
+        .policy-container {
+            max-width: 900px;
+            margin: 80px auto;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 40px;
+            padding: 60px;
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.9);
+        }
+
+        h2 {
+            color: var(--gold);
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+
+        p {
+            margin-bottom: 1.5rem;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: 700;
+            margin-bottom: 30px;
+            transition: 0.3s;
+        }
+
+        .back-btn:hover {
+            transform: translateX(-5px);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="policy-container">
+        <a href="index.php" class="back-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Home
+        </a>
+
+        <h1 class="text-5xl gold-text mb-2">Privilege Terms</h1>
+        <p class="text-gray-500 uppercase tracking-widest text-xs font-bold mb-10">Legal Discretion & Guest Rights</p>
+
+        <section>
+            <h2>1. Essence of Membership</h2>
+            <p>The Grand Luxe Privilege Membership is an exclusive agreement between the guest and our establishment. By
+                registering, you are granted access to our elite portal and digital concierge services.</p>
+        </section>
+
+        <section>
+            <h2>2. Data Discretion</h2>
+            <p>Your privacy is our utmost priority. We employ military-grade encryption to protect your personal
+                identification, stay history, and financial preferences. We never share guest details with third parties
+                without high-level authorization.</p>
+        </section>
+
+        <section>
+            <h2>3. Secure Access</h2>
+            <p>Each Member is responsible for the confidentiality of their digital key (password). Multi-factor
+                authentication is strictly enforced for your protection.</p>
+        </section>
+
+        <section>
+            <h2>4. Service Conduct</h2>
+            <p>Grand Luxe reserves the right to terminate access for any behavior that compromises the experience of
+                other elite guests or the integrity of our digital infrastructure.</p>
+        </section>
+
+        <div class="mt-20 pt-10 border-t border-white/10 text-center text-xs text-gray-600 uppercase tracking-[4px]">
+            &copy; 2026 Grand Luxe Luxury Group &bull; All Rights Reserved
+        </div>
+    </div>
+</body>
+
+</html>
