@@ -11,7 +11,7 @@ $dob = $user_data['dob'] ?? '';
 $created_at = $user_data['created_at'];
 
 // SECURE ACCESS CHECK: Only allow checked-in guests to ORDER
-$booking_check_sql = "SELECT * FROM bookings WHERE user_id = ? AND status IN ('Confirmed', 'Checked-In') AND CURRENT_DATE BETWEEN check_in AND check_out LIMIT 1";
+$booking_check_sql = "SELECT * FROM bookings WHERE user_id = ? AND status = 'Checked-In' AND CURRENT_DATE BETWEEN check_in AND check_out LIMIT 1";
 $check_stmt = $conn->prepare($booking_check_sql);
 $check_stmt->bind_param("i", $user_id);
 $check_stmt->execute();
@@ -59,7 +59,7 @@ if ($booking) {
     $cin_date = new DateTime($booking['check_in']);
     $cout_date = new DateTime($booking['check_out']);
     
-    if ($today >= $cin_date && $today <= $cout_date) {
+    if ($booking['status'] === 'Checked-In') {
         $bookingLabel = "Active Booking";
         $isLive = true;
     } else {

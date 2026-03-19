@@ -55,9 +55,9 @@ while($row = $orders_res->fetch_assoc()) {
     $pending_services_total += $row['total_price'];
 }
 
-$booking_paid = $booking['total_amount']; // Already paid during booking
-$grand_total_stay = $booking_paid + $pending_services_total;
-$due_now = $pending_services_total; // Only charge for the extra services
+$booking_paid = $booking['amount_paid'] ?? $booking['total_amount']; // Paid initially
+$grand_total_stay = $booking['total_amount'] + $pending_services_total;
+$due_now = ($booking['total_amount'] - $booking_paid) + $pending_services_total;
 
 // 4. Feedback check removed as per updated protocol
 $feedback_exists = true; 

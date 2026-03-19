@@ -122,7 +122,7 @@ include '../includes/admin_sidebar.php';
                     <select name="room_type" class="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl text-gray-800 outline-none focus:border-primary/50 transition-all">
                         <option value="Standard">Standard</option>
                         <option value="Deluxe">Deluxe</option>
-                        <option value="Suite">Luxe Suite</option>
+                        <option value="Executive">Executive</option>
                     </select>
                 </div>
             </div>
@@ -182,7 +182,7 @@ include '../includes/admin_sidebar.php';
                     <select name="room_type" id="edit_room_type" class="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl text-gray-800 outline-none focus:border-primary/50 transition-all">
                         <option value="Standard">Standard</option>
                         <option value="Deluxe">Deluxe</option>
-                        <option value="Suite">Luxe Suite</option>
+                        <option value="Executive">Executive</option>
                     </select>
                 </div>
             </div>

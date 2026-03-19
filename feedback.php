@@ -26,7 +26,7 @@ $table_init_sql = "CREATE TABLE IF NOT EXISTS feedbacks (
 $conn->query($table_init_sql);
 
 // SECURE ACCESS CHECK: Only allow checked-in guests to SUBMIT
-$booking_check_sql = "SELECT * FROM bookings WHERE user_id = ? AND status IN ('Confirmed', 'Checked-In') AND CURRENT_DATE BETWEEN check_in AND check_out LIMIT 1";
+$booking_check_sql = "SELECT * FROM bookings WHERE user_id = ? AND status = 'Checked-In' AND CURRENT_DATE BETWEEN check_in AND check_out LIMIT 1";
 $check_stmt = $conn->prepare($booking_check_sql);
 $check_stmt->bind_param("i", $user_id);
 $check_stmt->execute();

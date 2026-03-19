@@ -18,7 +18,7 @@ $created_at = $user_data['created_at'];
 $booking_check_sql = "SELECT b.*, r.room_number 
                     FROM bookings b 
                     JOIN rooms r ON b.room_id = r.id 
-                    WHERE b.user_id = ? AND b.status IN ('Confirmed', 'Checked-In') 
+                    WHERE b.user_id = ? AND b.status = 'Checked-In' 
                     AND CURRENT_DATE BETWEEN b.check_in AND b.check_out LIMIT 1";
 $check_stmt = $conn->prepare($booking_check_sql);
 $check_stmt->bind_param("i", $user_id);

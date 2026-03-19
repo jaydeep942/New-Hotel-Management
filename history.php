@@ -286,11 +286,13 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
                             <div class="w-12 h-12 rounded-2xl overflow-hidden border-2 border-gold/20 p-1 transition-all duration-500 group-hover:border-gold/50 group-hover:rotate-6 shadow-sm bg-white">
                                 <?php if ($profile_photo): ?>
                                     <img src="<?php echo $profile_photo; ?>" class="w-full h-full object-cover rounded-xl" alt="Profile">
-                                <?php else: ?>
+                                <?php
+else: ?>
                                     <div class="w-full h-full bg-maroon rounded-xl flex items-center justify-center text-white font-bold text-lg">
                                         <?php echo strtoupper(substr($_SESSION['name'], 0, 1)); ?>
                                     </div>
-                                <?php endif; ?>
+                                <?php
+endif; ?>
                             </div>
                         </div>
 
@@ -433,7 +435,7 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
                         </thead>
                         <tbody id="historyTableBody" class="text-sm">
                             <!-- Populated via JS -->
-                            <?php while($row = $history_result->fetch_assoc()): ?>
+                            <?php while ($row = $history_result->fetch_assoc()): ?>
                             <tr class="animate-fade-in">
                                 <td class="pl-10 font-bold maroon-text">#LX-<?php echo str_pad($row['id'], 4, '0', STR_PAD_LEFT); ?></td>
                                 <td>
@@ -442,34 +444,40 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
                                 </td>
                                  <td><?php echo date('d/m/Y', strtotime($row['check_in'])); ?></td>
                                  <td>
-                                    <?php if($row['status'] === 'Checked-Out' && $row['actual_checkout']): ?>
+                                    <?php if ($row['status'] === 'Checked-Out' && $row['actual_checkout']): ?>
                                         <p class="font-bold text-teal-600"><?php echo date('d/m/Y, h:i A', strtotime($row['actual_checkout'])); ?></p>
                                         <p class="text-[9px] uppercase tracking-tighter opacity-50">Actual Departure</p>
-                                    <?php else: ?>
+                                    <?php
+    else: ?>
                                         <?php echo date('d/m/Y', strtotime($row['check_out'])); ?>
-                                    <?php endif; ?>
+                                    <?php
+    endif; ?>
                                  </td>
                                  <td class="font-bold maroon-text">
-                                    ₹<?php 
-                                        // Robust price selection: Use final_bill only if it exists and is greater than 0, otherwise fallback to total_amount
-                                        $final_bill = isset($row['final_bill']) ? floatval($row['final_bill']) : 0;
-                                        $display_price = ($row['status'] === 'Checked-Out' && $final_bill > 0) ? $final_bill : $row['total_amount'];
-                                        echo number_format($display_price, 0); 
-                                    ?>
+                                    ₹<?php
+    // Robust price selection: Use final_bill only if it exists and is greater than 0, otherwise fallback to total_amount
+    $final_bill = isset($row['final_bill']) ? floatval($row['final_bill']) : 0;
+    $display_price = ($row['status'] === 'Checked-Out' && $final_bill > 0) ? $final_bill : $row['total_amount'];
+    echo number_format($display_price, 0);
+?>
                                  </td>
-                                 <td><span class="status-badge <?php 
-                                    $status = strtolower($row['status']);
-                                    if ($status == 'confirmed' || $status == 'checked-in') echo 'status-confirmed';
-                                    elseif ($status == 'checked-out' || $status == 'completed') echo 'status-completed';
-                                    elseif ($status == 'cancelled') echo 'status-cancelled';
-                                ?>"><?php echo $row['status']; ?></span></td>
+                                 <td><span class="status-badge <?php
+    $status = strtolower($row['status']);
+    if ($status == 'confirmed' || $status == 'checked-in')
+        echo 'status-confirmed';
+    elseif ($status == 'checked-out' || $status == 'completed')
+        echo 'status-completed';
+    elseif ($status == 'cancelled')
+        echo 'status-cancelled';
+?>"><?php echo $row['status']; ?></span></td>
                                 <td class="pr-10 text-right">
                                     <div class="flex items-center justify-end gap-1 sm:gap-3">
                                         <?php if ($row['status'] == 'Confirmed' && strtotime($row['check_in']) > time()): ?>
                                             <button onclick="cancelBooking(<?php echo $row['id']; ?>)" class="p-2 text-red-400 hover:text-red-600 transition-all duration-300 hover:scale-125" title="Cancel Booking">
                                                 <i class="fas fa-times-circle"></i>
                                             </button>
-                                        <?php endif; ?>
+                                        <?php
+    endif; ?>
                                          <button onclick='viewBooking(<?php echo json_encode($row); ?>)' class="p-2 text-gray-300 hover:text-gold transition-all duration-300 hover:scale-125" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </button>
@@ -479,12 +487,14 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
                                     </div>
                                 </td>
                             </tr>
-                            <?php endwhile; ?>
-                            <?php if($history_result->num_rows == 0): ?>
+                            <?php
+endwhile; ?>
+                            <?php if ($history_result->num_rows == 0): ?>
                             <tr>
                                 <td colspan="7" class="p-10 text-center text-gray-400 italic">No residency archives found.</td>
                             </tr>
-                            <?php endif; ?>
+                            <?php
+endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -507,10 +517,13 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
                                         class="page-num-btn w-10 h-10 rounded-xl <?php echo $i == $page ? 'bg-maroon text-white active-page' : 'border border-gray-100 text-gray-400 hover:bg-gray-50'; ?> flex items-center justify-center text-xs font-bold transition-all duration-300">
                                         <?php echo $i; ?>
                                     </button>
-                                <?php elseif (($i == $page - 2 && $start > 1) || ($i == $page + 2 && $end < $total_pages)): ?>
+                                <?php
+    elseif (($i == $page - 2 && $start > 1) || ($i == $page + 2 && $end < $total_pages)): ?>
                                     <span class="text-gray-300">...</span>
-                                <?php endif; ?>
-                            <?php endfor; ?>
+                                <?php
+    endif; ?>
+                            <?php
+endfor; ?>
                         </div>
 
                         <button onclick="changeHistoryPage(1)" id="nextBtn" class="w-10 h-10 rounded-xl border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-maroon hover:text-white transition <?php echo $page >= $total_pages ? 'opacity-50 cursor-not-allowed' : ''; ?>" <?php echo $page >= $total_pages ? 'disabled' : ''; ?>>
@@ -805,13 +818,15 @@ $history_result = $conn->query("SELECT b.*, r.room_type, r.room_number
                         <div class="mb-10 text-center md:text-left">
                             <div class="relative w-20 h-20 mx-auto md:mx-0 mb-4 group">
                                 <div class="w-full h-full rounded-[28px] overflow-hidden border-4 border-white premium-shadow">
-                                    <?php if($profile_photo): ?>
+                                    <?php if ($profile_photo): ?>
                                         <img src="<?php echo $profile_photo; ?>" class="w-full h-full object-cover" alt="Profile">
-                                    <?php else: ?>
+                                    <?php
+else: ?>
                                         <div class="w-full h-full bg-maroon flex items-center justify-center text-white text-2xl font-bold">
                                             <?php echo strtoupper(substr($_SESSION['name'], 0, 1)); ?>
                                         </div>
-                                    <?php endif; ?>
+                                    <?php
+endif; ?>
                                 </div>
                                 <button onclick="document.getElementById('modalPhotoUpload').click()" class="absolute -bottom-1 -right-1 w-8 h-8 bg-white text-gold rounded-xl flex items-center justify-center shadow-xl border border-gray-50 hover:bg-gold hover:text-white transition-all transform hover:scale-110">
                                     <i class="fas fa-camera text-[10px]"></i>

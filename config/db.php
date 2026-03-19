@@ -143,7 +143,8 @@ if ($check_ca->num_rows > 0) {
 $fields_to_check = [
     'guest_email' => "VARCHAR(100) NULL AFTER guest_name",
     'guest_phone' => "VARCHAR(20) NULL AFTER guest_email",
-    'id_proof_type' => "VARCHAR(20) NULL AFTER total_amount",
+    'amount_paid' => "DECIMAL(10,2) NULL AFTER total_amount",
+    'id_proof_type' => "VARCHAR(20) NULL AFTER amount_paid",
     'id_proof_number' => "VARCHAR(50) NULL AFTER id_proof_type",
     'permanent_address' => "TEXT NULL AFTER id_proof_number",
     'special_requests' => "TEXT NULL AFTER permanent_address"
@@ -170,6 +171,9 @@ foreach ($fields_to_check as $col => $definition) {
     $check = $conn->query("SHOW COLUMNS FROM `bookings` LIKE '$col'");
     if ($check->num_rows == 0) {
         $conn->query("ALTER TABLE bookings ADD COLUMN $col $definition");
+        if ($col === 'amount_paid') {
+            $conn->query("UPDATE bookings SET amount_paid = total_amount WHERE amount_paid IS NULL");
+        }
     }
 }
 

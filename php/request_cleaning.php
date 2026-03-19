@@ -14,7 +14,7 @@ $service_type = $_POST['service_type'];
 
 // Fetch room number from active booking (Must be Checked-In)
 $room_sql = "SELECT r.room_number FROM bookings b JOIN rooms r ON b.room_id = r.id 
-            WHERE b.user_id = ? AND b.status IN ('Confirmed', 'Checked-In') 
+            WHERE b.user_id = ? AND b.status = 'Checked-In' 
             AND CURRENT_DATE BETWEEN b.check_in AND b.check_out LIMIT 1";
 $room_stmt = $conn->prepare($room_sql);
 $room_stmt->bind_param("i", $user_id);

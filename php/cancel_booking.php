@@ -60,6 +60,60 @@ try {
 
     $conn->commit();
     echo json_encode(['success' => true, 'message' => 'Booking cancelled and room is now available']);
+}
+catch (Exception $e) {
+    $conn->rollback();
+    echo json_encode(['success' => false, 'message' => 'Failed to cancel booking: ' . $e->getMessage()]);
+}
+?>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td colspan='2' style='margin-top: 20px; padding-top: 25px;'>
+                                                                <table width='100%' border='0' cellspacing='0' cellpadding='0'>
+                                                                    <tr>
+                                                                        <td><span style='color: #6A1E2D; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;'>Refund Total</span></td>
+                                                                        <td align='right'><span style='color: #D4AF37; font-size: 26px; font-weight: bold;'>₹$refund_str</span></td>
+                                                                    </tr>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                        <!-- Action CTA -->
+                                        <div style='text-align: center; padding-bottom: 20px;'>
+                                            <p style='color: #718096; font-size: 13px; line-height: 1.6; margin-bottom: 25px;'><strong>Your refund will after 7 working days.</strong></p>
+                                            <p style='color: #718096; font-size: 13px; line-height: 1.6; margin-bottom: 25px;'>If you have any questions regarding these charges or wish to speak to our dispute team, contact us 24/7.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Footer Section -->
+                                <tr>
+                                    <td style='background-color: #fcfcfc; padding: 30px; text-align: center; border-top: 1px solid #f5f5f5;'>
+                                        <p style='color: #A0AEC0; font-size: 10px; margin: 0; text-transform: uppercase; letter-spacing: 1px;'>123 Royalty Avenue • Grand Luxe Metropolis • +1 (234) 567-890</p>
+                                        <p style='color: #A0AEC0; font-size: 10px; margin-top: 5px;'>© 2026 Grand Luxe Hotel Group. Excellence Defined.</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </div>";
+            $mail->send();
+        } catch (Exception $e) {
+            error_log("Cancellation Mailer Error: " . $mail->ErrorInfo . " Exception: " . $e->getMessage());
+        } catch (\Error $e) {
+            error_log("Cancellation Mailer Fatal Error: " . $e->getMessage());
+        }
+    } else {
+        error_log("Cancellation Mailer Skipped. file_exists: " . file_exists($phpmailer_path . 'PHPMailer.php') . ", guest_email: $guest_email");
+    }
+
+    echo json_encode(['success' => true, 'message' => 'Booking cancelled. Any applicable refund has been initiated.']);
 } catch (Exception $e) {
     $conn->rollback();
     echo json_encode(['success' => false, 'message' => 'Failed to cancel booking: ' . $e->getMessage()]);
