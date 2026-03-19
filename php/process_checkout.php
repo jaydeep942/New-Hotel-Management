@@ -86,97 +86,130 @@ try {
             $mail->addAddress($guest_email, $guest_name);
             $mail->isHTML(true);
             
-            // Check for mid-stay refund condition
-            $amount_paid = $booking['amount_paid'] ?? $booking['total_amount'];
-            $due_now = ($final_bill - $amount_paid);
-
-            $mail->Subject = 'Departure Receipt & Settlement: Grand Luxe';
-
-            $content_title = "Checkout Settlement Successful";
-            $content_desc = "Respected $guest_name, we have recorded your departure via your private dashboard.";
-            $action_text = "";
-
-            if ($due_now < 0) {
-                // It's a refund scenario (Mid-stay departure usually)
-                $refund_str = number_format(abs($due_now), 2);
-                $content_title = "Mid-Stay Departure & Refund Protocol";
-                $action_text = "
-                <span class='text-sm italic block text-teal-600 mb-2'>Refund Allocation Detected</span>
-                <div style='background: #fdfaf5; border: 1px solid #eee; padding: 20px; border-radius: 12px; margin: 30px 0;'>
-                    <p style='color: #6A1E2D; font-weight: bold; font-size: 18px; margin: 0;'>Expected Refund Reflection</p>
-                    <p style='color: #777; font-size: 14px; margin-top: 10px;'>A refund of <strong>₹$refund_str</strong> has been successfully processed. Your refund will reflect after 7 working days.</p>
-                </div>";
-            }
+            $scheduled_departure = date('Y-m-d', strtotime($booking['check_out']));
+            $actual_departure = date('Y-m-d');
+            $is_early_departure = (strtotime($actual_departure) < strtotime($scheduled_departure));
 
             $booking_id_str = "#LX-" . str_pad($booking_id, 4, '0', STR_PAD_LEFT);
-            $final_bill_str = number_format($final_bill, 2);
+            $scheduled_str = date('d M Y', strtotime($booking['check_out']));
+            $actual_str = date('d M Y');
 
-            $mail->Body = "
-            <div style='background-color: #F8F5F0; padding: 40px 10px; font-family: \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;'>
-                <table width='100%' border='0' cellspacing='0' cellpadding='0'>
-                    <tr>
-                        <td align='center'>
-                            <table width='600' border='0' cellspacing='0' cellpadding='0' style='background-color: #ffffff; border-radius: 30px; overflow: hidden; box-shadow: 0 20px 40px rgba(106, 30, 45, 0.05); border: 1px solid rgba(106, 30, 45, 0.05);'>
-                                <tr>
-                                    <td align='center' style='background: linear-gradient(135deg, #6A1E2D 0%, #832537 100%); padding: 50px 40px;'>
-                                        <div style='color: #D4AF37; font-size: 10px; text-transform: uppercase; letter-spacing: 5px; font-weight: bold; margin-bottom: 15px;'>Official Receipt</div>
-                                        <h1 style='color: #ffffff; font-size: 34px; margin: 0; letter-spacing: 2px; text-transform: uppercase; font-family: serif;'>GRAND<span style='color: #D4AF37;'>LUXE</span></h1>
-                                        <div style='height: 2px; width: 40px; background-color: #D4AF37; margin: 20px auto;'></div>
-                                        <p style='color: #ffffff; opacity: 0.8; font-size: 13px; margin: 0; font-weight: 300;'>Excellence Defined Since 1924</p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style='padding: 40px;'>
-                                        <div style='text-align: center; margin-bottom: 40px;'>
-                                            <h2 style='color: #6A1E2D; font-size: 22px; font-weight: bold; margin: 0 0 10px 0;'>$content_title</h2>
-                                            <p style='color: #718096; font-size: 14px; margin: 0; line-height: 1.5;'>$content_desc</p>
-                                        </div>
+            if ($is_early_departure) {
+                // New Dark Theme Refund Template matching screenshot exactly
+                $mail->Subject = 'Grand Luxe - Mid-Stay Departure & Refund Protocol - ' . $booking_id_str;
+                
+                $mail->Body = "
+                <div style='background-color: #1a1a1a; padding: 20px 10px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif; color: #ffffff;'>
+                    <table width='100%' border='0' cellspacing='0' cellpadding='0'>
+                        <tr>
+                            <td align='center'>
+                                <table width='400' border='0' cellspacing='0' cellpadding='0' style='background-color: #121212; border-radius: 20px; overflow: hidden; max-width: 100%; border: 1px solid #333;'>
+                                    <tr>
+                                        <td align='center' style='background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); padding: 40px 20px;'>
+                                            <h1 style='color: #ffffff; font-size: 24px; margin: 0; letter-spacing: 2px; text-transform: uppercase;'>GRAND LUXE</h1>
+                                            <div style='color: #ffffff; font-size: 10px; text-transform: uppercase; letter-spacing: 4px; font-weight: bold; margin-top: 15px;'>REFUND PROTOCOL<br>ACTIVATED</div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style='padding: 30px 25px;'>
+                                            <h2 style='color: #a78bfa; font-size: 18px; font-weight: 600; margin: 0 0 25px 0;'>Mid-Stay Departure & Refund Protocol - $booking_id_str</h2>
+                                            
+                                            <p style='color: #e5e5e5; font-size: 14px; margin: 0 0 25px 0;'>Respected $guest_name,</p>
+                                            
+                                            <p style='color: #e5e5e5; font-size: 14px; line-height: 1.6; margin: 0 0 25px 0;'>We have recorded your mid-stay departure from Grand Luxe via your private dashboard.</p>
+                                            
+                                            <p style='color: #e5e5e5; font-size: 14px; margin: 0 0 5px 0;'><strong>Scheduled Departure:</strong> $scheduled_str</p>
+                                            <p style='color: #e5e5e5; font-size: 14px; margin: 0 0 25px 0;'><strong>Actual Departure:</strong> $actual_str</p>
+                                            
+                                            <p style='color: #e5e5e5; font-size: 14px; line-height: 1.6; margin: 0 0 25px 0;'>As per our protocol for early departures, a <strong>refund for the remaining nights</strong> of your residency has been initiated. This amount will reflect in your bank account within the next <strong>7 working days</strong>.</p>
+                                            
+                                            <p style='color: #e5e5e5; font-size: 14px; line-height: 1.6; margin: 0 0 35px 0;'>Your final residency protocol has been closed. We hope your stay was exceptional despite the change in plans.</p>
+                                            
+                                            <div style='background-color: #262626; border-radius: 12px; padding: 20px; margin-bottom: 30px;'>
+                                                <p style='color: #a3a3a3; font-size: 12px; line-height: 1.5; margin: 0;'><strong>System Note:</strong> This is an automated security protocol. Please do not reply to this email. For assistance, contact our 24/7 concierge.</p>
+                                            </div>
+                                            
+                                            <div style='border-top: 1px solid #333; padding-top: 25px; text-align: center;'>
+                                                <p style='color: #737373; font-size: 11px; margin: 0;'>© 2026 Grand Luxe. The Pinnacle of Luxury. All rights reserved.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </div>";
+            } else {
+                // Standard Checkout Template
+                $final_bill_str = number_format($final_bill, 2);
+                $mail->Subject = 'Departure Receipt & Settlement: Grand Luxe';
 
-                                        <table width='100%' border='0' cellspacing='0' cellpadding='30' style='background-color: #FDFBFA; border: 1px solid #F3EDE7; border-radius: 20px; margin-bottom: 30px;'>
-                                            <tr>
-                                                <td>
-                                                    <table width='100%' border='0' cellspacing='0' cellpadding='0'>
-                                                        <tr>
-                                                            <td style='border-bottom: 1px solid #F3EDE7; padding-bottom: 15px;'>
-                                                                <span style='color: #A0AEC0; font-size: 9px; text-transform: uppercase; letter-spacing: 2px; font-weight: bold;'>Reservation Status</span><br>
-                                                                <span style='color: #2CA6A4; font-weight: bold; font-size: 14px;'>CHECKED-OUT</span>
-                                                            </td>
-                                                            <td align='right' style='border-bottom: 1px solid #F3EDE7; padding-bottom: 15px;'>
-                                                                <span style='color: #A0AEC0; font-size: 9px; text-transform: uppercase; letter-spacing: 2px; font-weight: bold;'>Booking Reference</span><br>
-                                                                <span style='color: #6A1E2D; font-weight: bold; font-size: 14px;'>$booking_id_str</span>
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td colspan='2' style='margin-top: 20px; padding-top: 25px;'>
-                                                                <table width='100%' border='0' cellspacing='0' cellpadding='0'>
-                                                                    <tr>
-                                                                        <td><span style='color: #6A1E2D; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;'>Investment Total</span></td>
-                                                                        <td align='right'><span style='color: #D4AF37; font-size: 26px; font-weight: bold;'>₹$final_bill_str</span></td>
-                                                                    </tr>
-                                                                </table>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </table>
+                $mail->Body = "
+                <div style='background-color: #F8F5F0; padding: 40px 10px; font-family: \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;'>
+                    <table width='100%' border='0' cellspacing='0' cellpadding='0'>
+                        <tr>
+                            <td align='center'>
+                                <table width='600' border='0' cellspacing='0' cellpadding='0' style='background-color: #ffffff; border-radius: 30px; overflow: hidden; box-shadow: 0 20px 40px rgba(106, 30, 45, 0.05); border: 1px solid rgba(106, 30, 45, 0.05);'>
+                                    <tr>
+                                        <td align='center' style='background: linear-gradient(135deg, #6A1E2D 0%, #832537 100%); padding: 50px 40px;'>
+                                            <div style='color: #D4AF37; font-size: 10px; text-transform: uppercase; letter-spacing: 5px; font-weight: bold; margin-bottom: 15px;'>Official Receipt</div>
+                                            <h1 style='color: #ffffff; font-size: 34px; margin: 0; letter-spacing: 2px; text-transform: uppercase; font-family: serif;'>GRAND<span style='color: #D4AF37;'>LUXE</span></h1>
+                                            <div style='height: 2px; width: 40px; background-color: #D4AF37; margin: 20px auto;'></div>
+                                            <p style='color: #ffffff; opacity: 0.8; font-size: 13px; margin: 0; font-weight: 300;'>Excellence Defined Since 1924</p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style='padding: 40px;'>
+                                            <div style='text-align: center; margin-bottom: 40px;'>
+                                                <h2 style='color: #6A1E2D; font-size: 22px; font-weight: bold; margin: 0 0 10px 0;'>Checkout Settlement Successful</h2>
+                                                <p style='color: #718096; font-size: 14px; margin: 0; line-height: 1.5;'>Respected $guest_name, we have recorded your departure via your private dashboard.</p>
+                                            </div>
 
-                                        <div style='text-align: center; padding-bottom: 20px;'>
-                                            $action_text
-                                            <p style='color: #718096; font-size: 13px; line-height: 1.6; margin-bottom: 25px;'>If you have any questions regarding your final settlement bill or wish to speak to our dispute team, contact us 24/7.</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style='background-color: #fcfcfc; padding: 30px; text-align: center; border-top: 1px solid #f5f5f5;'>
-                                        <p style='color: #A0AEC0; font-size: 10px; margin: 0; text-transform: uppercase; letter-spacing: 1px;'>123 Royalty Avenue • Grand Luxe Metropolis • +1 (234) 567-890</p>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-            </div>";
+                                            <table width='100%' border='0' cellspacing='0' cellpadding='30' style='background-color: #FDFBFA; border: 1px solid #F3EDE7; border-radius: 20px; margin-bottom: 30px;'>
+                                                <tr>
+                                                    <td>
+                                                        <table width='100%' border='0' cellspacing='0' cellpadding='0'>
+                                                            <tr>
+                                                                <td style='border-bottom: 1px solid #F3EDE7; padding-bottom: 15px;'>
+                                                                    <span style='color: #A0AEC0; font-size: 9px; text-transform: uppercase; letter-spacing: 2px; font-weight: bold;'>Reservation Status</span><br>
+                                                                    <span style='color: #2CA6A4; font-weight: bold; font-size: 14px;'>CHECKED-OUT</span>
+                                                                </td>
+                                                                <td align='right' style='border-bottom: 1px solid #F3EDE7; padding-bottom: 15px;'>
+                                                                    <span style='color: #A0AEC0; font-size: 9px; text-transform: uppercase; letter-spacing: 2px; font-weight: bold;'>Booking Reference</span><br>
+                                                                    <span style='color: #6A1E2D; font-weight: bold; font-size: 14px;'>$booking_id_str</span>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td colspan='2' style='margin-top: 20px; padding-top: 25px;'>
+                                                                    <table width='100%' border='0' cellspacing='0' cellpadding='0'>
+                                                                        <tr>
+                                                                            <td><span style='color: #6A1E2D; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;'>Investment Total</span></td>
+                                                                            <td align='right'><span style='color: #D4AF37; font-size: 26px; font-weight: bold;'>₹$final_bill_str</span></td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </table>
+
+                                            <div style='text-align: center; padding-bottom: 20px;'>
+                                                <p style='color: #718096; font-size: 13px; line-height: 1.6; margin-bottom: 25px;'>If you have any questions regarding your final settlement bill or wish to speak to our dispute team, contact us 24/7.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style='background-color: #fcfcfc; padding: 30px; text-align: center; border-top: 1px solid #f5f5f5;'>
+                                            <p style='color: #A0AEC0; font-size: 10px; margin: 0; text-transform: uppercase; letter-spacing: 1px;'>123 Royalty Avenue • Grand Luxe Metropolis • +1 (234) 567-890</p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </div>";
+            }
             
             $mail->send();
         } catch (Exception $e) {
