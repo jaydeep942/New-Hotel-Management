@@ -10,20 +10,7 @@ $nationality = $user_data['nationality'] ?? '';
 $dob = $user_data['dob'] ?? '';
 $created_at = $user_data['created_at'];
 
-// ONE-TIME SEED REFRESH (Add more rooms if only 6 exist)
-$check_count = $conn->query("SELECT COUNT(*) as total FROM rooms");
-$row_count = $check_count->fetch_assoc();
-if ($row_count['total'] <= 6) {
-    $conn->query("INSERT IGNORE INTO rooms (room_number, room_type, price_per_night, status) VALUES 
-        ('103', 'Standard', 1000.00, 'Available'),
-        ('104', 'Standard', 1000.00, 'Available'),
-        ('203', 'Deluxe', 1500.00, 'Available'),
-        ('204', 'Deluxe', 1500.00, 'Available'),
-        ('302', 'Executive', 1700.00, 'Available'),
-        ('303', 'Executive', 1800.00, 'Available'),
-        ('402', 'Presidential', 2300.00, 'Available'),
-        ('501', 'Presidential', 2300.00, 'Available')");
-}
+
 
 // Processing Search Filters
 $cin = isset($_GET['cin']) ? $_GET['cin'] : '';
@@ -44,6 +31,8 @@ if (!empty($cin) && !empty($cout)) {
         AND (check_in < '$cout' AND check_out > '$cin')
     )";
 }
+
+$query .= " ORDER BY price_per_night ASC";
 
 $rooms_result = $conn->query($query);
 ?>
@@ -544,8 +533,9 @@ $rooms_result = $conn->query($query);
                             
                             // Use room number as a smarter seed to ensure every room is unique
                             $seed = (int)$room['room_number'];
-                            $img = $pool[$seed % count($pool)];
+                            $img = !empty($room['image']) ? $room['image'] : $pool[$seed % count($pool)];
                             $suiteName = $names[$seed % count($names)] . " " . $type . " Suite";
+
                             ?>
                             <img src="<?php echo $img; ?>" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="Residency Image" onerror="this.src='https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg?auto=compress&cs=tinysrgb&w=800'">
                             <div class="absolute top-4 right-4 bg-white/95 backdrop-blur-sm p-2 px-4 rounded-full font-bold maroon-text text-xs uppercase tracking-widest shadow-sm">
@@ -558,11 +548,15 @@ $rooms_result = $conn->query($query);
                                 <p class="text-[10px] uppercase tracking-[3px] font-bold text-gold mt-1">Luxury Residency</p>
                             </div>
                             <p class="text-gray-400 text-sm mb-6 flex items-center">
-                                <i class="fas fa-expand-arrows-alt mr-2 text-gold"></i> 
-                                <?php 
-                                $sizes = ['Standard' => '45', 'Deluxe' => '65', 'Executive' => '85', 'Presidential' => '120', 'Family' => '150', 'Penthouse' => '180'];
-                                echo $sizes[$room['room_type']] ?? '45'; 
-                                ?> m² • King Bed • <?php echo ($room['room_type'] == 'Penthouse' ? '360° View' : 'Panoramic View'); ?>
+                                <?php if (!empty($room['description'])): ?>
+                                    <i class="fas fa-info-circle mr-2 text-gold"></i> <?php echo htmlspecialchars($room['description']); ?>
+                                <?php else: ?>
+                                    <i class="fas fa-expand-arrows-alt mr-2 text-gold"></i> 
+                                    <?php 
+                                    $sizes = ['Standard' => '45', 'Deluxe' => '65', 'Executive' => '85', 'Presidential' => '120', 'Family' => '150', 'Penthouse' => '180', 'Suite' => '150'];
+                                    echo $sizes[$room['room_type']] ?? '45'; 
+                                    ?> m² • King Bed • <?php echo ($room['room_type'] == 'Penthouse' ? '360° View' : 'Panoramic View'); ?>
+                                <?php endif; ?>
                             </p>
                             <div class="flex items-center justify-between mt-auto pt-6 border-t border-gray-50">
                                 <div>
