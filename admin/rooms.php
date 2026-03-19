@@ -59,7 +59,7 @@ include '../includes/admin_sidebar.php';
     <?php foreach($rooms as $r): ?>
     <div class="card-soft overflow-hidden group">
         <div class="h-48 bg-gray-100 relative overflow-hidden">
-            <img src="<?php echo !empty($r['image']) ? $r['image'] : 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&q=80&w=800'; ?>" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+            <img src="<?php echo !empty($r['image']) ? $r['image'] : 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&q=80&w=800'; ?>" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&q=80&w=800';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
             <div class="absolute top-4 right-4">
                 <?php 
                     $statusClass = match($r['status']) {
