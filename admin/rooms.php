@@ -59,7 +59,44 @@ include '../includes/admin_sidebar.php';
     <?php foreach($rooms as $r): ?>
     <div class="card-soft overflow-hidden group">
         <div class="h-48 bg-gray-100 relative overflow-hidden">
-            <img src="<?php echo !empty($r['image']) ? $r['image'] : 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&q=80&w=800'; ?>" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&q=80&w=800';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+            <?php 
+            $imagePool = [
+                'Standard' => [
+                    "https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg?auto=compress&cs=tinysrgb&w=800",
+                    "https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg?auto=compress&cs=tinysrgb&w=800",
+                    "https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=800",
+                    "https://images.pexels.com/photos/279746/pexels-photo-279746.jpeg?auto=compress&cs=tinysrgb&w=800",
+                    "https://images.pexels.com/photos/1743231/pexels-photo-1743231.jpeg?auto=compress&cs=tinysrgb&w=800"
+                ],
+                'Deluxe' => [
+                    "https://images.pexels.com/photos/262048/pexels-photo-262048.jpeg?auto=compress&cs=tinysrgb&w=800",
+                    "https://images.pexels.com/photos/271619/pexels-photo-271619.jpeg?auto=compress&cs=tinysrgb&w=800",
+                    "https://images.pexels.com/photos/1457842/pexels-photo-1457842.jpeg?auto=compress&cs=tinysrgb&w=800",
+                    "https://images.pexels.com/photos/2102656/pexels-photo-2102656.jpeg?auto=compress&cs=tinysrgb&w=800",
+                    "https://images.pexels.com/photos/271643/pexels-photo-271643.jpeg?auto=compress&cs=tinysrgb&w=800"
+                ],
+                'Executive' => [
+                    "https://images.pexels.com/photos/271647/pexels-photo-271647.jpeg?auto=compress&cs=tinysrgb&w=800",
+                    "https://images.pexels.com/photos/276671/pexels-photo-276671.jpeg?auto=compress&cs=tinysrgb&w=800",
+                    "https://images.pexels.com/photos/2029722/pexels-photo-2029722.jpeg?auto=compress&cs=tinysrgb&w=800",
+                    "https://images.pexels.com/photos/261169/pexels-photo-261169.jpeg?auto=compress&cs=tinysrgb&w=800",
+                    "https://images.pexels.com/photos/2034330/pexels-photo-2034330.jpeg?auto=compress&cs=tinysrgb&w=800"
+                ],
+                'Presidential' => [
+                    "https://images.pexels.com/photos/323311/pexels-photo-323311.jpeg?auto=compress&cs=tinysrgb&w=800",
+                    "https://images.pexels.com/photos/2506990/pexels-photo-2506990.jpeg?auto=compress&cs=tinysrgb&w=800",
+                    "https://images.pexels.com/photos/2507010/pexels-photo-2507010.jpeg?auto=compress&cs=tinysrgb&w=800",
+                    "https://images.pexels.com/photos/237371/pexels-photo-237371.jpeg?auto=compress&cs=tinysrgb&w=800",
+                    "https://images.pexels.com/photos/1838554/pexels-photo-1838554.jpeg?auto=compress&cs=tinysrgb&w=800"
+                ]
+            ];
+            $type = $r['room_type'] ?? 'Standard';
+            $pool = $imagePool[$type] ?? $imagePool['Standard'];
+            $seed = (int)$r['room_number'];
+            $defaultImg = $pool[$seed % count($pool)];
+            $displayImg = !empty($r['image']) ? $r['image'] : $defaultImg;
+            ?>
+            <img src="<?php echo $displayImg; ?>" onerror="this.onerror=null; this.src='https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg?auto=compress&cs=tinysrgb&w=800';" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
             <div class="absolute top-4 right-4">
                 <?php 
                     $statusClass = match($r['status']) {

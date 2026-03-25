@@ -270,12 +270,40 @@ $conn->query("CREATE TABLE IF NOT EXISTS settings (
     address TEXT
 )");
 
-// 12. Housekeeping Requests Migration
+// 12. Housekeeping Requests Table and Migration
+$conn->query("CREATE TABLE IF NOT EXISTS housekeeping_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    room_number VARCHAR(10) NOT NULL,
+    service_type VARCHAR(100) NOT NULL,
+    status ENUM('Pending', 'In Progress', 'Completed') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
 $check_hr_received = $conn->query("SHOW COLUMNS FROM `housekeeping_requests` LIKE 'is_received'");
 if ($check_hr_received && $check_hr_received->num_rows == 0) {
     $conn->query("ALTER TABLE housekeeping_requests ADD COLUMN is_received TINYINT(1) DEFAULT 0 AFTER status");
 }
 
+// 13. Menu Items Initialization
+$check_menu = $conn->query("SHOW TABLES LIKE 'menu_items'");
+if ($check_menu && $check_menu->num_rows == 0) {
+    require_once __DIR__ . '/../php/init_menu.php';
+}
+
+// 14. Complaints Table
+$conn->query("CREATE TABLE IF NOT EXISTS complaints (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    type VARCHAR(100) NOT NULL,
+    room_number VARCHAR(10) NULL,
+    description TEXT NOT NULL,
+    status ENUM('Pending', 'Under Investigation', 'Resolved') DEFAULT 'Pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+)");
+
 // Return connection
 return $conn;
 ?>
+
